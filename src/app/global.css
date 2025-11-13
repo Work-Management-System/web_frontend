@@ -1,0 +1,1129 @@
+@import "tailwindcss";
+
+:root {
+    --primary-bg-colors: #EDEEF0;
+    --primary-color-1: #0798bd;
+    --primary-color-1-hover: #0799bdc8;
+    --primary-color-2: #FF8700;
+    --bg-color: #fff;
+    --primary-bg-text: #002A60;
+    --secondary-color: #333333;
+    --background-color: #EDEEF0;
+    --text-color: #333333;
+    --text-color-2: #ffffff;
+    --primary-1-text-color: #002A60;
+    --primary-2-text-color: #FF8700;
+    --signin-bg-color: #F5F5F5;
+    --border-focus-color: 1px solid #FF8700 !important;
+    --card-bg-color: #fff !important;
+    --success-color: #17c57f !important;
+}
+
+body {
+    padding: 0px !important;
+    overflow-y: auto !important;
+}
+
+/* For all elements */
+* {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(128, 128, 128, 0.282) rgba(128, 128, 128, 0.227);
+  }
+  
+  /* Chrome, Edge, Safari */
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.196);
+  }
+  
+  *::-webkit-scrollbar-track {
+    background-color: rgba(128, 128, 128, 0.216);
+  }
+  
+
+/* Reduce the popup size */
+.swal-popup {
+    width: 300px !important; /* Smaller width */
+    height:260px !important;
+    font-size: 14px !important; /* Smaller text */
+  }
+  
+  /* Reduce the title size */
+  .swal-title {
+    font-size: 16px !important;
+  }
+  /* Reduce the icon size */
+  .swal-icon {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 10px !important;
+  }
+  
+  /* Reduce the button size */
+  .swal-confirm, .swal-cancel {
+    font-size: 12px !important;
+    border-radius: 6px !important;
+  }
+  
+.flag-dropdown.open ul.country-list {
+    margin: 3px 0 0px;
+    max-height: 170px !important;
+    width: 284px;
+}
+
+
+.list-rounded.selected-list-main::before {
+    position: absolute;
+    content: "";
+    top: -20px;
+    right: 0;
+    height: 20px;
+    width: 21px;
+    background: var(--primary-bg-colors);
+    z-index: 1;
+}
+
+.list-rounded.selected-list-main::after {
+    position: absolute;
+    content: "";
+    bottom: -12px;
+    right: 0;
+    height: 20px;
+    width: 21px;
+    background: var(--primary-bg-colors);
+    z-index: 1;
+}
+
+.list-rounded a {
+    position: relative;
+}
+
+.list-rounded a.Mui-selected::before {
+    position: absolute;
+    content: "";
+    top: -20px;
+    right: 0;
+    height: 20px;
+    background: var(--primary-color-1);
+    z-index: 11;
+    border-radius: 0 0 38px 0;
+    width: 21px;
+    transition: '.5s',
+}
+
+.list-rounded a.Mui-selected::after {
+    position: absolute;
+    content: "";
+    bottom: -20px;
+    right: 0;
+    height: 20px;
+    background: var(--primary-color-1);
+    z-index: 11;
+    border-radius: 0 38px 0 0;
+    width: 21px;
+    transition: '.5s',
+}
+
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3) !important;
+    background-color: #F5F5F5 !important;
+    border-radius: 10px !important;
+}
+
+
+::-webkit-scrollbar {
+    width: 6px !important;
+    background-color: #F5F5F5 !important;
+    border-radius: 10px !important;
+}
+
+
+::-webkit-scrollbar-thumb {
+    background-color: #949494 !important;
+    border-radius: 10px !important;
+}
+
+
+div#share-select {
+    width: 175px;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: var(--primary-2-text-color);
+    background: #f6f6f6;
+    border-radius: 8px;
+}
+
+.MuiDateCalendar-root {
+    height: 291px !important;
+    max-height: 292px !important;
+}
+
+.qa-bx img {
+    width: auto !important;
+}
+
+.coverImage img {
+    height: 230px !important;
+}
+
+
+.category legend {
+    display: none;
+}
+
+.category fieldset {
+    border: none;
+}
+
+.css-4s133w-menu {
+    z-index: 99999999 !important
+}
+
+.flag-dropdown.open ul.country-list {
+    width: 219px !important;
+}
+
+.select-locations .css-13cymwt-control,
+.select-locations .css-t3ipsp-control {
+    min-height: 44px;
+    border-radius: 7px;
+}
+
+.gm-style-iw.gm-style-iw-c {
+    padding: 0px;
+    width: 250px;
+    max-width: 250px;
+}
+
+.gm-style .gm-style-iw-t button.gm-ui-hover-effect {
+    position: absolute !important;
+    right: 0 !important;
+}
+
+.cover-box:hover .button-cover {
+    background: #ffffffe8;
+    height: 48px;
+    width: 49px;
+}
+
+.cover-box .button-cover {
+    display: block;
+    transition: 0.3s smooth;
+    background: #ffffffe8;
+    height: 48px;
+    width: 49px;
+}
+
+
+.grid-styling .MuiDataGrid-row--borderBottom {
+    background: #002a60 !important;
+}
+
+.grid-styling .MuiDataGrid-columnHeader {
+    border: 0.5px solid #ddd;
+}
+
+.grid-styling .MuiDataGrid-columnSeparator.MuiDataGrid-columnSeparator--resizable.MuiDataGrid-columnSeparator--sideRight {
+    display: none;
+}
+
+.grid-styling .MuiDataGrid-columnHeaderTitle {
+    color: #fff;
+}
+
+.grid-styling .MuiDataGrid-columnHeaderTitleContainer button {
+    color: #fff !important;
+    opacity: 11;
+    background: none;
+}
+
+.grid-styling .MuiDataGrid-menuIcon button {
+    color: #fff !important;
+}
+
+.grid-styling .MuiDataGrid-cell {
+    border: 1px solid #ddd;
+}
+
+.grid-styling .MuiDataGrid-cell span {
+    font-size: 12px !important;
+}
+
+.centered-cell {
+    text-align: center !important;
+}
+
+.coverImage.user-cover img {
+    height: 180px !important;
+    object-position: 54% 62%;
+}
+
+.boxer-select div#role-select {
+    padding: 4px 14px 4px 9px;
+}
+
+.chart-alumni {
+    min-height: 190px !important;
+}
+
+.faq-restyle h2 {
+    margin-bottom: 0px;
+    font-size: 15px;
+}
+
+.faq-restyle ol {
+    padding-left: 8px;
+    text-align: left;
+    list-style: inside;
+}
+
+.faq-restyle ol li {
+    text-align: left !important;
+    margin: 0;
+}
+
+.faq-restyle ol li::marker {
+    margin: 0 !important;
+}
+
+.blog-show p p {
+    margin: 0 !important;
+    font-size: 14px;
+}
+
+.blog-show p ol {
+    list-style: inside;
+    padding: 0;
+}
+
+.blog-show p h3 {
+    margin: 0 0 6px 0 !important;
+}
+
+.blog-show p ol li {
+    font-size: 14px;
+}
+
+ul.recieving li.other {
+    padding: 15px;
+    list-style: none;
+    background: #e1f0e9;
+    width: 75%;
+    margin: 15px auto 0 0;
+    border-radius: 14px;
+}
+
+ul.recieving li.you {
+    padding: 15px;
+    list-style: none;
+    background: var(--primary-bg-colors);
+    width: 75%;
+    margin: 15px 0 0 auto;
+    border-radius: 14px;
+}
+
+ul.recieving {
+    padding: 0 20px 0 0;
+    margin: 0 0 15px 0;
+    /* height: 258px; */
+    /* overflow-y: auto; */
+}
+
+.image-star {
+    border-right: 1px solid #ddd;
+    text-align: center;
+}
+
+.image-star img {
+    object-fit: cover;
+    height: auto !important;
+    width: 70%;
+    margin: 0 auto;
+}
+
+ul.recieving li {
+    position: relative;
+}
+
+ul.recieving li span {
+    position: absolute;
+    right: 5px;
+    font-size: 11px;
+    bottom: 4px;
+    margin: 0 !important;
+    letter-spacing: -3px;
+}
+
+.hover-box-active.active-hover-color {
+    background: #f6f6f6;
+}
+
+.hover-box-active:hover {
+    background: #f6f6f6;
+}
+
+.hover-box-active {
+    cursor: pointer;
+}
+
+li.other {
+    margin: 10px auto 10px 0;
+    padding: 10px 12px 15px;
+    font-size: 14px;
+    box-shadow: 0 0 2px 0 #ddd;
+}
+
+li.you {
+    margin: 0 0 0 auto;
+    padding: 10px 12px 15px;
+    font-size: 14px;
+    box-shadow: 0 0 2px 0 #ddd;
+    margin: 10px 0 10px auto;
+}
+
+img.doodle-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover !important;
+}
+
+img.logo-image {
+    height: 62px !important;
+    width: 85px;
+}
+
+.checkbox-shaping {
+    gap: 15px;
+}
+
+.checkbox-shaping fieldset svg {
+    font-size: 18px;
+}
+
+.checkbox-shaping fieldset span.MuiTypography-root {
+    font-size: 14px;
+}
+
+.checkbox-shaping fieldset span.MuiButtonBase-root {
+    padding: 5px;
+}
+
+.checkbox-shaping fieldset label {
+    margin: 0;
+}
+
+img.logo-images {
+    height: auto !important;
+    width: 131px;
+}
+
+
+.fullcalendar-shape .fc-daygrid-event-harness {
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+}
+
+.fullcalendar-shape button.fc-today-button.fc-button.fc-button-primary {
+    background: var(--primary-1-text-color);
+    opacity: 1;
+    padding: 8px 30px;
+    border-radius: 50px;
+}
+
+.fullcalendar-shape button.fc-today-button.fc-button.fc-button-primary:hover {
+    box-shadow: 0px 0px 15px 0px #ddd;
+}
+
+.fc-button-group {
+    gap: 5px;
+}
+
+.fullcalendar-shape .fc-button-group button {
+    background: #ff8700 !important;
+    border: none !important;
+    padding: 9px 10px !important;
+    border-radius: 50px !important;
+}
+
+.fullcalendar-shape {
+    margin-top: 22px;
+}
+
+.fullcalendar-shape h2 {
+    color: #002a60;
+    font-size: 25px !important;
+}
+
+.fullcalendar-shape .fc-header-toolbar.fc-toolbar {
+    margin-bottom: 15px;
+}
+
+.fullcalendar-shape .fc-daygrid-event-harness a.fc-event {
+    background: #ff8700;
+    border: none;
+    padding: 2px 10px;
+}
+
+.fullcalendar-shape .fc-daygrid-event-harness a.fc-event .fc-daygrid-event-dot {
+    color: #fff !important;
+    border: calc(var(--fc-daygrid-event-dot-width) / 2) solid #fff !important;
+}
+
+.fullcalendar-shape .fc-event-time {
+    display: none;
+}
+
+.fullcalendar-shape .fc-event-title {
+    color: #fff;
+    font-size: 13px;
+}
+
+.event-images .MuiPaper-root.MuiPaper-elevation {
+    border-radius: 15px !important;
+}
+
+.event-images button {
+    background: var(--primary-color-2);
+    right: 5px;
+    top: 4px;
+}
+
+
+div#notification-menu .MuiPaper-root.MuiPaper-elevation {
+    position: absolute;
+    right: 100px;
+    left: auto !important;
+    top: 50px !important;
+    border-radius: 10px;
+    box-shadow: 0px 0px 2px 0px #00000057 !important;
+}
+
+div#notification-menu .MuiPaper-root.MuiPaper-elevation ul li {
+    width: 350px;
+}
+
+div#notification-menu .MuiPaper-root.MuiPaper-elevation ul {
+    padding: 0px;
+}
+
+.tagging-drop {
+    background: #fff;
+    padding: 0 !important;
+}
+
+.tagging-drop label {
+    color: #ff8700;
+    font-size: 14px;
+    position: absolute;
+    top: -9px;
+}
+
+.tagging-drop .MuiInputBase-root {
+    padding: 0 !important;
+}
+
+.tagging-drop label[data-expanded="true"] {
+    top: 0 !important;
+}
+
+.upcoming-image img {
+    width: 100% !important;
+    height: 300px !important;
+}
+
+.logo-imagesss {
+    height: 300px !important;
+    width: 100% !important;
+}
+
+.extra-remove-margin p {
+    margin: 0px;
+}
+
+.extra-remove-margin h3 {
+    margin: 7px 0px 0px;
+}
+
+.hover-box-style:hover {
+    box-shadow: 0px 7px 30px 0px rgba(90, 114, 123, 0.11);
+}
+
+
+.event-detailed-pack p {
+    margin: 0px;
+    font-size: 15px;
+}
+
+.event-detailed-pack h1 {
+    margin: 0px;
+}
+
+.event-detailed-pack h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #000;
+}
+
+.event-detailed-pack ul {
+    margin-top: 0;
+    padding-left: 29px;
+    font-size: 15px;
+}
+
+.selection-alumnus .MuiInputBase-root {
+    padding: 3px !important;
+    border-radius: 0px !important;
+}
+
+.formik-image-load {
+    padding: 4px;
+}
+
+.formik-image-load img {
+    height: 102px !important;
+    object-fit: cover;
+    object-position: top;
+    margin-bottom: 5px;
+}
+
+.announcement-cdk .ck.ck-toolbar__items {
+    flex-wrap: wrap !important;
+}
+
+@media (max-width: 767px) {
+
+    .list-rounded.selected-list-main::before {
+        top: -19px;
+        height: 22px;
+        width: 20px;
+    }
+
+    .list-rounded.selected-list-main::after {
+        height: 22px;
+        width: 20px;
+    }
+
+    .fullcalendar-shape .fc-view-harness {
+        height: 429px !important;
+        overflow: hidden !important;
+    }
+
+    .fullcalendar-shape .fc-view-harness {
+        height: 429px !important;
+        overflow: hidden !important;
+    }
+
+    .fullcalendar-shape .fc-header-toolbar {
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 27px !important;
+    }
+
+    .fullcalendar-shape .fc-header-toolbar .fc-toolbar-chunk {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .fullcalendar-shape .fc-header-toolbar .fc-toolbar-chunk h2 {
+        width: 100%;
+        text-align: center;
+    }
+
+    .footer-making {
+        margin-top: 35px;
+        margin-bottom: 20px;
+    }
+
+    .footer-making p {
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+}
+
+.footer-making {
+    margin-top: 35px;
+    margin-bottom: 20px;
+}
+
+.footer-making p {
+    background: #fff;
+    padding: 20px;
+    border-radius: 16px;
+}
+
+.footer-making p a {
+    color: var(--primary-color-2);
+}
+
+@media (min-width: 320px) and (max-width: 500px) {
+
+    .event-images {
+        width: 100% !important;
+        margin-left: 0px !important;
+    }
+
+    div#share-select {
+        width: 100%;
+    }
+
+    .friends-tabss .MuiTabs-flexContainer {
+        margin-bottom: 10px !important;
+    }
+
+    .faq-restyle h4 {
+        margin-left: 0 !important;
+    }
+
+    img.not-found {
+        width: 241px !important;
+    }
+
+    .doodle-image,
+    .doodle-image-chat {
+        height: 100vh !important;
+        object-fit: cover !important;
+    }
+
+    img.eventImage {
+        margin: 0 0 15px !important;
+        width: 100%;
+        height: auto;
+        float: left;
+    }
+
+}
+
+@media (min-width: 1025px) and (max-width: 1199px) {
+    img.sign-logo {
+        width: 95px !important;
+        height: auto !important;
+    }
+
+    .student-images {
+        width: 282px !important;
+    }
+
+}
+
+@media (min-width: 1025px) and (max-width: 1110px) {
+
+    .ranger {
+        width: 81% !important;
+        max-width: 81% !important;
+    }
+
+}
+
+@media (min-width: 1111px) and (max-width: 1199px) {
+
+    .ranger {
+        width: 75% !important;
+        max-width: 75% !important;
+    }
+
+}
+
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    img.sign-logo {
+        width: 70px !important;
+        height: auto !important;
+    }
+}
+
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .edit-dash-image {
+        width: 197px !important;
+        height: auto !important;
+    }
+
+    img.eventImage {
+        width: 250px;
+        height: 250px;
+    }
+}
+
+@media (min-width: 575px) and (max-width: 767px) {
+    .faq-restyle h4 {
+        margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 501px) and (max-width: 600px) {
+    img.eventImage {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 365px) {
+    div#notification-menu .MuiPaper-root.MuiPaper-elevation {
+        right: 16px;
+    }
+
+    div#notification-menu .MuiPaper-root.MuiPaper-elevation ul li {
+        width: 100%;
+    }
+
+    div#notification-menu .MuiPaper-root.MuiPaper-elevation ul {
+        padding: 0px;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 767px) {
+    div#notification-menu .MuiPaper-root.MuiPaper-elevation {
+        right: 16px;
+    }
+}
+
+
+
+@media (min-width: 600px) and (max-width: 767px) {
+    .text-one {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .medium-mobiles {
+        width: 50% !important;
+        min-width: 50% !important;
+    }
+
+    img.eventImage {
+        width: 250px;
+        height: 250px;
+        margin-bottom: 20px;
+    }
+}
+
+.friends-tabss .css-1s8mg9c.Mui-selected {
+    background: var(--primary-color-2) !important;
+    color: #fff !important;
+}
+
+.friends-tabss span.MuiTabs-indicator.css-dbgn64 {
+    display: none !important;
+}
+
+.faq-restyle h4 {
+    margin-left: 0 !important;
+}
+
+.doodle-image,
+.doodle-image-chat {
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.sign-logo-bg {
+    height: 100% !important;
+}
+
+.front-bg::after {
+    position: absolute;
+    content: '';
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: #00000085;
+}
+
+.footer-insider a:hover {
+    text-decoration: underline;
+}
+
+.social-icons-foot img {
+    height: auto !important;
+}
+
+.apexcharts-menu-icon {
+    display: none;
+}
+
+.add-role-table {
+    border: 1px solid #ddd;
+}
+
+.add-role-table td {
+    padding: 14px 20px !important;
+    font-size: 14px !important;
+}
+
+.add-role-table td label {
+    font-size: 14px !important;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+}
+
+.add-role-table td label span {
+    padding: 0px;
+    font-size: 14px;
+}
+
+.add-role-table tr:nth-child(odd) {
+    background: #f3f3f3;
+}
+
+.avatarr {
+    object-fit: contain !important;
+}
+
+.avtar-logoo img {
+    object-fit: contain !important;
+}
+
+ol.MuiBreadcrumbs-ol.css-4pdmu4-MuiBreadcrumbs-ol p {
+    text-transform: capitalize;
+}
+
+ol.MuiBreadcrumbs-ol.css-4pdmu4-MuiBreadcrumbs-ol a {
+    text-transform: capitalize;
+}
+
+.tab-pending-approve .css-obochr-MuiTabs-root .css-1n79qib-MuiButtonBase-root-MuiTab-root.Mui-selected span.MuiBadge-badge {
+    right: -19px !important;
+    background: #002a60;
+    top: 8px;
+}
+
+.tab-pending-approve .css-obochr-MuiTabs-root .css-1n79qib-MuiButtonBase-root-MuiTab-root span.MuiBadge-badge {
+    right: -19px !important;
+    top: 8px;
+}
+
+.css-2qqcvj-MuiButtonBase-root-MuiTab-root.Mui-selected {
+    color: #ffffff !important;
+    background: #ff8700;
+}
+
+.button-cover.edit-cover-fa {
+    background: #fff !important;
+    padding: 10px;
+}
+
+.edt-pop .MuiPaper-root.MuiPaper-elevation {
+    box-shadow: 0px 0px 6px 1px #ddd !important;
+}
+
+ol.MuiBreadcrumbs-ol.css-nhb8h9 p {
+    text-transform: capitalize !important;
+}
+
+.grid-styling .MuiDataGrid-row--borderBottom .MuiDataGrid-columnHeader {
+    height: 44px !important;
+}
+
+
+.imageBoxer {
+    float: right !important;
+    margin-left: 25px !important;
+}
+
+.announced-id:hover {
+    box-shadow: 0px 0px 12px 0px #ddd; 
+}
+
+.announced-id {
+    border-radius: 15px;
+    transition: .3s;
+}
+
+.announced-id:nth-child(1) {
+    margin-top: 0px !important;
+}
+
+@media (min-width: 320px) and (max-width: 767px) {
+    .friends-tabss .MuiTabs-flexContainer {
+        margin-bottom: 0px !important;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 400px) {
+    .horizon-form {
+        width: 245px !important;
+    }
+}
+
+
+.css-1njbxfe {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    z-index: 1; /* Ensure content is above background */
+}
+
+.css-1njbxfe::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url(/images/backgrounds/profilebg.jpg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(5px);
+    z-index: -1; /* Send background behind content */
+}
+
+
+.button-primary {
+  background-color: var(--primary-color-1);
+  /* color: var(--text-color); */
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background-color: var(--primary-color-1-hover);
+}
+
+.primary-color-1 {
+  color: var(--primary-color-1);
+}
+.bg-primary-color-1 {
+  background-color: var(--primary-color-1);
+}
+.primary-color-1:hover {
+  color: var(--primary-color-1-hover);
+}
+.text-color {
+  color: var(--text-color);
+}
+
+
+.primary-color-2 {
+  color: var(--primary-color-2);
+}
+.bg-primary-color-2 {
+  background-color: var(--primary-color-2);
+}
+.my-swal {
+  z-index: 2000;
+}
+.swal2-container {
+  z-index: 3000 !important; /* Must be higher than MUI modal's z-index (typically 1300-1500) */
+}
+.swal-custom-zindex {
+  z-index: 3000 !important;
+}
+
+.swal-container-zindex {
+  z-index: 3000 !important;
+}
+/* Spinner.css */
+.lds-spinner,
+.lds-spinner div,
+.lds-spinner div:after {
+    box-sizing: border-box;
+}
+
+.lds-spinner {
+    color: var(--primary-color-2);
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.lds-spinner div {
+    transform-origin: 40px 40px;
+    animation: lds-spinner 1.2s linear infinite;
+}
+
+.lds-spinner div:after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 3.2px;
+    left: 36.8px;
+    width: 6.4px;
+    height: 17.6px;
+    border-radius: 20%;
+    background: currentColor;
+}
+
+.lds-spinner div:nth-child(1) {
+    transform: rotate(0deg);
+    animation-delay: -1.1s;
+}
+
+.lds-spinner div:nth-child(2) {
+    transform: rotate(30deg);
+    animation-delay: -1s;
+}
+
+.lds-spinner div:nth-child(3) {
+    transform: rotate(60deg);
+    animation-delay: -0.9s;
+}
+
+.lds-spinner div:nth-child(4) {
+    transform: rotate(90deg);
+    animation-delay: -0.8s;
+}
+
+.lds-spinner div:nth-child(5) {
+    transform: rotate(120deg);
+    animation-delay: -0.7s;
+}
+
+.lds-spinner div:nth-child(6) {
+    transform: rotate(150deg);
+    animation-delay: -0.6s;
+}
+
+.lds-spinner div:nth-child(7) {
+    transform: rotate(180deg);
+    animation-delay: -0.5s;
+}
+
+.lds-spinner div:nth-child(8) {
+    transform: rotate(210deg);
+    animation-delay: -0.4s;
+}
+
+.lds-spinner div:nth-child(9) {
+    transform: rotate(240deg);
+    animation-delay: -0.3s;
+}
+
+.lds-spinner div:nth-child(10) {
+    transform: rotate(270deg);
+    animation-delay: -0.2s;
+}
+
+.lds-spinner div:nth-child(11) {
+    transform: rotate(300deg);
+    animation-delay: -0.1s;
+}
+
+.lds-spinner div:nth-child(12) {
+    transform: rotate(330deg);
+    animation-delay: 0s;
+}
+
+@keyframes lds-spinner {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
