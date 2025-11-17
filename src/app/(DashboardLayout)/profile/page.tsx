@@ -1,8 +1,7 @@
 "use client";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import createAxiosInstance from "@/app/axiosInstance";
-import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAppselector } from "@/redux/store";
 import { Box, Button, TextField } from "@mui/material";
 import { EditUserDialog } from "../users/page";
@@ -86,7 +85,7 @@ type Project = {
 type Role = {
   id: string;
   name: string;
-  priority: number
+  priority: number;
 };
 export type EditUser = {
   id: string;
@@ -117,15 +116,10 @@ export type SetPassword = {
 export default function UserProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [coverImage, setCoverImage] = useState<string>(
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
-  );
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<number>(0);
-  const pathName = usePathname();
   const axiosInstance = createAxiosInstance();
   const router = useRouter();
   const [editUser, setEditUser] = useState<EditUser | null>(null);
@@ -136,6 +130,7 @@ export default function UserProfilePage() {
   const userId = authData?.user?.id;
   const currentUserRole = useAppselector((state) => state.role.value.name);
   const [passDialogOpen, setPassDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<number>(0);
 
   const handleOpen = () => setPassDialogOpen(true);
   const handleClose = () => setPassDialogOpen(false);
@@ -151,12 +146,13 @@ export default function UserProfilePage() {
       }
     } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Failed to update password. Please try again.";
+        error.response?.data?.message ||
+        "Failed to update password. Please try again.";
       toast.error(errorMessage);
       console.error("Error updating password:", error);
     }
   };
-  
+
   const fetchUser = async () => {
     if (!userId) throw new Error("User ID not found");
     const controller = new AbortController();
@@ -173,62 +169,64 @@ export default function UserProfilePage() {
       throw err;
     }
   };
-  
-    const fetchUsers = async () => {
-      const res = await axiosInstance.get(`/user/list`);
-      if (!res.data.status) throw new Error('Failed to fetch users');
-      return res.data.data;
-    };
 
-    const fetchEditUserDetails= async (userId: string) => {
-      const res=users?.find((edituser) => edituser.id === userId);
-      setEditUser(res);
-    }
-  
-    const fetchRoles = async () => {
-      try {
-        const response = await axiosInstance.get('/role-management/get-all');
-        if (response.status === 200) {
-          setRoles(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching roles:', error);
+  const fetchUsers = async () => {
+    const res = await axiosInstance.get(`/user/list`);
+    if (!res.data.status) throw new Error("Failed to fetch users");
+    return res.data.data;
+  };
+
+  const fetchEditUserDetails = async (userId: string) => {
+    const res = users?.find((edituser) => edituser.id === userId);
+    setEditUser(res);
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axiosInstance.get("/role-management/get-all");
+      if (response.status === 200) {
+        setRoles(response.data.data);
       }
-    };
-  
-    useEffect(() => {
-      if(currentUserRole !== "SuperAdmin"){
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUserRole !== "SuperAdmin") {
       fetchUsers()
         .then(setUsers)
         .catch(console.error)
         .finally(() => setLoading(false));
       fetchRoles();
-      }
-    }, []);
+    }
+  }, [currentUserRole]);
 
-    useEffect(() => {
-      fetchUser().then(setUser).catch(console.error);
-      if (userId) {
-        fetchEditUserDetails(userId)
-          .catch(console.error);
-      }
-    }, [users]);
-  
-    const handleCloseDialog = () => {
-      setOpenDialog(false);
-      // setEditUser(null);
-    };
-    const handleEditClick = (user: EditUser) => {
-      setOpenDialog(true);
-    };
+  useEffect(() => {
+    fetchUser().then(setUser).catch(console.error);
+    if (userId) {
+      fetchEditUserDetails(userId).catch(console.error);
+    }
+  }, [users]);
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    // setEditUser(null);
+  };
+  const handleEditClick = (user: EditUser) => {
+    setOpenDialog(true);
+  };
 
   const fetchUserProjects = async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
     try {
-      const res = await axiosInstance.get(`/project-management/user-projects/${userId}`, {
-        signal: controller.signal,
-      });
+      const res = await axiosInstance.get(
+        `/project-management/user-projects/${userId}`,
+        {
+          signal: controller.signal,
+        }
+      );
       clearTimeout(timeoutId);
       return res.data;
     } catch (err) {
@@ -243,13 +241,14 @@ export default function UserProfilePage() {
       // toast.error(null);
       try {
         const userData = await fetchUser();
-        console.log("currentUserRole",currentUserRole)
+        console.log("currentUserRole", currentUserRole);
         setUser(userData);
-        const isSuperAdmin =currentUserRole === "SuperAdmin"
+        const isSuperAdmin = currentUserRole === "SuperAdmin";
         if (!isSuperAdmin) {
           const projectsData = await fetchUserProjects();
-          setProjects(Array.isArray(projectsData) ? projectsData : []);
-          setFilteredProjects(Array.isArray(projectsData) ? projectsData : [])
+          const list = Array.isArray(projectsData) ? projectsData : [];
+          setProjects(list);
+          setFilteredProjects(list);
         }
       } catch (error: any) {
         console.error("Fetch error:", error);
@@ -271,7 +270,8 @@ export default function UserProfilePage() {
           joiningDate: "2022-05-01",
           employeeCode: "EMP12345",
           role: "User",
-          profile_image: "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+          profile_image:
+            "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
           emergency_contact: "911123456789",
           blood_group: "O+",
           gender: "Male",
@@ -285,6 +285,7 @@ export default function UserProfilePage() {
     };
     fetchData();
   }, [userId]);
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
@@ -297,20 +298,9 @@ export default function UserProfilePage() {
       setFilteredProjects(filtered);
     }
   };
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   if (loading) {
-    return (
-      <Loader/>);
+    return <Loader />;
   }
 
   if (error) {
@@ -321,593 +311,493 @@ export default function UserProfilePage() {
     );
   }
 
-  const defaultProfilePicture = "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250";
+  const defaultProfilePicture =
+    "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250";
 
-  // SuperAdmin UI
   const isSuperAdmin =
+    currentUserRole === "SuperAdmin" ||
     user?.role === "SuperAdmin" ||
-    user?.role_id === "db3cae96-a430-4d23-9ced-af0fd0718970"; // Adjust role_id if needed
-  if (isSuperAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
-        <div className="container mx-auto p-6">
-          <div className="mb-12">
-            <div className="relative group">
-              <img
-                src={coverImage}
-                alt="Cover"
-                className="w-full h-48 object-cover rounded-t-lg"
-              />
-              <label
-                htmlFor="cover-upload"
-                className="absolute top-2 right-2 backdrop-blur-md p-2 cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 rounded-full"
-              >
-                <div className="w-24 h-8 flex items-center justify-center text-gray-600 text-sm font-medium rounded-md hover:opacity-100">
-                  Change Cover
-                </div>
-                <input
-                  id="cover-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-              </label>
-              <div className="absolute left-6 -bottom-16">
+    user?.role_id === "db3cae96-a430-4d23-9ced-af0fd0718970";
+
+  return (
+    <>
+      <div className="min-h-screen bg-[var(--bg-color)] px-4 py-6 lg:px-8 font-sans">
+        <div className="">
+          <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+            {/* Left sidebar */}
+            <div className="flex flex-col rounded-3xl border border-gray-200/60 bg-[var(--card-bg-color)] p-6 shadow-sm">
+              <div className="mb-6 flex items-center gap-4">
                 <img
                   src={user?.profile_image || defaultProfilePicture}
                   alt={`${user?.first_name} ${user?.last_name}`}
-                  className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
+                  className="h-16 w-16 rounded-2xl border border-gray-200/70 object-cover shadow-md"
                 />
-              </div>
-            </div>
-
-            <div className="mt-20">
-              <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
-                <div className="mb-6 border-b border-gray-200 pb-4">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {user?.first_name || "N/A"} {user?.last_name || "N/A"}
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-lg font-semibold text-[var(--text-color)]">
+                    {user?.first_name || "N/A"} {user?.last_name || ""}
                   </h1>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="mb-2">
-                      <div className="flex items-center">
-                        <svg
-                          className="w-5 h-5 text-blue-600 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-                          />
-                        </svg>
-                        <h3 className="text-lg font-semibold text-gray-700">
-                          Personal Information
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="space-y-2 pl-7 text-sm">
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Gender
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.gender || "N/A"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Date of Birth
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.dob || "N/A"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Blood Group
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.blood_group || "N/A"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Emergency Contact
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.emergency_contact || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="mb-2">
-                      <div className="flex items-center">
-                        <svg
-                          className="w-5 h-5 text-blue-600 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                          />
-                        </svg>
-                        <h3 className="text-lg font-semibold text-gray-700">
-                          Contact Information
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="space-y-2 pl-7 text-sm">
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Email
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.email || "N/A"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Phone
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.phone || "N/A"}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span className="text-gray-700 font-bold text-left">
-                          Address
-                        </span>
-                        <p className="text-gray-800 text-left">
-                          {user?.address || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  {user?.employeeCode && (
+                    <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                      {user.employeeCode}
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // Non-SuperAdmin UI
-  return (
-    <>
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
-      <div className="container mx-auto p-6">
-        <div className="mb-12">
-          <div className="relative group">
-            <img
-              src={coverImage}
-              alt="Cover"
-              className="w-full h-48 object-cover rounded-t-lg"
-            />
-            <label
-              htmlFor="cover-upload"
-              className="absolute top-2 right-2 backdrop-blur-md p-2 cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 rounded-full"
-            >
-              <div className="w-24 h-8 flex items-center justify-center text-gray-600 text-sm font-medium rounded-md hover:opacity-100">
-                Change Cover
-              </div>
-              <input
-                id="cover-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </label>
-            <div className="absolute left-6 -bottom-16">
-              <img
-                src={user?.profile_image || defaultProfilePicture}
-                alt={`${user?.first_name} ${user?.last_name}`}
-                className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
-              />
-            </div>
-          </div>
-
-          <div className="mt-20">
-            <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6">
-              {currentUserRole !== 'SuperAdmin' &&
-              <div className="mb-6 border-b border-gray-200 pb-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {user?.first_name || "N/A"} {user?.last_name || "N/A"}
-                </h1>
-                <div >
-                      <Button
-                        sx={{
-                          backgroundColor: 'var(--primary-color-1)',
-                          color: 'white',
-                          marginRight: '15px',
-                          fontWeight: '500',
-                          '&:hover': {
-                            backgroundColor: 'var(--primary-color-2)',
-                          },
-                        }}
-                        onClick={handleOpen}
-                      >
-                        Change Password
-                      </Button>
-                <Button
-                   sx={{
-                      backgroundColor: 'var(--primary-color-1)',
-                      color: 'white',
-                      marginRight: '15px',                  
-                      fontWeight: '500',
-                      '&:hover': {
-                        backgroundColor: 'var(--primary-color-2)',
-                      },
-                    }}                  
-                    onClick={() =>  handleEditClick(editUser)}
-                >
-                  Edit
-                </Button>
-                <Button
-                   sx={{
-                      backgroundColor: 'var(--primary-color-2)',
-                      color: 'white',
-                      fontWeight: '500',
-                      '&:hover': {
-                        backgroundColor: 'var(--primary-color-1)',
-                      },
-                    }}                 
-                     onClick={() => router.push(`/tasks?userId=${userId}`)}
-                >
-                  View Tasks
-                </Button>
-                </div>
-              </div>
-}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <div className="mb-2">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 text-blue-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <h3 className="text-lg font-semibold text-gray-700">Professional Details</h3>
-                    </div>
-                  </div>
-                  <div className="space-y-2 pl-7 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Department</span>
-                      <p className="text-gray-800 text-left">{user?.department || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Designation</span>
-                      <p className="text-gray-800 text-left">{user?.designation || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Employee Code</span>
-                      <p className="text-gray-800 text-left">{user?.employeeCode || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Joining Date</span>
-                      <p className="text-gray-800 text-left">{user?.joiningDate || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Reporting Manager</span>
-                      <p className="text-gray-800 text-left">{user?.reporting_manager || "N/A"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2">
-                    <div className="flex items-center">
-                         <svg
-                          className="w-5 h-5 text-blue-600 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-                          />
-                        </svg>
-                      <h3 className="text-lg font-semibold text-gray-700">Personal Information</h3>
-                    </div>
-                  </div>
-                  <div className="space-y-2 pl-7 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Gender</span>
-                      <p className="text-gray-800 text-left">{user?.gender || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Date of Birth</span>
-                      <p className="text-gray-800 text-left">{user?.dob || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Blood Group</span>
-                      <p className="text-gray-800 text-left">{user?.blood_group || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Emergency Contact</span>
-                      <p className="text-gray-800 text-left">{user?.emergency_contact || "N/A"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-5 h-5 text-blue-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                      <h3 className="text-lg font-semibold text-gray-700">Contact Information</h3>
-                    </div>
-                  </div>
-                  <div className="space-y-2 pl-7 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Email</span>
-                      <p className="text-gray-800 text-left">{user?.email || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Phone</span>
-                      <p className="text-gray-800 text-left">{user?.phone || "N/A"}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <span className="text-gray-700 font-bold text-left">Address</span>
-                      <p className="text-gray-800 text-left">{user?.address || "N/A"}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mt-10 text-gray-600">Tech Stack</h3>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {["Frontend", "JavaScript", "Security", "Design"].map((skill) => (
-                <span
-                  key={skill}
-                  className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 hover:shadow-sm transition-all duration-300"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
-<div className="flex justify-between">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Projects</h2>
-           <TextField
-                            size="small"
-                            // label="Search Projects"
-                            variant="outlined"
-                            fullWidth
-                            placeholder="Search by project title..."
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                            InputProps={{
-                              startAdornment: (
-                                <GridSearchIcon sx={{ color: "var(--primary-color-1)", mr: 1 }} />
-                              ),
-                            }}
-                            sx={{
-                              width: "350px",
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "var(--primary-color-1)",
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "var(--primary-color-2)",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "var(--primary-color-2)",
-                                },
-                              },
-                              backgroundColor: "#FFF", // Ensure visibility
-                              borderRadius: "4px",
-                            }}
-                          />
-            </div>
-          {filteredProjects?.length > 0 ? (
-            <>
-              {/* <div className="flex space-x-4 mb-6 overflow-x-auto"> */}
-<Box
-  sx={{
-    display: 'flex',
-    gap: 2,
-    overflowX: 'auto',
-    py: 2,
-  }}
->
-  {filteredProjects.map((project, index) => (
-    <button
-      key={index}
-      onClick={() => setSelectedProject(index)}
-      className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap ${
-        selectedProject === index
-          ? 'text-white shadow-md'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
-      style={
-        selectedProject === index
-          ? { backgroundColor: 'var(--primary-color-1)' }
-          : {}
-      }
-    >
-      {project?.title}
-    </button>
-  ))}
-</Box>
-              <div className="bg-white shadow-lg rounded-2xl p-6 border border-gray-100/50 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">{filteredProjects[selectedProject]?.title}</h3>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      filteredProjects[selectedProject].status === "ACTIVE"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {filteredProjects[selectedProject].status}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4">{filteredProjects[selectedProject].description}</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="font-semibold text-gray-700 w-32 shrink-0">Start Date:</span>
-                      <span className="text-gray-900">
-                        {new Date(filteredProjects[selectedProject].start_date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="font-semibold text-gray-700 w-32 shrink-0">End Date:</span>
-                      <span className="text-gray-900">
-                        {new Date(filteredProjects[selectedProject].end_date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <span className="font-semibold text-gray-700 w-32 shrink-0">Current Phase:</span>
-                      <span className="text-gray-900">{filteredProjects[selectedProject].current_phase}</span>
-                    </div>
-                  </div>
-
-                <h4 className="text-lg font-semibold text-gray-700 mt-6 mb-3">Team Members</h4>
-                  <div className="space-y-3 max-h-[20rem] overflow-y-scroll">
-                {filteredProjects[selectedProject].teams
-                      ?.filter((team) => team?.user && team.user?.first_name)
-                      .map((team, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition duration-200"
+              <div className="space-y-6 text-sm text-[var(--text-color)]">
+                {/* Professional Details */}
+                <div className="border-t border-gray-200/70 pt-4">
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      style={{ color: "var(--primary-color-1)" }}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium mr-3">
-                        {team?.user?.first_name.charAt(0)}
-                        {team?.user?.last_name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-gray-800 font-medium">
-                          {team?.user?.first_name} {team?.user?.last_name}
-                        </p>
-                        <p className="text-gray-600 text-sm">{team?.user?.designation}</p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          team?.status === "WORKING"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}
-                      >
-                        {team?.status}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Professional Details
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Department</span>
+                      <span className="text-right font-medium">
+                        {user?.department || "N/A"}
                       </span>
                     </div>
-                  ))}
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Designation</span>
+                      <span className="text-right font-medium">
+                        {user?.designation || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Employee Code</span>
+                      <span className="text-right font-medium">
+                        {user?.employeeCode || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Joining Date</span>
+                      <span className="text-right font-medium">
+                        {user?.joiningDate || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Reporting Manager</span>
+                      <span className="text-right font-medium">
+                        {user?.reporting_manager || "N/A"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {filteredProjects[selectedProject].taskReports?.length > 0 && (
+                {/* Personal Information */}
+                <div className="border-t border-gray-200/70 pt-4">
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      style={{ color: "var(--primary-color-1)" }}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+                      />
+                    </svg>
+                    Personal Information
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Gender</span>
+                      <span className="text-right font-medium">
+                        {user?.gender || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Date of Birth</span>
+                      <span className="text-right font-medium">
+                        {user?.dob || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Blood Group</span>
+                      <span className="text-right font-medium">
+                        {user?.blood_group || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Emergency Contact</span>
+                      <span className="text-right font-medium">
+                        {user?.emergency_contact || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="border-t border-gray-200/70 pt-4">
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      style={{ color: "var(--primary-color-1)" }}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      />
+                    </svg>
+                    Contact Information
+                  </h2>
+                  <div className="space-y-2">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Email</span>
+                      <span className="text-right font-medium break-all">
+                        {user?.email || "Not provided"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Phone</span>
+                      <span className="text-right font-medium">
+                        {user?.phone || "Not provided"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-gray-500">Address</span>
+                      <span className="text-right font-medium">
+                        {user?.address || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {!isSuperAdmin && (
+                <div className="mt-6 grid grid-cols-1 gap-3">
+                  <Button
+                    sx={{
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                      fontWeight: 500,
+                      textTransform: "none",
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color-2)",
+                      },
+                    }}
+                    onClick={handleOpen}
+                  >
+                    Change password
+                  </Button>
+                  <Button
+                    sx={{
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                      fontWeight: 500,
+                      textTransform: "none",
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color-2)",
+                      },
+                    }}
+                    onClick={() => editUser && handleEditClick(editUser)}
+                    disabled={!editUser}
+                  >
+                    Edit profile
+                  </Button>
+                  <Button
+                    sx={{
+                      backgroundColor: "var(--primary-color-2)",
+                      color: "white",
+                      fontWeight: 500,
+                      textTransform: "none",
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color-1)",
+                      },
+                    }}
+                    onClick={() => router.push(`/tasks?userId=${userId}`)}
+                  >
+                    View tasks
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Right column */}
+            <div className="space-y-6">
+              {/* Projects section - cohesive card design */}
+              <div className="rounded-3xl border border-gray-200/60 bg-[var(--card-bg-color)] p-6 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                    Projects
+                  </h2>
+                  <TextField
+                    size="small"
+                    variant="outlined"
+                    fullWidth
+                    placeholder="Search by project title..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    InputProps={{
+                      startAdornment: (
+                        <GridSearchIcon
+                          sx={{ color: "var(--primary-color-1)", mr: 1 }}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      width: "260px",
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "var(--primary-color-1)",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "var(--primary-color-2)",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "var(--primary-color-2)",
+                        },
+                      },
+                      backgroundColor: "var(--card-bg-color)",
+                      borderRadius: "999px",
+                    }}
+                  />
+                </div>
+
+                {filteredProjects?.length > 0 ? (
                   <>
-                    <h4 className="text-lg font-semibold text-gray-700 mt-6 mb-3">Task Reports</h4>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {filteredProjects[selectedProject].taskReports.map((report, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition duration-200"
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        overflowX: "auto",
+                        py: 1,
+                      }}
+                    >
+                      {filteredProjects.map((project, index) => (
+                        <button
+                          key={project.id || index}
+                          onClick={() => setSelectedProject(index)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                            selectedProject === index
+                              ? "text-white shadow-sm"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                          style={
+                            selectedProject === index
+                              ? { backgroundColor: "var(--primary-color-1)" }
+                              : { backgroundColor: "transparent" }
+                          }
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-gray-800 font-medium">{report?.task_name || "Untitled Task"}</p>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                report?.status === "completed"
-                                  ? "bg-green-100 text-green-700"
-                                  : report?.status === "in_progress"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {report?.status}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 text-sm">{report?.description}</p>
-                          {report.remarks && (
-                            <p className="text-gray-500 text-sm mt-1">
-                              <span className="font-medium">Remarks:</span> {report?.remarks}
-                            </p>
-                          )}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-gray-600 text-sm">
-                            <p>
-                              <span className="font-medium">Start:</span>{" "}
-                              {new Date(report?.start_time).toLocaleString()}
-                            </p>
-                            <p>
-                              <span className="font-medium">End:</span>{" "}
-                              {new Date(report?.end_time).toLocaleString()}
-                            </p>
-                            <p>
-                              <span className="font-medium">ETA:</span>{" "}
-                              {new Date(report?.eta).toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
+                          {project?.title}
+                        </button>
                       ))}
+                    </Box>
+
+                    <div className="mt-4 rounded-2xl border border-gray-200/70 bg-white/70 p-5">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-[var(--text-color)]">
+                            {filteredProjects[selectedProject]?.title}
+                          </h3>
+                          <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                            {filteredProjects[selectedProject].description}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            filteredProjects[selectedProject].status ===
+                            "ACTIVE"
+                              ? "bg-green-50 text-green-700 border border-green-100"
+                              : "bg-gray-50 text-gray-700 border border-gray-200"
+                          }`}
+                        >
+                          {filteredProjects[selectedProject].status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-xs text-gray-600">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-gray-500">
+                            Start date
+                          </span>
+                          <span className="text-[var(--text-color)]">
+                            {new Date(
+                              filteredProjects[selectedProject].start_date
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-gray-500">
+                            End date
+                          </span>
+                          <span className="text-[var(--text-color)]">
+                            {new Date(
+                              filteredProjects[selectedProject].end_date
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold text-gray-500">
+                            Current phase
+                          </span>
+                          <span className="text-[var(--text-color)]">
+                            {filteredProjects[selectedProject].current_phase}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                        Team members
+                      </h4>
+                      <div className="space-y-2 max-h-[18rem] overflow-y-auto pr-1">
+                        {filteredProjects[selectedProject].teams
+                          ?.filter(
+                            (team) => team?.user && team.user?.first_name
+                          )
+                          .map((team, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-2"
+                            >
+                              <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary-color-1)]/10 text-xs font-semibold text-[var(--primary-color-1)]">
+                                {team?.user?.first_name.charAt(0)}
+                                {team?.user?.last_name.charAt(0)}
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-[var(--text-color)]">
+                                  {team?.user?.first_name}{" "}
+                                  {team?.user?.last_name}
+                                </p>
+                                <p className="text-[11px] text-gray-500">
+                                  {team?.user?.designation}
+                                </p>
+                              </div>
+                              <span
+                                className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                  team?.status === "WORKING"
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "bg-purple-50 text-purple-700"
+                                }`}
+                              >
+                                {team?.status}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+
+                      {filteredProjects[selectedProject].taskReports?.length >
+                        0 && (
+                        <>
+                          <h4 className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                            Task reports
+                          </h4>
+                          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                            {filteredProjects[selectedProject].taskReports.map(
+                              (report, idx) => (
+                                <div
+                                  key={idx}
+                                  className="rounded-xl border border-gray-200 bg-gray-50/60 px-3 py-3"
+                                >
+                                  <div className="mb-1 flex items-center justify-between">
+                                    <p className="text-xs font-medium text-[var(--text-color)]">
+                                      {report?.task_name || "Untitled Task"}
+                                    </p>
+                                    <span
+                                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                        report?.status === "completed"
+                                          ? "bg-green-50 text-green-700"
+                                          : report?.status === "in_progress"
+                                          ? "bg-yellow-50 text-yellow-700"
+                                          : "bg-red-50 text-red-700"
+                                      }`}
+                                    >
+                                      {report?.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-gray-600">
+                                    {report?.description}
+                                  </p>
+                                  {report.remarks && (
+                                    <p className="mt-1 text-[11px] text-gray-500">
+                                      <span className="font-semibold">
+                                        Remarks:
+                                      </span>{" "}
+                                      {report?.remarks}
+                                    </p>
+                                  )}
+                                  <div className="mt-2 grid grid-cols-1 gap-1 text-[11px] text-gray-600 md:grid-cols-3">
+                                    <p>
+                                      <span className="font-semibold">
+                                        Start:
+                                      </span>{" "}
+                                      {new Date(
+                                        report?.start_time
+                                      ).toLocaleString()}
+                                    </p>
+                                    <p>
+                                      <span className="font-semibold">
+                                        End:
+                                      </span>{" "}
+                                      {new Date(
+                                        report?.end_time
+                                      ).toLocaleString()}
+                                    </p>
+                                    <p>
+                                      <span className="font-semibold">
+                                        ETA:
+                                      </span>{" "}
+                                      {new Date(report?.eta).toLocaleString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-2">
+                    No projects available.
+                  </p>
                 )}
               </div>
-            </>
-          ) : (
-            <p className="text-gray-600">No projects available.</p>
-          )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    {editUser && (
-            <EditUserDialog
-              open={openDialog}
-              onClose={handleCloseDialog}
-              user={editUser}
-              roles={roles}
-              onUpdate={() => fetchUsers().then(setUsers).catch(console.error)}
-              profileEditMode={true}
-              currentUserPriority={ user?.role?.priority} 
-            />
-          )}
+
+      {editUser && (
+        <EditUserDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          user={editUser}
+          roles={roles}
+          onUpdate={() => fetchUsers().then(setUsers).catch(console.error)}
+          profileEditMode={true}
+          currentUserPriority={user?.role?.priority}
+        />
+      )}
       <SetPasswordDialog
         open={passDialogOpen}
         onClose={handleClose}
         onSubmit={handleSubmit}
       />
-        </>
+    </>
   );
 }

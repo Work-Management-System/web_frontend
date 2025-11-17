@@ -264,6 +264,15 @@ export default function PayrollDocuments() {
             variant="contained"
             startIcon={<UploadIcon />}
             onClick={() => setUploadDialogOpen(true)}
+            sx={{
+              backgroundColor: "var(--primary-color-1)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "var(--primary-color-1-hover)",
+              },
+              textTransform: "none",
+              fontWeight: 600,
+            }}
           >
             Upload Document
           </Button>
@@ -280,9 +289,30 @@ export default function PayrollDocuments() {
             value={users.find((u) => u.id === filterUserId) || null}
             onChange={(_, value) => setFilterUserId(value?.id || null)}
             renderInput={(params) => (
-              <TextField {...params} label="Filter by Employee" />
+              <TextField
+                {...params}
+                label="Filter by Employee"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "&:hover fieldset": {
+                      borderColor: "var(--primary-color-1)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "var(--primary-color-1)",
+                    },
+                  },
+                }}
+              />
             )}
-            sx={{ maxWidth: 400 }}
+            sx={{
+              maxWidth: 400,
+              "& .MuiAutocomplete-option[aria-selected='true']": {
+                backgroundColor: "rgba(7, 152, 189, 0.08)",
+              },
+              "& .MuiAutocomplete-option:hover": {
+                backgroundColor: "rgba(7, 152, 189, 0.04)",
+              },
+            }}
           />
         </Box>
       )}
@@ -355,16 +385,26 @@ export default function PayrollDocuments() {
                     <IconButton
                       size="small"
                       onClick={() => handleView(doc)}
-                      color="primary"
                       title="View Document"
+                      sx={{
+                        color: "var(--primary-color-1)",
+                        "&:hover": {
+                          backgroundColor: "rgba(7, 152, 189, 0.08)",
+                        },
+                      }}
                     >
                       <VisibilityIcon />
                     </IconButton>
                     <IconButton
                       size="small"
                       onClick={() => handleDownload(doc)}
-                      color="primary"
                       title="Download Document"
+                      sx={{
+                        color: "var(--primary-color-1)",
+                        "&:hover": {
+                          backgroundColor: "rgba(7, 152, 189, 0.08)",
+                        },
+                      }}
                     >
                       <DownloadIcon />
                     </IconButton>
@@ -373,8 +413,13 @@ export default function PayrollDocuments() {
                       <IconButton
                         size="small"
                         onClick={() => handleDelete(doc.id)}
-                        color="error"
                         title="Delete Document"
+                        sx={{
+                          color: "#ef4444",
+                          "&:hover": {
+                            backgroundColor: "rgba(239, 68, 68, 0.08)",
+                          },
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -457,11 +502,32 @@ export default function PayrollDocuments() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setUploadDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => setUploadDialogOpen(false)}
+            sx={{
+              color: "var(--primary-color-1)",
+              textTransform: "none",
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             onClick={handleUpload}
             variant="contained"
             disabled={uploading || !selectedUser || !file}
+            sx={{
+              backgroundColor: "var(--primary-color-1)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "var(--primary-color-1-hover)",
+              },
+              "&:disabled": {
+                backgroundColor: "rgba(0, 0, 0, 0.12)",
+                color: "rgba(0, 0, 0, 0.26)",
+              },
+              textTransform: "none",
+              fontWeight: 600,
+            }}
           >
             {uploading ? <CircularProgress size={20} /> : "Upload"}
           </Button>
@@ -559,11 +625,28 @@ export default function PayrollDocuments() {
             <Button
               startIcon={<DownloadIcon />}
               onClick={() => handleDownload(selectedDocument)}
+              sx={{
+                backgroundColor: "var(--primary-color-1)",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "var(--primary-color-1-hover)",
+                },
+                textTransform: "none",
+                fontWeight: 600,
+              }}
             >
               Download
             </Button>
           )}
-          <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+          <Button
+            onClick={() => setViewDialogOpen(false)}
+            sx={{
+              color: "var(--primary-color-1)",
+              textTransform: "none",
+            }}
+          >
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -37,6 +37,9 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Switch,
+  FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import {
   AccessTime,
@@ -55,6 +58,8 @@ import {
   Add,
   ArrowDownward,
   ArrowUpward,
+  Restaurant,
+  Coffee,
 } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -144,6 +149,23 @@ const Attendance = () => {
   const [newLeaveDate, setNewLeaveDate] = useState<Date | null>(null);
   const [newLeaveReason, setNewLeaveReason] = useState("");
   const [newLeaveType, setNewLeaveType] = useState("HOLIDAY");
+  const [lunchSettings, setLunchSettings] = useState<{
+    defaultStartTime: string;
+    defaultDurationMinutes: number;
+    autoStart: boolean;
+    autoEnd: boolean;
+  } | null>(null);
+  const [weekendSettings, setWeekendSettings] = useState<{
+    saturdayIsOffDay: boolean;
+    sundayIsOffDay: boolean;
+  } | null>(null);
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocations, setSelectedLocations] = useState<{
+    clockInLocation: string | null;
+    clockOutLocation: string | null;
+    hasMultipleLocations: boolean;
+  } | null>(null);
 
   const axiosInstance = createAxiosInstance();
   const user = useAppselector((state) => state.auth.value);
@@ -154,6 +176,8 @@ const Attendance = () => {
     fetchCurrentStatus();
     fetchMonthlyAttendance();
     fetchLeaveDays();
+    fetchLunchSettings();
+    fetchWeekendSettings();
     // Initial fetch for today's attendance (selectedDayView is initialized to today)
     fetchDayAttendance(selectedDayView);
 
@@ -162,7 +186,21 @@ const Attendance = () => {
       fetchCurrentStatus();
     }, 30000);
 
-    return () => clearInterval(statusInterval);
+    // Set up auto-lunch processing (every 30 seconds)
+    const autoLunchInterval = setInterval(async () => {
+      try {
+        await axiosInstance.post("/attendance/auto-lunch/process");
+        // Refresh status after processing
+        fetchCurrentStatus();
+      } catch (error) {
+        // Silently fail - auto-lunch is optional
+      }
+    }, 30000);
+
+    return () => {
+      clearInterval(statusInterval);
+      clearInterval(autoLunchInterval);
+    };
   }, []);
 
   useEffect(() => {
@@ -188,6 +226,13 @@ const Attendance = () => {
 
   const fetchCurrentStatus = async () => {
     try {
+      // Process auto-lunch first (silently, don't show errors)
+      try {
+        await axiosInstance.post("/attendance/auto-lunch/process");
+      } catch (error) {
+        // Silently fail - auto-lunch is optional
+      }
+
       // Don't set loading for status check to avoid UI flicker
       const response = await axiosInstance.get("/attendance/status");
       console.log("Current status response:", response.data);
@@ -264,6 +309,48 @@ const Attendance = () => {
     }
   };
 
+  const fetchLunchSettings = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await axiosInstance.get("/attendance/lunch-settings");
+      const settings = response.data.data || {
+        defaultStartTime: '12:00',
+        defaultDurationMinutes: 60,
+        autoStart: false,
+        autoEnd: false,
+      };
+      setLunchSettings(settings);
+    } catch (error) {
+      console.error("Error fetching lunch settings:", error);
+      // Set defaults if fetch fails
+      setLunchSettings({
+        defaultStartTime: '12:00',
+        defaultDurationMinutes: 60,
+        autoStart: false,
+        autoEnd: false,
+      });
+    }
+  };
+
+  const fetchWeekendSettings = async () => {
+    if (!isAdmin) return;
+    try {
+      const response = await axiosInstance.get("/attendance/weekend-settings");
+      const settings = response.data.data || {
+        saturdayIsOffDay: true,
+        sundayIsOffDay: true,
+      };
+      setWeekendSettings(settings);
+    } catch (error) {
+      console.error("Error fetching weekend settings:", error);
+      // Set defaults if fetch fails
+      setWeekendSettings({
+        saturdayIsOffDay: true,
+        sundayIsOffDay: true,
+      });
+    }
+  };
+
   const getCurrentLocation = (): Promise<GeolocationCoordinates> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -284,7 +371,7 @@ const Attendance = () => {
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000,
           maximumAge: 0,
         }
       );
@@ -576,28 +663,121 @@ const Attendance = () => {
             </Box>
 
             {/* Quick Action Buttons in Header */}
-            <Box display="flex" gap={1}>
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<PlayArrow />}
-                onClick={() => openDialog("clockIn")}
-                size="medium"
-                disabled={currentStatus?.status === "CLOCKED_IN"}
-              >
-                Clock In
-              </Button>
-
-              {/* Show Clock Out if there's an active clock-in */}
-              {currentStatus?.status === "CLOCKED_IN" && (
+            <Box display="flex" gap={1} flexWrap="wrap">
+              {/* Clock In - Show if not clocked in OR if clocked out (allow multiple sessions) */}
+              {(currentStatus?.status === "NOT_CLOCKED_IN" ||
+                currentStatus?.status === "CLOCKED_OUT") && (
                 <Button
                   variant="contained"
-                  color="error"
+                  sx={{
+                    backgroundColor: "var(--primary-color-1)",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-1-hover)",
+                    },
+                  }}
+                  startIcon={<PlayArrow />}
+                  onClick={() => openDialog("clockIn")}
+                  size="medium"
+                >
+                  Clock In
+                </Button>
+              )}
+
+              {/* Clock Out - Show if clocked in, on break, or on lunch */}
+              {(currentStatus?.status === "CLOCKED_IN" ||
+                currentStatus?.status === "BREAK" ||
+                currentStatus?.status === "LUNCH") && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "var(--primary-color-2)",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#e07b00",
+                    },
+                  }}
                   startIcon={<Stop />}
                   onClick={() => openDialog("clockOut")}
                   size="medium"
                 >
                   Clock Out
+                </Button>
+              )}
+
+              {/* Start Break - Only show if clocked in */}
+              {currentStatus?.status === "CLOCKED_IN" && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#f59e0b",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#d97706",
+                    },
+                  }}
+                  startIcon={<Pause />}
+                  onClick={() => openDialog("break")}
+                  size="medium"
+                >
+                  Start Break
+                </Button>
+              )}
+
+              {/* Start Lunch - Only show if clocked in */}
+              {currentStatus?.status === "CLOCKED_IN" && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#2563eb",
+                    },
+                  }}
+                  startIcon={<Pause />}
+                  onClick={() => openDialog("lunch")}
+                  size="medium"
+                >
+                  Start Lunch
+                </Button>
+              )}
+
+              {/* End Break - Only show if on break */}
+              {currentStatus?.status === "BREAK" && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#00c292",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#00a67e",
+                    },
+                  }}
+                  startIcon={<PlayCircleOutline />}
+                  onClick={() => openDialog("endBreak")}
+                  size="medium"
+                >
+                  End Break
+                </Button>
+              )}
+
+              {/* End Lunch - Only show if on lunch */}
+              {currentStatus?.status === "LUNCH" && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#00c292",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#00a67e",
+                    },
+                  }}
+                  startIcon={<PlayCircleOutline />}
+                  onClick={() => openDialog("endLunch")}
+                  size="medium"
+                >
+                  End Lunch
                 </Button>
               )}
 
@@ -626,11 +806,36 @@ const Attendance = () => {
         <Tabs
           value={activeTab}
           onChange={(e, newValue) => setActiveTab(newValue)}
-          sx={{ mb: 3 }}
+          sx={{
+            mb: 3,
+            "& .MuiTab-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              minHeight: 48,
+              px: 3,
+              color: "rgba(0, 0, 0, 0.6)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                color: "var(--primary-color-1)",
+                backgroundColor: "rgba(7, 152, 189, 0.04)",
+                borderRadius: "8px 8px 0 0",
+              },
+            },
+            "& .Mui-selected": {
+              color: "var(--primary-color-1) !important",
+              fontWeight: 700,
+            },
+            "& .MuiTabs-indicator": {
+              backgroundColor: "var(--primary-color-1)",
+              height: 3,
+              borderRadius: "3px 3px 0 0",
+            },
+          }}
         >
           <Tab label="Team Status" />
           <Tab label="Calendar View" />
-          {isAdmin && <Tab label="Settings" />}
+          <Tab label="Settings" />
         </Tabs>
 
         {activeTab === 0 && (
@@ -854,7 +1059,14 @@ const Attendance = () => {
                   const isCurrentMonth = isSameMonth(day, selectedMonth);
                   const isCurrentDay = isToday(day);
                   const dayOfWeek = getDay(day); // 0 = Sunday, 6 = Saturday
-                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                  
+                  // Check if this day is configured as an off day based on weekend settings
+                  const isSaturday = dayOfWeek === 6;
+                  const isSunday = dayOfWeek === 0;
+                  const isSaturdayOffDay = weekendSettings?.saturdayIsOffDay ?? true;
+                  const isSundayOffDay = weekendSettings?.sundayIsOffDay ?? true;
+                  const isOffDay = (isSaturday && isSaturdayOffDay) || (isSunday && isSundayOffDay);
+                  
                   const isLeaveDay = leaveDays.some((leave) =>
                     isSameDay(parseISO(leave.leave_date), day)
                   );
@@ -880,14 +1092,14 @@ const Attendance = () => {
                           ? "grey.50"
                           : isLeaveDay
                           ? "error.light"
-                          : isWeekend
+                          : isOffDay
                           ? "grey.100"
                           : "background.paper",
                         position: "relative",
                         cursor: isCurrentMonth ? "pointer" : "default",
                         display: "flex",
                         flexDirection: "column",
-                        opacity: isWeekend && !isLeaveDay ? 0.6 : 1,
+                        opacity: isOffDay && !isLeaveDay ? 0.6 : 1,
                         "&:hover": {
                           bgcolor: isCurrentMonth ? "action.hover" : undefined,
                         },
@@ -919,17 +1131,46 @@ const Attendance = () => {
                               ? "primary.main"
                               : isLeaveDay
                               ? "error.main"
+                              : isOffDay
+                              ? "text.disabled"
                               : "text.secondary",
-                            fontWeight: isCurrentDay ? 700 : 400,
+                            fontWeight: isCurrentDay ? 700 : isOffDay ? 400 : 400,
                           }}
                         >
                           {format(day, "d")}
                         </Typography>
-                        {isLeaveDay && (
-                          <EventBusy
-                            sx={{ fontSize: "0.75rem", color: "error.main" }}
-                          />
-                        )}
+                        <Box display="flex" alignItems="center" gap={0.3}>
+                          {/* Break Indicator */}
+                          {attendance &&
+                            attendance.break_start_time &&
+                            isCurrentMonth && (
+                              <Coffee
+                                sx={{
+                                  fontSize: "0.7rem",
+                                  color: "#f59e0b",
+                                }}
+                                titleAccess="Break taken"
+                              />
+                            )}
+                          {/* Lunch Indicator */}
+                          {attendance &&
+                            attendance.lunch_start_time &&
+                            isCurrentMonth && (
+                              <Restaurant
+                                sx={{
+                                  fontSize: "0.7rem",
+                                  color: "#3b82f6",
+                                }}
+                                titleAccess="Lunch taken"
+                              />
+                            )}
+                          {/* Leave Day Indicator */}
+                          {isLeaveDay && (
+                            <EventBusy
+                              sx={{ fontSize: "0.75rem", color: "error.main" }}
+                            />
+                          )}
+                        </Box>
                       </Box>
 
                       {/* Leave Day Indicator */}
@@ -1074,36 +1315,46 @@ const Attendance = () => {
           </Box>
         )}
 
-        {activeTab === 2 && isAdmin && (
+        {activeTab === 2 && (
           <Card>
             <CardContent>
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={3}
-              >
-                <Typography variant="h6" fontWeight="bold">
-                  Calendar Settings
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => {
-                    setNewLeaveDate(new Date());
-                    setNewLeaveReason("");
-                    setNewLeaveType("HOLIDAY");
-                    setLeaveDialogOpen(true);
-                  }}
-                >
-                  Add Leave Day
-                </Button>
-              </Box>
+              {/* Admin-only: Leave Days Management */}
+              {isAdmin && (
+                <>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={3}
+                  >
+                    <Typography variant="h6" fontWeight="bold">
+                      Calendar Settings
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "var(--primary-color-1)",
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "var(--primary-color-1-hover)",
+                        },
+                      }}
+                      startIcon={<Add />}
+                      onClick={() => {
+                        setNewLeaveDate(new Date());
+                        setNewLeaveReason("");
+                        setNewLeaveType("HOLIDAY");
+                        setLeaveDialogOpen(true);
+                      }}
+                    >
+                      Add Leave Day
+                    </Button>
+                  </Box>
 
-              <Box mb={3}>
-                <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  Leave Days Management
-                </Typography>
+                  <Box mb={3}>
+                    <Typography variant="subtitle1" fontWeight={600} mb={2}>
+                      Leave Days Management
+                    </Typography>
                 <Typography variant="body2" color="text.secondary" mb={2}>
                   Manage holidays and leave days that will be displayed on the
                   calendar.
@@ -1208,9 +1459,634 @@ const Attendance = () => {
                   </Table>
                 </TableContainer>
               </Box>
+                </>
+              )}
+
+              {/* Admin-only: Company-Wide Lunch Settings */}
+              {isAdmin && (
+                <Box mb={3}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <Restaurant sx={{ color: "var(--primary-color-1)", fontSize: "1.5rem" }} />
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      Company-Wide Lunch Settings
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Configure the generic lunch time that applies to all employees. This is the company-wide lunch schedule.
+                  </Typography>
+
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      bgcolor: "rgba(7, 152, 189, 0.02)",
+                      borderColor: "rgba(7, 152, 189, 0.2)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Stack spacing={3}>
+                      <Alert 
+                        severity="info" 
+                        sx={{ 
+                          bgcolor: "rgba(7, 152, 189, 0.08)",
+                          border: "1px solid rgba(7, 152, 189, 0.2)",
+                          "& .MuiAlert-icon": {
+                            color: "var(--primary-color-1)",
+                          },
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={600} mb={0.5}>
+                          Company Default Lunch Time
+                        </Typography>
+                        <Typography variant="caption">
+                          This lunch time will be applied to all employees. 
+                          The system will automatically start and end lunch based on these settings if auto-start/end is enabled.
+                        </Typography>
+                      </Alert>
+
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} mb={1} sx={{ color: "var(--primary-color-1)" }}>
+                          Generic Lunch Start Time (All Employees)
+                        </Typography>
+                        <TextField
+                          label="Company Lunch Start Time"
+                          type="time"
+                          value={lunchSettings?.defaultStartTime || '12:00'}
+                          onChange={(e) =>
+                            setLunchSettings({
+                              defaultStartTime: e.target.value,
+                              defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
+                              autoStart: lunchSettings?.autoStart || false,
+                              autoEnd: lunchSettings?.autoEnd || false,
+                            })
+                          }
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                          helperText="This time applies to all employees by default"
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "&:hover fieldset": {
+                                borderColor: "var(--primary-color-1)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "var(--primary-color-1)",
+                              },
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} mb={1} sx={{ color: "var(--primary-color-1)" }}>
+                          Generic Lunch Duration (All Employees)
+                        </Typography>
+                        <TextField
+                          label="Company Lunch Duration (minutes)"
+                          type="number"
+                          value={lunchSettings?.defaultDurationMinutes || 60}
+                          onChange={(e) =>
+                            setLunchSettings({
+                              defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
+                              defaultDurationMinutes: parseInt(e.target.value) || 60,
+                              autoStart: lunchSettings?.autoStart || false,
+                              autoEnd: lunchSettings?.autoEnd || false,
+                            })
+                          }
+                          fullWidth
+                          inputProps={{ min: 15, max: 180 }}
+                          helperText="Duration in minutes (15-180 minutes)"
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "&:hover fieldset": {
+                                borderColor: "var(--primary-color-1)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "var(--primary-color-1)",
+                              },
+                            },
+                          }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} mb={1.5} sx={{ color: "var(--primary-color-1)" }}>
+                          Automation Settings (Applies to All Employees)
+                        </Typography>
+                        <Stack spacing={1.5}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={lunchSettings?.autoStart || false}
+                                onChange={(e) =>
+                                  setLunchSettings({
+                                    defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
+                                    defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
+                                    autoStart: e.target.checked,
+                                    autoEnd: lunchSettings?.autoEnd || false,
+                                  })
+                                }
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "var(--primary-color-1)",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                    backgroundColor: "var(--primary-color-1)",
+                                  },
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  Auto-start lunch at company default time
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Automatically start lunch for all employees at the configured time
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={lunchSettings?.autoEnd || false}
+                                onChange={(e) =>
+                                  setLunchSettings({
+                                    defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
+                                    defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
+                                    autoStart: lunchSettings?.autoStart || false,
+                                    autoEnd: e.target.checked,
+                                  })
+                                }
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "var(--primary-color-1)",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                    backgroundColor: "var(--primary-color-1)",
+                                  },
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  Auto-end lunch after company duration
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Automatically end lunch for all employees after the configured duration
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </Stack>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        onClick={async () => {
+                          if (!lunchSettings) {
+                            toast.error("Please wait for settings to load");
+                            return;
+                          }
+                          try {
+                            await axiosInstance.post("/attendance/lunch-settings", lunchSettings);
+                            toast.success("Company-wide lunch settings saved successfully");
+                            fetchLunchSettings();
+                          } catch (error: any) {
+                            toast.error(
+                              error.response?.data?.message || "Error updating lunch settings"
+                            );
+                          }
+                        }}
+                        disabled={!lunchSettings}
+                        sx={{
+                          backgroundColor: "var(--primary-color-1)",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "var(--primary-color-1-hover)",
+                          },
+                          "&:disabled": {
+                            backgroundColor: "rgba(0, 0, 0, 0.12)",
+                            color: "rgba(0, 0, 0, 0.26)",
+                          },
+                          textTransform: "none",
+                          fontWeight: 600,
+                          px: 3,
+                          py: 1.5,
+                        }}
+                      >
+                        Save Company-Wide Lunch Settings
+                      </Button>
+                    </Stack>
+                  </Card>
+                </Box>
+              )}
+
+              {/* Admin-only: Weekend Settings */}
+              {isAdmin && (
+                <Box mb={3}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                    <CalendarToday sx={{ color: "var(--primary-color-1)", fontSize: "1.5rem" }} />
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      Weekend Configuration
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Configure whether weekends (Saturday and Sunday) are considered off days for attendance and leave calculations.
+                  </Typography>
+
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      bgcolor: "rgba(7, 152, 189, 0.02)",
+                      borderColor: "rgba(7, 152, 189, 0.2)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Stack spacing={3}>
+                      <Alert 
+                        severity="info" 
+                        sx={{ 
+                          bgcolor: "rgba(7, 152, 189, 0.08)",
+                          border: "1px solid rgba(7, 152, 189, 0.2)",
+                          "& .MuiAlert-icon": {
+                            color: "var(--primary-color-1)",
+                          },
+                        }}
+                      >
+                        <Typography variant="body2" fontWeight={600} mb={0.5}>
+                          Weekend Off Days Configuration
+                        </Typography>
+                        <Typography variant="caption">
+                          When enabled, weekends will be excluded from leave day calculations and marked as non-working days in the calendar. 
+                          This affects how leave days are calculated for all employees.
+                        </Typography>
+                      </Alert>
+
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} mb={1.5} sx={{ color: "var(--primary-color-1)" }}>
+                          Weekend Off Days (Applies to All Employees)
+                        </Typography>
+                        <Stack spacing={1.5}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={weekendSettings?.saturdayIsOffDay ?? true}
+                                onChange={(e) =>
+                                  setWeekendSettings({
+                                    saturdayIsOffDay: e.target.checked,
+                                    sundayIsOffDay: weekendSettings?.sundayIsOffDay ?? true,
+                                  })
+                                }
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "var(--primary-color-1)",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                    backgroundColor: "var(--primary-color-1)",
+                                  },
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  Saturday is an off day
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {weekendSettings?.saturdayIsOffDay
+                                    ? "Saturday will be excluded from leave calculations"
+                                    : "Saturday will be counted as a working day"}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={weekendSettings?.sundayIsOffDay ?? true}
+                                onChange={(e) =>
+                                  setWeekendSettings({
+                                    saturdayIsOffDay: weekendSettings?.saturdayIsOffDay ?? true,
+                                    sundayIsOffDay: e.target.checked,
+                                  })
+                                }
+                                sx={{
+                                  "& .MuiSwitch-switchBase.Mui-checked": {
+                                    color: "var(--primary-color-1)",
+                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                                    backgroundColor: "var(--primary-color-1)",
+                                  },
+                                }}
+                              />
+                            }
+                            label={
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  Sunday is an off day
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {weekendSettings?.sundayIsOffDay
+                                    ? "Sunday will be excluded from leave calculations"
+                                    : "Sunday will be counted as a working day"}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </Stack>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        onClick={async () => {
+                          if (!weekendSettings) {
+                            toast.error("Please wait for settings to load");
+                            return;
+                          }
+                          try {
+                            await axiosInstance.post("/attendance/weekend-settings", weekendSettings);
+                            toast.success("Weekend settings saved successfully");
+                            await fetchWeekendSettings();
+                            // Refresh calendar to reflect changes
+                            if (activeTab === 1) {
+                              fetchLeaveDays();
+                            }
+                          } catch (error: any) {
+                            toast.error(
+                              error.response?.data?.message || "Error updating weekend settings"
+                            );
+                          }
+                        }}
+                        disabled={!weekendSettings}
+                        sx={{
+                          backgroundColor: "var(--primary-color-1)",
+                          color: "white",
+                          "&:hover": {
+                            backgroundColor: "var(--primary-color-1-hover)",
+                          },
+                          "&:disabled": {
+                            backgroundColor: "rgba(0, 0, 0, 0.12)",
+                            color: "rgba(0, 0, 0, 0.26)",
+                          },
+                          textTransform: "none",
+                          fontWeight: 600,
+                          px: 3,
+                          py: 1.5,
+                        }}
+                      >
+                        Save Weekend Settings
+                      </Button>
+                    </Stack>
+                  </Card>
+                </Box>
+              )}
             </CardContent>
           </Card>
         )}
+
+        {/* Location Dialog */}
+        <Dialog
+          open={locationDialogOpen}
+          onClose={() => setLocationDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            <Box display="flex" alignItems="center" gap={1}>
+              <LocationOn sx={{ color: "var(--primary-color-1)" }} />
+              <Typography variant="h6">Tracked Location</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            {selectedLocation && selectedLocations && (
+              <Box sx={{ mt: 2 }}>
+                {selectedLocations.hasMultipleLocations ? (
+                  <>
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                      Tracked locations from clock in and clock out:
+                    </Typography>
+                    <Stack spacing={1.5} mb={2}>
+                      {selectedLocations.clockInLocation && (
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1,
+                            bgcolor: "rgba(52, 211, 153, 0.08)",
+                            border: "1px solid rgba(52, 211, 153, 0.2)",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary" mb={0.5}>
+                            Clock In Location:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: "monospace",
+                              wordBreak: "break-all",
+                              color: "#10b981",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {selectedLocations.clockInLocation}
+                          </Typography>
+                        </Box>
+                      )}
+                      {selectedLocations.clockOutLocation && (
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1,
+                            bgcolor: "rgba(248, 113, 113, 0.08)",
+                            border: "1px solid rgba(248, 113, 113, 0.2)",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary" mb={0.5}>
+                            Clock Out Location:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: "monospace",
+                              wordBreak: "break-all",
+                              color: "#ef4444",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {selectedLocations.clockOutLocation}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: "400px",
+                        borderRadius: 1,
+                        overflow: "hidden",
+                        border: "1px solid rgba(0, 0, 0, 0.12)",
+                      }}
+                    >
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps/dir/${selectedLocations.clockInLocation}/${selectedLocations.clockOutLocation}/@${selectedLocations.clockInLocation},13z/data=!4m2!4m1!3e0?output=embed`}
+                      />
+                    </Box>
+                    <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                      <Button
+                        variant="outlined"
+                        startIcon={<LocationOn />}
+                        onClick={() => {
+                          const googleMapsUrl = `https://www.google.com/maps/dir/${selectedLocations.clockInLocation}/${selectedLocations.clockOutLocation}`;
+                          window.open(googleMapsUrl, "_blank");
+                        }}
+                        sx={{
+                          borderColor: "var(--primary-color-1)",
+                          color: "var(--primary-color-1)",
+                          "&:hover": {
+                            borderColor: "var(--primary-color-2)",
+                            backgroundColor: "rgba(7, 152, 189, 0.08)",
+                          },
+                          textTransform: "none",
+                        }}
+                      >
+                        View Route in Google Maps
+                      </Button>
+                    </Box>
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                      Tracked location from clock in/out:
+                    </Typography>
+                    {selectedLocation.includes(",") ? (
+                      <>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 1,
+                            bgcolor: "rgba(7, 152, 189, 0.04)",
+                            border: "1px solid rgba(7, 152, 189, 0.1)",
+                            mb: 2,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: "monospace",
+                              wordBreak: "break-all",
+                              color: "var(--primary-color-1)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {selectedLocation}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: "400px",
+                            borderRadius: 1,
+                            overflow: "hidden",
+                            border: "1px solid rgba(0, 0, 0, 0.12)",
+                          }}
+                        >
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
+                            src={`https://www.google.com/maps?q=${selectedLocation}&output=embed&z=15&layer=c`}
+                          />
+                        </Box>
+                        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                          <Button
+                            variant="outlined"
+                            startIcon={<LocationOn />}
+                            onClick={() => {
+                              const [lat, lng] = selectedLocation.split(",");
+                              const googleMapsUrl = `https://www.google.com/maps/@${lat},${lng},15z?layer=c`;
+                              window.open(googleMapsUrl, "_blank");
+                            }}
+                            sx={{
+                              borderColor: "var(--primary-color-1)",
+                              color: "var(--primary-color-1)",
+                              "&:hover": {
+                                borderColor: "var(--primary-color-2)",
+                                backgroundColor: "rgba(7, 152, 189, 0.08)",
+                              },
+                              textTransform: "none",
+                            }}
+                          >
+                            Street View
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            startIcon={<LocationOn />}
+                            onClick={() => {
+                              const [lat, lng] = selectedLocation.split(",");
+                              const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+                              window.open(googleMapsUrl, "_blank");
+                            }}
+                            sx={{
+                              borderColor: "var(--primary-color-1)",
+                              color: "var(--primary-color-1)",
+                              "&:hover": {
+                                borderColor: "var(--primary-color-2)",
+                                backgroundColor: "rgba(7, 152, 189, 0.08)",
+                              },
+                              textTransform: "none",
+                            }}
+                          >
+                            Open in Google Maps
+                          </Button>
+                        </Box>
+                      </>
+                    ) : (
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 1,
+                          bgcolor: "rgba(7, 152, 189, 0.04)",
+                          border: "1px solid rgba(7, 152, 189, 0.1)",
+                        }}
+                      >
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontFamily: "monospace",
+                            wordBreak: "break-all",
+                            color: "var(--primary-color-1)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {selectedLocation}
+                        </Typography>
+                      </Box>
+                    )}
+                  </>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setLocationDialogOpen(false)}
+              sx={{
+                color: "var(--primary-color-1)",
+                textTransform: "none",
+              }}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Leave Day Dialog */}
         <Dialog
@@ -1398,6 +2274,10 @@ const Attendance = () => {
                 bgcolor:
                   currentStatus.status === "CLOCKED_IN"
                     ? "success.light"
+                    : currentStatus.status === "BREAK"
+                    ? "warning.light"
+                    : currentStatus.status === "LUNCH"
+                    ? "info.light"
                     : "grey.200",
               }}
             >
@@ -1411,18 +2291,65 @@ const Attendance = () => {
                   />
                 </Box>
                 {currentStatus.attendance && (
-                  <Typography variant="caption" color="text.secondary">
-                    Last:{" "}
-                    {format(
-                      parseISO(currentStatus.attendance.clock_in_time),
-                      "hh:mm a"
-                    )}
-                    {currentStatus.attendance.clock_out_time &&
-                      ` - ${format(
-                        parseISO(currentStatus.attendance.clock_out_time),
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" color="text.secondary">
+                      Clock In:{" "}
+                      {format(
+                        parseISO(currentStatus.attendance.clock_in_time),
                         "hh:mm a"
-                      )}`}
-                  </Typography>
+                      )}
+                      {currentStatus.attendance.clock_out_time &&
+                        ` - Clock Out: ${format(
+                          parseISO(currentStatus.attendance.clock_out_time),
+                          "hh:mm a"
+                        )}`}
+                    </Typography>
+                    {currentStatus.attendance.break_start_time && (
+                      <Typography variant="caption" color="text.secondary">
+                        Break:{" "}
+                        {format(
+                          parseISO(currentStatus.attendance.break_start_time),
+                          "hh:mm a"
+                        )}
+                        {currentStatus.attendance.break_end_time
+                          ? ` - ${format(
+                              parseISO(
+                                currentStatus.attendance.break_end_time
+                              ),
+                              "hh:mm a"
+                            )}`
+                          : " (In Progress)"}
+                      </Typography>
+                    )}
+                    {currentStatus.attendance.lunch_start_time && (
+                      <Typography variant="caption" color="text.secondary">
+                        Lunch:{" "}
+                        {format(
+                          parseISO(currentStatus.attendance.lunch_start_time),
+                          "hh:mm a"
+                        )}
+                        {currentStatus.attendance.lunch_end_time
+                          ? ` - ${format(
+                              parseISO(
+                                currentStatus.attendance.lunch_end_time
+                              ),
+                              "hh:mm a"
+                            )}`
+                          : " (In Progress)"}
+                      </Typography>
+                    )}
+                    {currentStatus.attendance.total_hours != null &&
+                      currentStatus.attendance.clock_out_time && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          fontWeight={600}
+                        >
+                          Total Hours:{" "}
+                          {Number(currentStatus.attendance.total_hours).toFixed(2)}h
+                        </Typography>
+                      )}
+                  </Stack>
                 )}
               </CardContent>
             </Card>
@@ -1479,19 +2406,90 @@ const Attendance = () => {
                       previousDateLabel = dateLabel;
                     }
 
+                    // Get locations for this date from all records
+                    const getLocationsForDate = (dateLabel: string) => {
+                      const recordsForDate = dayAttendance.filter((r) => {
+                        const rDate = format(parseISO(r.clock_in_time), "EEE, MMM dd");
+                        return rDate === dateLabel;
+                      });
+                      
+                      let clockInLocation: string | null = null;
+                      let clockOutLocation: string | null = null;
+                      let clockInTime: Date | null = null;
+                      let clockOutTime: Date | null = null;
+                      
+                      recordsForDate.forEach((r) => {
+                        if (r.location) {
+                          const clockIn = parseISO(r.clock_in_time);
+                          const clockOut = r.clock_out_time ? parseISO(r.clock_out_time) : null;
+                          
+                          // Get clock in location (first one or most recent)
+                          if (!clockInLocation || (clockInTime && clockIn > clockInTime)) {
+                            clockInLocation = r.location;
+                            clockInTime = clockIn;
+                          }
+                          
+                          // Get clock out location (most recent)
+                          if (clockOut) {
+                            if (!clockOutLocation || (clockOutTime && clockOut > clockOutTime)) {
+                              clockOutLocation = r.location;
+                              clockOutTime = clockOut;
+                            }
+                          }
+                        }
+                      });
+                      
+                      return {
+                        clockInLocation,
+                        clockOutLocation,
+                        hasMultipleLocations: clockInLocation && clockOutLocation && clockInLocation !== clockOutLocation,
+                      };
+                    };
+
                     return (
                       <Box key={record.id}>
                         {isNewDate && (
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontWeight: 600,
-                              color: "text.primary",
-                              mt: isFirstDate ? 0 : 1,
-                            }}
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{ mt: isFirstDate ? 0 : 1 }}
                           >
-                            {dateLabel}
-                          </Typography>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontWeight: 600,
+                                color: "text.primary",
+                              }}
+                            >
+                              {dateLabel}
+                            </Typography>
+                            {(() => {
+                              const locations = getLocationsForDate(dateLabel);
+                              const hasLocation = locations.clockInLocation || locations.clockOutLocation;
+                              return hasLocation ? (
+                                <Tooltip title="View tracked location">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      setSelectedLocations(locations);
+                                      setSelectedLocation(locations.clockOutLocation || locations.clockInLocation);
+                                      setLocationDialogOpen(true);
+                                    }}
+                                    sx={{
+                                      p: 0.5,
+                                      color: "var(--primary-color-1)",
+                                      "&:hover": {
+                                        backgroundColor: "rgba(7, 152, 189, 0.08)",
+                                      },
+                                    }}
+                                  >
+                                    <LocationOn fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : null;
+                            })()}
+                          </Box>
                         )}
 
                         <Box

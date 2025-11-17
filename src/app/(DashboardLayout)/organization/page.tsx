@@ -13,7 +13,32 @@ export default function OrganizationPage() {
       <Tabs
         value={activeTab}
         onChange={(e, newValue) => setActiveTab(newValue)}
-        sx={{ mb: 3 }}
+        sx={{
+          mb: 3,
+          "& .MuiTab-root": {
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            minHeight: 48,
+            px: 3,
+            color: "rgba(0, 0, 0, 0.6)",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              color: "var(--primary-color-1)",
+              backgroundColor: "rgba(7, 152, 189, 0.04)",
+              borderRadius: "8px 8px 0 0",
+            },
+          },
+          "& .Mui-selected": {
+            color: "var(--primary-color-1) !important",
+            fontWeight: 700,
+          },
+          "& .MuiTabs-indicator": {
+            backgroundColor: "var(--primary-color-1)",
+            height: 3,
+            borderRadius: "3px 3px 0 0",
+          },
+        }}
       >
         <Tab label="Employee Documents" />
         <Tab label="Payroll Documents" />

@@ -17,6 +17,19 @@ import ProjectOverview from './ProjectOverview';
 import TenantDetailsCards from './TenantDetailsCards';
 import SortIcon from '@mui/icons-material/Sort';
 import { color } from 'framer-motion';
+import WelcomeBanner from './components/WelcomeBanner';
+import CategoryCards from './components/CategoryCards';
+import DashboardSidebar from './components/DashboardSidebar';
+import { Box as MuiBox, Grid } from '@mui/material';
+import GroupIcon from '@mui/icons-material/Group';
+import FolderIcon from '@mui/icons-material/Folder';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import CodeIcon from '@mui/icons-material/Code';
+import DesignServicesIcon from '@mui/icons-material/DesignServices';
+import ReportIcon from '@mui/icons-material/Report';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import BeachAccessIcon from '@mui/icons-material/BeachAccess';
+import toast from 'react-hot-toast';
 
 // Dynamically import react-apexcharts
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -104,6 +117,12 @@ export default function Dashboard() {
     const [chartKey, setChartKey] = useState(0); // Key to force chart re-render
     const [filteredReports, setFilteredReports] = useState<Report[]>([]);
     const [allUsers, setAllUsers] = useState<User[]>([]);
+    const [missedReportsCount, setMissedReportsCount] = useState<number>(0);
+    const [attendanceStatus, setAttendanceStatus] = useState<any>(null);
+    const [assignedProjectsCount, setAssignedProjectsCount] = useState<number>(0);
+    const [teamUsersCount, setTeamUsersCount] = useState<number>(0);
+    const [userTasksCount, setUserTasksCount] = useState<number>(0);
+    const [leaveBalanceCount, setLeaveBalanceCount] = useState<number>(0);
     const router = useRouter();
     const isUUID = (str: string): boolean =>
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -173,10 +192,125 @@ export default function Dashboard() {
         }
     };
 
+    const fetchMissedReportsCount = async () => {
+        try {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const dateStr = yesterday.toISOString().split('T')[0];
+            
+            let apiUrl = '';
+            if (userPriority === 1) {
+                // Admin: get all missed reports
+                apiUrl = `work-logs/missed-reports`;
+            } else if (userPriority === 2) {
+                // Manager: get missed reports for their team
+                apiUrl = `work-logs/missed-reports`;
+            } else {
+                // Team Lead or User: get missed reports for manager
+                apiUrl = `work-logs/missed-reports-for-manager/${user?.id}`;
+            }
+            
+            const response = await axiosInstance.get(apiUrl, {
+                params: { date: dateStr }
+            });
+            
+            // Count total missed reports (sum of all users' missed reports)
+            const count = Array.isArray(response.data) 
+                ? response.data.reduce((sum: number, user: any) => sum + (user.missedReports?.length || 0), 0)
+                : 0;
+            setMissedReportsCount(count);
+        } catch (error) {
+            console.error("Failed to fetch missed reports count:", error);
+            setMissedReportsCount(0);
+        }
+    };
+
+    const fetchAttendanceStatus = async () => {
+        try {
+            const response = await axiosInstance.get('/attendance/status');
+            if (response.data?.data) {
+                setAttendanceStatus(response.data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch attendance status:", error);
+            setAttendanceStatus(null);
+        }
+    };
+
+    const fetchAssignedProjectsCount = async () => {
+        try {
+            if (userPriority === 1) {
+                // Admin: get all projects
+                const response = await axiosInstance.get('/project-management/list');
+                setAssignedProjectsCount(response.data?.data?.length || 0);
+            } else {
+                // Manager/Employee: get assigned projects
+                const response = await axiosInstance.get(`/project-management/user-projects/${user?.id}`);
+                setAssignedProjectsCount(Array.isArray(response.data) ? response.data.length : (response.data?.data?.length || 0));
+            }
+        } catch (error) {
+            console.error("Failed to fetch assigned projects count:", error);
+            setAssignedProjectsCount(0);
+        }
+    };
+
+    const fetchTeamUsersCount = async () => {
+        try {
+            // For all roles, get total user count
+            const response = await axiosInstance.get('/user/list');
+            setTeamUsersCount(response.data?.data?.length || 0);
+        } catch (error) {
+            console.error("Failed to fetch team users count:", error);
+            setTeamUsersCount(0);
+        }
+    };
+
+    const handleClockInOut = async () => {
+        try {
+            if (!attendanceStatus) {
+                // Clock In
+                await axiosInstance.post('/attendance/clock-in', {});
+                toast.success('Clocked in successfully');
+            } else if (attendanceStatus.status === 'CLOCKED_IN' || attendanceStatus.status === 'ON_BREAK' || attendanceStatus.status === 'ON_LUNCH') {
+                // Clock Out
+                await axiosInstance.post('/attendance/clock-out', {});
+                toast.success('Clocked out successfully');
+            } else {
+                // Clock In
+                await axiosInstance.post('/attendance/clock-in', {});
+                toast.success('Clocked in successfully');
+            }
+            await fetchAttendanceStatus();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to clock in/out');
+        }
+    };
+
+    const fetchLeaveBalanceCount = async () => {
+        try {
+            const response = await axiosInstance.get('/leave-management/balances');
+            const balances = response.data?.data || [];
+            // Sum up all available leave balances
+            const totalBalance = balances.reduce((sum: number, balance: any) => {
+                return sum + (parseFloat(balance.balance) || 0);
+            }, 0);
+            setLeaveBalanceCount(Math.round(totalBalance));
+        } catch (error) {
+            console.error("Failed to fetch leave balance count:", error);
+            setLeaveBalanceCount(0);
+        }
+    };
+
     useEffect(() => {
         fetchAnalytics();
         fetchUsers();
         fetchTasks();
+        fetchMissedReportsCount();
+        fetchAttendanceStatus();
+        fetchAssignedProjectsCount();
+        fetchTeamUsersCount();
+        fetchLeaveBalanceCount();
     }, []);
 
     const fetchUsers = async () => {
@@ -231,12 +365,29 @@ export default function Dashboard() {
             }));
 
             setFilteredReports(mappedReports);
+            
+            // Calculate user tasks count based on role
+            if (userPriority === 1) {
+                // Admin: count all tasks not completed/testable
+                const adminTasksCount = mappedReports.filter(r => 
+                    !['completed', 'testable'].includes(r.status?.toLowerCase())
+                ).length;
+                setUserTasksCount(adminTasksCount);
+            } else {
+                // Manager/Employee: count only their tasks
+                const userTasks = mappedReports.filter(r => 
+                    r.current_user?.id === user?.id &&
+                    !['completed', 'testable'].includes(r.status?.toLowerCase())
+                );
+                setUserTasksCount(userTasks.length);
+            }
         } catch (error) {
             console.error("Failed to fetch tasks:", error);
             if (error.response?.status === 404) {
                 // toast.error("Tasks could not be loaded. Please check the server.");
             }
             setFilteredReports([]);
+            setUserTasksCount(0);
         }
     };
 
@@ -521,6 +672,76 @@ export default function Dashboard() {
         <div className="container mx-auto">
             {userPriority === 1 && (
                 <>
+                    {analytics && (
+                        <>
+                            {/* Welcome Banner */}
+                            <WelcomeBanner 
+                                newItemsCount={analytics?.worklogCountYesterday || 0}
+                                onReviewClick={() => router.push('/my-reports')}
+                            />
+
+                            {/* Category Cards */}
+                            <CategoryCards
+                                title="Quick Access"
+                                viewAllRoute="/dashboard"
+                                categories={[
+                                    {
+                                        name: userPriority === 1 ? 'Employees' : 'Team',
+                                        count: userPriority === 1 ? teamUsersCount : teamUsersCount,
+                                        icon: <GroupIcon />,
+                                        bgColor: 'var(--primary-color-1)',
+                                        route: userPriority === 4 ? '#' : '/users',
+                                        disabled: userPriority === 4
+                                    },
+                                    {
+                                        name: 'Projects',
+                                        count: assignedProjectsCount,
+                                        icon: <FolderIcon />,
+                                        bgColor: 'var(--primary-color-2)',
+                                        route: '/project-listing'
+                                    },
+                                    {
+                                        name: 'Tasks',
+                                        count: userTasksCount,
+                                        icon: <AssignmentIcon />,
+                                        bgColor: '#f44336',
+                                        route: '/tasks'
+                                    },
+                                    {
+                                        name: 'Reports',
+                                        count: missedReportsCount || 0,
+                                        icon: <ReportIcon />,
+                                        bgColor: '#4caf50',
+                                        route: '/my-reports'
+                                    },
+                                    {
+                                        name: 'Clock In/Out',
+                                        count: 0,
+                                        icon: <AccessTimeIcon />,
+                                        bgColor: '#9c27b0',
+                                        route: '/attendance',
+                                        isClockInOut: true,
+                                        onClockAction: handleClockInOut,
+                                        clockButtonText: attendanceStatus?.status === 'CLOCKED_IN' || attendanceStatus?.status === 'ON_BREAK' || attendanceStatus?.status === 'ON_LUNCH' ? 'Clock Out' : 'Clock In'
+                                    },
+                                    {
+                                        name: 'Leave',
+                                        count: leaveBalanceCount,
+                                        icon: <BeachAccessIcon />,
+                                        bgColor: '#ff9800',
+                                        route: '/leave-management'
+                                    },
+                                ]}
+                            />
+
+                            {/* Attendance Sidebar - Full Width */}
+                            <Box sx={{ mb: 3 }}>
+                                <DashboardSidebar
+                                    onUserClick={(id) => router.push(`/users/${id}`)}
+                                />
+                            </Box>
+                        </>
+                    )}
                     <h1 className="text-2xl font-bold mb-4">Tenant Analytics Dashboard</h1>
                     <div className="mb-6">
                         <button
@@ -649,22 +870,96 @@ export default function Dashboard() {
             )}
             {(userPriority === 2 || userPriority === 3) && (
                 <>
-                    <h1 className="text-2xl font-bold mb-1">Project Analytics Dashboard</h1>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {analytics && (
                         <>
-                            <div>
-                                <TenantDetailsCards projectStats={analytics?.projectStats} userStats={analytics?.userStats} worklogCountYesterday={analytics?.worklogCountYesterday} />
-                            </div>
-                            <div className="flex">
-                                <UserTasks
-                                    users={allUsers}
-                                    reports={filteredReports}
-                                    columns={columns}
+                            {/* Welcome Banner */}
+                            <WelcomeBanner 
+                                newItemsCount={analytics?.worklogCountYesterday || 0}
+                                onReviewClick={() => router.push('/my-reports')}
+                            />
+
+                            {/* Category Cards */}
+                            <CategoryCards
+                                title="Quick Access"
+                                viewAllRoute="/dashboard"
+                                categories={[
+                                    {
+                                        name: userPriority === 1 ? 'Employees' : 'Team',
+                                        count: userPriority === 1 ? teamUsersCount : teamUsersCount,
+                                        icon: <GroupIcon />,
+                                        bgColor: 'var(--primary-color-1)',
+                                        route: userPriority === 4 ? '#' : '/users',
+                                        disabled: userPriority === 4
+                                    },
+                                    {
+                                        name: 'Projects',
+                                        count: assignedProjectsCount,
+                                        icon: <FolderIcon />,
+                                        bgColor: 'var(--primary-color-2)',
+                                        route: '/project-listing'
+                                    },
+                                    {
+                                        name: 'Tasks',
+                                        count: userTasksCount,
+                                        icon: <AssignmentIcon />,
+                                        bgColor: '#f44336',
+                                        route: '/tasks'
+                                    },
+                                    {
+                                        name: 'Reports',
+                                        count: missedReportsCount || 0,
+                                        icon: <ReportIcon />,
+                                        bgColor: '#4caf50',
+                                        route: '/my-reports'
+                                    },
+                                    {
+                                        name: 'Clock In/Out',
+                                        count: 0,
+                                        icon: <AccessTimeIcon />,
+                                        bgColor: '#9c27b0',
+                                        route: '/attendance',
+                                        isClockInOut: true,
+                                        onClockAction: handleClockInOut,
+                                        clockButtonText: attendanceStatus?.status === 'CLOCKED_IN' || attendanceStatus?.status === 'ON_BREAK' || attendanceStatus?.status === 'ON_LUNCH' ? 'Clock Out' : 'Clock In'
+                                    },
+                                    {
+                                        name: 'Leave',
+                                        count: leaveBalanceCount,
+                                        icon: <BeachAccessIcon />,
+                                        bgColor: '#ff9800',
+                                        route: '/leave-management'
+                                    },
+                                ]}
+                            />
+
+                            {/* Attendance Sidebar - Full Width */}
+                            <Box sx={{ mb: 3 }}>
+                                <DashboardSidebar
+                                    onUserClick={(id) => router.push(`/users/${id}`)}
                                 />
-                                <ProjectOverview projects={analytics?.allProjectDetails} />
-                            </div>
-                            <div className="space-y-6">
+                            </Box>
+
+                            {/* Main Content Grid */}
+                            <Grid container spacing={3} sx={{ mb: 3 }}>
+                                {/* Left Column - Main Content */}
+                                <Grid item xs={12} lg={8}>
+                                    {/* User Tasks and Project Overview */}
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, mt: 3 }}>
+                                        <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                            <UserTasks
+                                                users={allUsers}
+                                                reports={filteredReports}
+                                                columns={columns}
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <ProjectOverview projects={analytics?.allProjectDetails} />
+                                        </Box>
+                                    </Box>
+
+                                    {/* Charts Section */}
+                                    <div className="space-y-6" style={{ marginTop: '24px' }}>
                                 {/* Pie Charts in One Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {/* Pie Chart: Project Phases */}
@@ -797,6 +1092,9 @@ export default function Dashboard() {
                                     )}
                                 </div>
                             </div>
+                                </Grid>
+
+                            </Grid>
                         </>
                     )}
                 </>
@@ -804,10 +1102,76 @@ export default function Dashboard() {
 
             {userPriority === 4 && (
                 <>
-                    <h1 className="text-2xl font-bold mb-4">Project Analytics Dashboard</h1>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {analytics && (
                         <>
+                            {/* Welcome Banner */}
+                            <WelcomeBanner 
+                                newItemsCount={analytics?.worklogCountYesterday || 0}
+                                onReviewClick={() => router.push('/my-reports')}
+                            />
+
+                            {/* Category Cards */}
+                            <CategoryCards
+                                title="Quick Access"
+                                viewAllRoute="/dashboard"
+                                categories={[
+                                    {
+                                        name: userPriority === 1 ? 'Employees' : 'Team',
+                                        count: userPriority === 1 ? teamUsersCount : teamUsersCount,
+                                        icon: <GroupIcon />,
+                                        bgColor: 'var(--primary-color-1)',
+                                        route: userPriority === 4 ? '#' : '/users',
+                                        disabled: userPriority === 4
+                                    },
+                                    {
+                                        name: 'Projects',
+                                        count: assignedProjectsCount,
+                                        icon: <FolderIcon />,
+                                        bgColor: 'var(--primary-color-2)',
+                                        route: '/project-listing'
+                                    },
+                                    {
+                                        name: 'Tasks',
+                                        count: userTasksCount,
+                                        icon: <AssignmentIcon />,
+                                        bgColor: '#f44336',
+                                        route: '/tasks'
+                                    },
+                                    {
+                                        name: 'Reports',
+                                        count: missedReportsCount || 0,
+                                        icon: <ReportIcon />,
+                                        bgColor: '#4caf50',
+                                        route: '/my-reports'
+                                    },
+                                    {
+                                        name: 'Clock In/Out',
+                                        count: 0,
+                                        icon: <AccessTimeIcon />,
+                                        bgColor: '#9c27b0',
+                                        route: '/attendance',
+                                        isClockInOut: true,
+                                        onClockAction: handleClockInOut,
+                                        clockButtonText: attendanceStatus?.status === 'CLOCKED_IN' || attendanceStatus?.status === 'ON_BREAK' || attendanceStatus?.status === 'ON_LUNCH' ? 'Clock Out' : 'Clock In'
+                                    },
+                                    {
+                                        name: 'Leave',
+                                        count: leaveBalanceCount,
+                                        icon: <BeachAccessIcon />,
+                                        bgColor: '#ff9800',
+                                        route: '/leave-management'
+                                    },
+                                ]}
+                            />
+
+                            {/* Attendance Sidebar - Full Width */}
+                            <Box sx={{ mb: 3 }}>
+                                <DashboardSidebar
+                                    onUserClick={(id) => router.push(`/users/${id}`)}
+                                />
+                            </Box>
+
                             <UserTasks
                                 users={allUsers}
                                 reports={filteredReports}
@@ -1041,7 +1405,7 @@ const UserTasks = ({ users, reports, columns }) => {
     };
 
     return (
-        <div className="bg-white/50 p-3 rounded-2xl mb-6 mr-3.5 min-w-[57vw]">
+        <div className="bg-white/50 p-3 rounded-2xl mb-6" style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: "semibold", color: "#172b4d" }}>
                     User Task Overview

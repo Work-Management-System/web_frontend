@@ -212,7 +212,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Page Content */}
             <Container
               sx={{
-                paddingTop: "20px",
+                paddingTop: "90px",
+                paddingX: { xs: 2, sm: 3, md: 4 },
                 maxWidth: "100% !important",
                 minWidth: "100% !important",
                 position: "relative",
@@ -222,13 +223,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Box
                 sx={{
                   minHeight: "calc(100vh - 170px)",
-                  mt: 3,
-                  // mt: 5,
-                  ...Mobile && { marginTop: '84px' },
-                  // backgroundColor: "rgba(255, 255, 255, 0.1)", // Slight backdrop for readability
+                  mt: { xs: 1, md: 2 },
                   borderRadius: "16px",
-                  // backdropFilter: "blur(5px)", // Optional glassmorphism effect
-                  // padding: { xs: 2, md: 4 },
                 }}
               >
                 {children}

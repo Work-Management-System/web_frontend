@@ -4,7 +4,7 @@ import {
   Box, AppBar, Toolbar, styled, Stack, IconButton, Menu, MenuItem, Typography,
   Grid, Badge, FormControl, Select, InputLabel,
   Button,
-  Popover
+  Popover,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import PropTypes from 'prop-types';
@@ -82,10 +82,10 @@ type DecodedToken = {
 };
 
 const AppBarStyled = styled(AppBar)(({ theme }) => ({
-  boxShadow: 'none',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   background: bgHeader,
   justifyContent: 'center',
-  borderRadius: '20px',
+  borderRadius: '0',
   [theme.breakpoints.up('lg')]: {
     minHeight: '70px',
   },
@@ -95,12 +95,16 @@ const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
   position: 'fixed',
   top: 0,
   right: 0,
+  left: 0,
   zIndex: theme.zIndex.appBar,
-  width: 'auto',
-  padding: theme.spacing(1, 2),
+  width: '100%',
+  padding: theme.spacing(1.5, 3),
   display: 'flex',
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: theme.spacing(2),
 }));
+
 
 interface Notification {
   id: number;
@@ -314,6 +318,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const desktop = useMediaQuery('(min-width: 768px) and (max-width: 1199px)');
   const smallMobile = useMediaQuery('(min-width: 320px) and (max-width: 365px)');
 
+
   return (
     <>
       <div>
@@ -325,7 +330,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
             sx={{
               display: {
                 lg: 'none',
-                xs: 'inline',
+                xs: 'inline-flex',
               },
             }}
           >
@@ -333,6 +338,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
           </IconButton>
 
           <Box flexGrow={1} />
+
           <Stack spacing={1} direction="row" alignItems="center">
             {userRole?.priority !== 1 && <OnlineToggle />}
             {roles.length > 1 && (

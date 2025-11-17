@@ -50,27 +50,30 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import createAxiosInstance from "@/app/axiosInstance";
 import { toast, Toaster } from "react-hot-toast";
-import Timeline from '@mui/lab/Timeline';
-import TimelineItem from '@mui/lab/TimelineItem';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineConnector from '@mui/lab/TimelineConnector';
-import TimelineContent from '@mui/lab/TimelineContent';
-import TimelineDot from '@mui/lab/TimelineDot';
+import Timeline from "@mui/lab/Timeline";
+import TimelineItem from "@mui/lab/TimelineItem";
+import TimelineSeparator from "@mui/lab/TimelineSeparator";
+import TimelineConnector from "@mui/lab/TimelineConnector";
+import TimelineContent from "@mui/lab/TimelineContent";
+import TimelineDot from "@mui/lab/TimelineDot";
 import TimelineOppositeContent, {
   timelineOppositeContentClasses,
-} from '@mui/lab/TimelineOppositeContent';
+} from "@mui/lab/TimelineOppositeContent";
 import { BsTriangleFill } from "react-icons/bs";
 import { CustomPagination } from "@/app/(AuthLayout)/components/Pagination/CustomPagination";
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import RequiredLabel from "../../layout/shared/logo/RequiredLabel";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { HistoryItem, TaskProvider, useTaskContext } from "@/contextapi/TaskContext";
+import {
+  HistoryItem,
+  TaskProvider,
+  useTaskContext,
+} from "@/contextapi/TaskContext";
 import dynamic from "next/dynamic";
 import { formatDistanceToNow } from "date-fns";
-
 
 interface Project {
   id: string;
@@ -225,33 +228,66 @@ const theme = createTheme({
 const getTeamStatusChipStyle = (status: string) => {
   switch (status.toUpperCase()) {
     case "WORKING":
-      return { background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)", color: "#1E40AF" };
+      return {
+        background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)",
+        color: "#1E40AF",
+      };
     case "NOT_WORKING":
-      return { background: "linear-gradient(135deg, #FEE2E2, #FECACA)", color: "#B91C1C" };
+      return {
+        background: "linear-gradient(135deg, #FEE2E2, #FECACA)",
+        color: "#B91C1C",
+      };
     case "MAINTAINING":
-      return { background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)", color: "#6B21A8" };
+      return {
+        background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)",
+        color: "#6B21A8",
+      };
     case "SUPERVISE":
-      return { background: "linear-gradient(135deg, #DCFCE7, #BBF7D0)", color: "#15803D" };
+      return {
+        background: "linear-gradient(135deg, #DCFCE7, #BBF7D0)",
+        color: "#15803D",
+      };
     case "ON_HOLD":
-      return { background: "linear-gradient(135deg, #FEF3C7, #FDE68A)", color: "#B45309" };
+      return {
+        background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+        color: "#B45309",
+      };
     default:
-      return { background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)", color: "#374151" };
+      return {
+        background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+        color: "#374151",
+      };
   }
 };
 
 const getDesignationChipStyle = (designation: string | null | undefined) => {
   if (!designation) {
-    return { background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)", color: "#374151" };
+    return {
+      background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+      color: "#374151",
+    };
   }
   switch (designation.toLowerCase()) {
     case "software engineer":
-      return { background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)", color: "#1E40AF" };
+      return {
+        background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)",
+        color: "#1E40AF",
+      };
     case "project manager":
-      return { background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)", color: "#6B21A8" };
+      return {
+        background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)",
+        color: "#6B21A8",
+      };
     case "designer":
-      return { background: "linear-gradient(135deg, #FEF3C7, #FDE68A)", color: "#B45309" };
+      return {
+        background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+        color: "#B45309",
+      };
     default:
-      return { background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)", color: "#374151" };
+      return {
+        background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+        color: "#374151",
+      };
   }
 };
 
@@ -259,16 +295,36 @@ const getEmailChipStyle = (email: string) => {
   const domain = email.split("@")[1]?.toLowerCase();
   switch (domain) {
     case "yopmail.com":
-      return { background: "linear-gradient(135deg, #FFEDD5, #FED7AA)", color: "#C2410C" };
+      return {
+        background: "linear-gradient(135deg, #FFEDD5, #FED7AA)",
+        color: "#C2410C",
+      };
     case "privi.com":
-      return { background: "linear-gradient(135deg, #CCFBF1, #99F6E4)", color: "#0F766E" };
+      return {
+        background: "linear-gradient(135deg, #CCFBF1, #99F6E4)",
+        color: "#0F766E",
+      };
     default:
-      const hash = email.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const hash = email
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const colors = [
-        { background: "linear-gradient(135deg, #FBCFE8, #F9A8D4)", color: "#BE185D" },
-        { background: "linear-gradient(135deg, #D1FAE5, #A7F3D0)", color: "#047857" },
-        { background: "linear-gradient(135deg, #EDE9FE, #DDD6FE)", color: "#7C3AED" },
-        { background: "linear-gradient(135deg, #FEE2E2, #FECACA)", color: "#B91C1C" },
+        {
+          background: "linear-gradient(135deg, #FBCFE8, #F9A8D4)",
+          color: "#BE185D",
+        },
+        {
+          background: "linear-gradient(135deg, #D1FAE5, #A7F3D0)",
+          color: "#047857",
+        },
+        {
+          background: "linear-gradient(135deg, #EDE9FE, #DDD6FE)",
+          color: "#7C3AED",
+        },
+        {
+          background: "linear-gradient(135deg, #FEE2E2, #FECACA)",
+          color: "#B91C1C",
+        },
       ];
       return colors[hash % colors?.length];
   }
@@ -276,7 +332,11 @@ const getEmailChipStyle = (email: string) => {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 const splitDate = (dateString: string) => {
@@ -308,7 +368,7 @@ const TasksContainer = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(6),
   padding: theme.spacing(2),
   // background: "linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.9))",
-  background: 'rgba(255, 255, 255, 0.95)',
+  background: "rgba(255, 255, 255, 0.95)",
   borderRadius: "24px",
   backdropFilter: "blur(10px)",
   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
@@ -320,7 +380,8 @@ const SectionHeader = styled(Box)(({ theme }) => ({
   justifyContent: "space-between",
   alignItems: "center",
   padding: theme.spacing(1, 1),
-  background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-1))",
+  background:
+    "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-1))",
   color: "white",
   borderRadius: "10px",
   cursor: "pointer",
@@ -387,7 +448,15 @@ const SearchField = styled(TextField)(({ theme }) => ({
 }));
 
 const TeamMemberRow = memo(
-  ({ member, index, onNameClick }: { member: TeamMember; index: number; onNameClick: (member: TeamMember) => void }) => (
+  ({
+    member,
+    index,
+    onNameClick,
+  }: {
+    member: TeamMember;
+    index: number;
+    onNameClick: (member: TeamMember) => void;
+  }) => (
     <TableRow
       sx={{
         "&:last-child td": { borderBottom: "none" },
@@ -401,13 +470,22 @@ const TeamMemberRow = memo(
         gap: { xs: 1, md: 0 },
       }}
     >
-      <TableCell sx={{ display: { xs: "flex", md: "table-cell" }, alignItems: "center", p: { xs: 1, md: "12px" }, width: { md: "10%" } }}>
+      <TableCell
+        sx={{
+          display: { xs: "flex", md: "table-cell" },
+          alignItems: "center",
+          p: { xs: 1, md: "12px" },
+          width: { md: "10%" },
+        }}
+      >
         <Avatar
           src={member.user.profile_image}
           sx={{
             width: 36,
             height: 36,
-            bgcolor: member.user.profile_image ? "transparent" : "linear-gradient(135deg, #1E3A8A, #3B82F6)",
+            bgcolor: member.user.profile_image
+              ? "transparent"
+              : "linear-gradient(135deg, #1E3A8A, #3B82F6)",
             transition: "transform 0.3s",
             "&:hover": { transform: "scale(1.15)" },
             objectFit: "cover",
@@ -419,7 +497,10 @@ const TeamMemberRow = memo(
         >
           {!member.user.profile_image && `${member.user.first_name.charAt(0)}`}
         </Avatar>
-        <Typography variant="body2" sx={{ display: { xs: "inline", md: "none" }, fontWeight: 600 }}>
+        <Typography
+          variant="body2"
+          sx={{ display: { xs: "inline", md: "none" }, fontWeight: 600 }}
+        >
           Icon
         </Typography>
       </TableCell>
@@ -454,7 +535,10 @@ const TeamMemberRow = memo(
               textOverflow: "ellipsis",
               whiteSpace: { xs: "nowrap", md: "normal" },
               transition: "transform 0.3s, box-shadow 0.3s",
-              "&:hover": { transform: "scale(1.05)", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" },
+              "&:hover": {
+                transform: "scale(1.05)",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              },
             }}
           >
             <MailOutlineIcon
@@ -465,7 +549,14 @@ const TeamMemberRow = memo(
                 opacity: 1,
               }}
             />
-            <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}>
+            <Typography
+              variant="body2"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                font: "menu",
+              }}
+            >
               {member.user.email}
             </Typography>
           </Box>
@@ -485,7 +576,10 @@ const TeamMemberRow = memo(
             textOverflow: "ellipsis",
             whiteSpace: { xs: "nowrap", md: "normal" },
             transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" },
+            "&:hover": {
+              transform: "scale(1.05)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            },
           }}
         >
           <span
@@ -493,12 +587,16 @@ const TeamMemberRow = memo(
               width: "6px",
               height: "6px",
               borderRadius: "50%",
-              backgroundColor: getDesignationChipStyle(member.user.designation).color,
+              backgroundColor: getDesignationChipStyle(member.user.designation)
+                .color,
               marginRight: "6px",
               flexShrink: 0,
             }}
           />
-          <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}>
+          <Typography
+            variant="body2"
+            sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}
+          >
             {member.user.designation || "—"}
           </Typography>
         </Box>
@@ -517,7 +615,10 @@ const TeamMemberRow = memo(
             textOverflow: "ellipsis",
             whiteSpace: { xs: "nowrap", md: "normal" },
             transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" },
+            "&:hover": {
+              transform: "scale(1.05)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            },
           }}
         >
           <span
@@ -530,7 +631,10 @@ const TeamMemberRow = memo(
               flexShrink: 0,
             }}
           />
-          <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}>
+          <Typography
+            variant="body2"
+            sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}
+          >
             {formatStatusForDisplay(member.status)}
           </Typography>
         </Box>
@@ -548,10 +652,16 @@ const TeamMemberRow = memo(
             textOverflow: "ellipsis",
             whiteSpace: { xs: "nowrap", md: "normal" },
             transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": { transform: "scale(1.05)", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" },
+            "&:hover": {
+              transform: "scale(1.05)",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            },
           }}
         >
-          <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+          <Typography
+            variant="body2"
+            sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+          >
             {formatMinutesToHours(member.time_spent)}
           </Typography>
         </Box>
@@ -561,7 +671,18 @@ const TeamMemberRow = memo(
 );
 
 const ClientRow = memo(
-  ({ client, index, onEdit }: { client: { name: string; email: string; contact: string }; index: number; onEdit: (client: { name: string; email: string; contact: string }, index: number) => void }) => (
+  ({
+    client,
+    index,
+    onEdit,
+  }: {
+    client: { name: string; email: string; contact: string };
+    index: number;
+    onEdit: (
+      client: { name: string; email: string; contact: string },
+      index: number
+    ) => void;
+  }) => (
     <TableRow
       sx={{
         "&:last-child td": { borderBottom: "none" },
@@ -576,20 +697,31 @@ const ClientRow = memo(
       }}
     >
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
-        <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+        <Typography
+          variant="body2"
+          sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+        >
           {client.name}
         </Typography>
       </TableCell>
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <MailOutlineIcon sx={{ fontSize: 16, color: "text.secondary", opacity: 1 }} />
-          <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+          <MailOutlineIcon
+            sx={{ fontSize: 16, color: "text.secondary", opacity: 1 }}
+          />
+          <Typography
+            variant="body2"
+            sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+          >
             {client.email}
           </Typography>
         </Box>
       </TableCell>
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
-        <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+        <Typography
+          variant="body2"
+          sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+        >
           {client.contact}
         </Typography>
       </TableCell>
@@ -609,7 +741,19 @@ const ClientRow = memo(
 );
 
 const ProjectTimelineItem = memo(
-  ({ timeline, index, onEdit, isFirst, isLast }: { timeline: { time: string; title: string }; index: number; onEdit: (timeline: { time: string; title: string }, index: number) => void; isFirst: boolean; isLast: boolean }) => (
+  ({
+    timeline,
+    index,
+    onEdit,
+    isFirst,
+    isLast,
+  }: {
+    timeline: { time: string; title: string };
+    index: number;
+    onEdit: (timeline: { time: string; title: string }, index: number) => void;
+    isFirst: boolean;
+    isLast: boolean;
+  }) => (
     <TimelineItem
       sx={{
         marginTop: "5px",
@@ -733,7 +877,10 @@ const ProjectTimelineItem = memo(
         }}
       >
         <Box>
-          <Typography variant="body1" sx={{ fontWeight: 600, color: "var(--primary-color-1)" }}>
+          <Typography
+            variant="body1"
+            sx={{ fontWeight: 600, color: "var(--primary-color-1)" }}
+          >
             {timeline.title}
           </Typography>
         </Box>
@@ -751,33 +898,31 @@ const ProjectTimelineItem = memo(
   )
 );
 // const TicketSection = ({ title, tickets }) => (
-  // <motion.div
-  //   initial={{ opacity: 0, y: 30 }}
-  //   animate={{ opacity: 1, y: 0 }}
-  //   transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-  // >
+// <motion.div
+//   initial={{ opacity: 0, y: 30 }}
+//   animate={{ opacity: 1, y: 0 }}
+//   transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+// >
 
 // Updated TicketSection component
 const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
   <Box sx={{ mb: 2 }}>
     <SectionHeader onClick={onToggle}>
-      <Typography sx={{ fontWeight: 700 }}>
-        {title}
-      </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Box
           sx={{
             width: 24,
             height: 24,
-            borderRadius: '50%',
-            backgroundColor: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid',
-            borderColor: 'grey.300',
-            color: 'primary.main',
-            fontSize: '0.85rem',
+            borderRadius: "50%",
+            backgroundColor: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "1px solid",
+            borderColor: "grey.300",
+            color: "primary.main",
+            fontSize: "0.85rem",
             fontWeight: 600,
           }}
           aria-label={`${noOFTickets ?? 0} tickets`}
@@ -786,8 +931,8 @@ const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
         </Box>
         <ExpandMoreIcon
           sx={{
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.3s ease',
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.3s ease",
           }}
         />
       </Box>
@@ -795,43 +940,61 @@ const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
     <Collapse in={open}>
       <Box sx={{ p: { xs: 2, md: 3 } }}>
         {tickets.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <HourglassEmptyIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.7 }} />
-            <Typography color="text.secondary" mt={2} sx={{ fontSize: '0.9rem' }}>
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <HourglassEmptyIcon
+              sx={{ fontSize: 60, color: "text.secondary", opacity: 0.7 }}
+            />
+            <Typography
+              color="text.secondary"
+              mt={2}
+              sx={{ fontSize: "0.9rem" }}
+            >
               No tickets found.
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {tickets.map((ticket) => (
               <TaskCard key={ticket.id}>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 15%' } }}>
+                <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 15%" } }}>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.9rem' }}
+                    sx={{
+                      fontWeight: 600,
+                      color: "text.primary",
+                      fontSize: "0.9rem",
+                    }}
                   >
                     {ticket.ticket_no}
                   </Typography>
                 </Box>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 35%' } }}>
+                <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 35%" } }}>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 500, color: 'text.primary', fontSize: '0.9rem' }}
+                    sx={{
+                      fontWeight: 500,
+                      color: "text.primary",
+                      fontSize: "0.9rem",
+                    }}
                   >
                     {ticket.title}
                   </Typography>
                 </Box>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 20%' } }}>
+                <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 20%" } }}>
                   <StatusBadge label={formatStatusForDisplay(ticket.status)} />
                 </Box>
-                <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 30%' } }}>
+                <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 30%" } }}>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: 400, color: 'text.secondary', fontSize: '0.85rem' }}
+                    sx={{
+                      fontWeight: 400,
+                      color: "text.secondary",
+                      fontSize: "0.85rem",
+                    }}
                   >
                     {ticket.current_user
                       ? `${ticket.current_user.first_name} ${ticket.current_user.last_name}`
-                      : 'Unassigned'}
+                      : "Unassigned"}
                   </Typography>
                 </Box>
               </TaskCard>
@@ -856,7 +1019,7 @@ interface Report {
   project_id: string;
   description: string;
   deadline_minutes: string;
-  history?:HistoryItem[];
+  history?: HistoryItem[];
 }
 
 const isUUID = (str: string): boolean =>
@@ -873,10 +1036,11 @@ const taskSchema = Yup.object({
   project_id: Yup.string()
     .test("is-uuid", "Project ID must be a valid UUID", isUUID)
     .required("Project is required"),
-  current_user_id: Yup.string()
-    .test("is-uuid", "User ID must be a valid UUID", (value) =>
-      value ? isUUID(value) : true
-    ),
+  current_user_id: Yup.string().test(
+    "is-uuid",
+    "User ID must be a valid UUID",
+    (value) => (value ? isUUID(value) : true)
+  ),
   deadline_hours: Yup.number()
     .min(0, "Hours cannot be negative")
     .typeError("Hours must be a number"),
@@ -887,7 +1051,8 @@ const taskSchema = Yup.object({
 });
 
 const ProjectDetailsPage = () => {
-    const { reports, projects,handleDeleteTask,taskId, setTaskId} = useTaskContext();
+  const { reports, projects, handleDeleteTask, taskId, setTaskId } =
+    useTaskContext();
   const params = useParams();
   const id = params?.id as string | undefined;
   const router = useRouter();
@@ -908,30 +1073,45 @@ const ProjectDetailsPage = () => {
   const [modalUsers, setModalUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
-  
-  const [clientDetails, setClientDetails] = useState<{ name: string; email: string; contact: string }>({
+
+  const [clientDetails, setClientDetails] = useState<{
+    name: string;
+    email: string;
+    contact: string;
+  }>({
     name: "",
     email: "",
     contact: "",
   });
-  const [timelineDetails, setTimelineDetails] = useState<{ time: string; title: string }>({
+  const [timelineDetails, setTimelineDetails] = useState<{
+    time: string;
+    title: string;
+  }>({
     time: new Date().toISOString().split("T")[0],
     title: "",
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [clientDialogMode, setClientDialogMode] = useState<"add" | "edit">("add");
-  const [timelineDialogMode, setTimelineDialogMode] = useState<"add" | "edit">("add");
-  const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(null);
-  const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<number | null>(null);
+  const [clientDialogMode, setClientDialogMode] = useState<"add" | "edit">(
+    "add"
+  );
+  const [timelineDialogMode, setTimelineDialogMode] = useState<"add" | "edit">(
+    "add"
+  );
+  const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(
+    null
+  );
+  const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<
+    number | null
+  >(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [openSections, setOpenSections] = useState({
-    p1: false,  // Changed to false
-    p2: false,  // Changed to false
-    p3: false,  // Changed to false
-    unassigned: false,  // Changed to false
-    completed: false,  // Changed to false
+    p1: false, // Changed to false
+    p2: false, // Changed to false
+    p3: false, // Changed to false
+    unassigned: false, // Changed to false
+    completed: false, // Changed to false
   });
   const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
   const [attachmentsLoading, setAttachmentsLoading] = useState(true);
@@ -963,7 +1143,9 @@ const ProjectDetailsPage = () => {
     }
     setAttachmentsLoading(true);
     try {
-      const res = await axiosInstance.get(`/project-management/${id}/attachments`);
+      const res = await axiosInstance.get(
+        `/project-management/${id}/attachments`
+      );
       const attachmentData: ProjectAttachment[] = (res.data?.data || []).map(
         (item: ProjectAttachment) => ({
           ...item,
@@ -980,7 +1162,9 @@ const ProjectDetailsPage = () => {
     }
   };
 
-  const handleAttachmentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !id) {
       return;
@@ -990,12 +1174,20 @@ const ProjectDetailsPage = () => {
       const uploads = Array.from(files).map(async (file) => {
         const formData = new FormData();
         formData.append("file", file);
-        await axiosInstance.post(`/project-management/${id}/attachments`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axiosInstance.post(
+          `/project-management/${id}/attachments`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
       });
       await Promise.all(uploads);
-      toast.success(files.length > 1 ? "Files uploaded successfully" : "File uploaded successfully");
+      toast.success(
+        files.length > 1
+          ? "Files uploaded successfully"
+          : "File uploaded successfully"
+      );
       await fetchAttachments();
     } catch (error) {
       console.error("Failed to upload attachment:", error);
@@ -1012,7 +1204,9 @@ const ProjectDetailsPage = () => {
       return;
     }
     try {
-      await axiosInstance.delete(`/project-management/attachments/${attachmentId}`);
+      await axiosInstance.delete(
+        `/project-management/attachments/${attachmentId}`
+      );
       toast.success("Attachment removed");
       setAttachments((prev) => prev.filter((item) => item.id !== attachmentId));
     } catch (error) {
@@ -1032,21 +1226,23 @@ const ProjectDetailsPage = () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
-    const fetchTasks = async () => {
-        try {
-            const res = await axiosInstance.get(`/task-maangement/by-project/${id}`);
-            const tasksData = res?.data?.tickets;
-            setTasks(tasksData);
-            console.log("Tasks fetched successfully:", tasksData);
-        } catch (err) {
-            console.error("Failed to fetch tasks:", err);
-        }
+  const fetchTasks = async () => {
+    try {
+      const res = await axiosInstance.get(`/task-maangement/by-project/${id}`);
+      const tasksData = res?.data?.tickets;
+      setTasks(tasksData);
+      console.log("Tasks fetched successfully:", tasksData);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
     }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -1057,17 +1253,23 @@ const ProjectDetailsPage = () => {
 
     const fetchProject = async () => {
       try {
-        const res = await axiosInstance.get(`/project-management/find-one/${id}`);
+        const res = await axiosInstance.get(
+          `/project-management/find-one/${id}`
+        );
         const projectData = res.data.data;
         setProject(projectData);
         setClientDetails(
-          projectData?.client_details?.length > 0 ? projectData?.client_details[0] : { name: "", email: "", contact: "" }
+          projectData?.client_details?.length > 0
+            ? projectData?.client_details[0]
+            : { name: "", email: "", contact: "" }
         );
         setTimelineDetails(
-          projectData?.project_timeline?.length > 0 ? projectData?.project_timeline[0] : {
-            time: new Date().toISOString().split("T")[0],
-            title: "",
-          }
+          projectData?.project_timeline?.length > 0
+            ? projectData?.project_timeline[0]
+            : {
+                time: new Date().toISOString().split("T")[0],
+                title: "",
+              }
         );
         setLoading(false);
       } catch (err) {
@@ -1078,11 +1280,16 @@ const ProjectDetailsPage = () => {
     };
     const fetchTeam = async () => {
       try {
-        const res = await axiosInstance.get(`/project-management/project-team/${id}`);
+        const res = await axiosInstance.get(
+          `/project-management/project-team/${id}`
+        );
         const teamData = res.data.data;
         teamData.forEach((member: TeamMember, index: number) => {
           if (!member.user.designation) {
-            console.warn(`Team member at index ${index} has no designation:`, member);
+            console.warn(
+              `Team member at index ${index} has no designation:`,
+              member
+            );
           }
         });
         setTeamMembers(teamData);
@@ -1106,7 +1313,8 @@ const ProjectDetailsPage = () => {
           const res = await axiosInstance.get(`/user/list`);
           const allUsers = res.data.data || [];
           const unassignedUsers = allUsers.filter(
-            (user: User) => !teamMembers.some((member) => member.user.id === user.id)
+            (user: User) =>
+              !teamMembers.some((member) => member.user.id === user.id)
           );
           setAvailableUsers(unassignedUsers);
         } catch (err) {
@@ -1137,11 +1345,16 @@ const ProjectDetailsPage = () => {
     try {
       const payload = {
         projectId: id,
-        user: selectedUsers.map((userId) => ({ id: userId, status: "WORKING" })),
+        user: selectedUsers.map((userId) => ({
+          id: userId,
+          status: "WORKING",
+        })),
       };
       await axiosInstance.post(`/project-management/assign-team`, payload);
       toast.success("Team members assigned successfully");
-      const res = await axiosInstance.get(`/project-management/project-team/${id}`);
+      const res = await axiosInstance.get(
+        `/project-management/project-team/${id}`
+      );
       setTeamMembers(res.data.data);
       handleCloseDialog();
     } catch (err) {
@@ -1167,11 +1380,16 @@ const ProjectDetailsPage = () => {
     setIsSubmitting(true);
     try {
       const payload = { userId: selectedMember.user.id, status: newStatus };
-      await axiosInstance.patch(`/project-management/team-user/status/${id}`, payload);
+      await axiosInstance.patch(
+        `/project-management/team-user/status/${id}`,
+        payload
+      );
       toast.success("Team member status updated successfully");
       setTeamMembers((prev) =>
         prev.map((member) =>
-          member.user.id === selectedMember.user.id ? { ...member, status: newStatus } : member
+          member.user.id === selectedMember.user.id
+            ? { ...member, status: newStatus }
+            : member
         )
       );
       handleCloseStatusDialog();
@@ -1201,7 +1419,10 @@ const ProjectDetailsPage = () => {
     setSelectedClientIndex(null);
   };
 
-  const handleClientChange = (field: "name" | "email" | "contact", value: string) => {
+  const handleClientChange = (
+    field: "name" | "email" | "contact",
+    value: string
+  ) => {
     setClientDetails((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -1220,12 +1441,27 @@ const ProjectDetailsPage = () => {
       }
       const payload = { projectId: id, client_details: updatedClientDetails };
       await axiosInstance.patch(`/project-management/update/${id}`, payload);
-      toast.success(`Client details ${clientDialogMode === "edit" ? "updated" : "added"} successfully`);
-      setProject((prev) => (prev ? { ...prev, client_details: updatedClientDetails } : null));
+      toast.success(
+        `Client details ${
+          clientDialogMode === "edit" ? "updated" : "added"
+        } successfully`
+      );
+      setProject((prev) =>
+        prev ? { ...prev, client_details: updatedClientDetails } : null
+      );
       handleCloseClientDialog();
     } catch (err) {
-      console.error(`Failed to ${clientDialogMode === "edit" ? "update" : "add"} client details:`, err);
-      toast.error(`Failed to ${clientDialogMode === "edit" ? "update" : "add"} client details`);
+      console.error(
+        `Failed to ${
+          clientDialogMode === "edit" ? "update" : "add"
+        } client details:`,
+        err
+      );
+      toast.error(
+        `Failed to ${
+          clientDialogMode === "edit" ? "update" : "add"
+        } client details`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1237,14 +1473,19 @@ const ProjectDetailsPage = () => {
     index?: number
   ) => {
     setTimelineDialogMode(mode);
-    setTimelineDetails(timeline || { time: new Date().toISOString().split("T")[0], title: "" });
+    setTimelineDetails(
+      timeline || { time: new Date().toISOString().split("T")[0], title: "" }
+    );
     setSelectedTimelineIndex(index !== undefined ? index : null);
     setOpenTimelineDialog(true);
   };
 
   const handleCloseTimelineDialog = () => {
     setOpenTimelineDialog(false);
-    setTimelineDetails({ time: new Date().toISOString().split("T")[0], title: "" });
+    setTimelineDetails({
+      time: new Date().toISOString().split("T")[0],
+      title: "",
+    });
     setTimelineDialogMode("add");
     setSelectedTimelineIndex(null);
   };
@@ -1268,12 +1509,27 @@ const ProjectDetailsPage = () => {
       }
       const payload = { projectId: id, project_timeline: updatedTimeline };
       await axiosInstance.patch(`/project-management/update/${id}`, payload);
-      toast.success(`Project timeline ${timelineDialogMode === "edit" ? "updated" : "added"} successfully`);
-      setProject((prev) => (prev ? { ...prev, project_timeline: updatedTimeline } : null));
+      toast.success(
+        `Project timeline ${
+          timelineDialogMode === "edit" ? "updated" : "added"
+        } successfully`
+      );
+      setProject((prev) =>
+        prev ? { ...prev, project_timeline: updatedTimeline } : null
+      );
       handleCloseTimelineDialog();
     } catch (err) {
-      console.error(`Failed to ${timelineDialogMode === "edit" ? "update" : "add"} project timeline:`, err);
-      toast.error(`Failed to ${timelineDialogMode === "edit" ? "update" : "add"} project timeline`);
+      console.error(
+        `Failed to ${
+          timelineDialogMode === "edit" ? "update" : "add"
+        } project timeline:`,
+        err
+      );
+      toast.error(
+        `Failed to ${
+          timelineDialogMode === "edit" ? "update" : "add"
+        } project timeline`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -1292,83 +1548,101 @@ const ProjectDetailsPage = () => {
     }
 
     if (!isUnique) {
-      throw new Error("Unable to generate a unique ticket number after maximum attempts");
+      throw new Error(
+        "Unable to generate a unique ticket number after maximum attempts"
+      );
     }
 
     return ticketNumber;
   };
 
-    const handleAddTask = async (values: any, { resetForm }: any) => {
-      setIsSubmitting(true);
-      try {
-        let ticket_no: string;
-        let isUnique = false;
-        let attempts = 0;
-        const maxAttempts = 3;
-        const existingTicketNumbers = reports.map((report) => report.ticket_no);
-  
-        while (!isUnique && attempts < maxAttempts) {
-          ticket_no = generateTicketNumber(existingTicketNumbers);
-          const { status, deadline_hours, deadline_minutes, ...payload } = values;
-          payload.status = "pending";
-          payload.ticket_no = ticket_no;
-          payload.deadline_minutes = values.deadline_total_minutes;
-  
-          try {
-            const response = await axiosInstance.post("/task-maangement", payload);
-            isUnique = true;
-  
-            const taskId = response.data.ticket?.id;
-            if (!taskId || !isUUID(taskId)) {
-              throw new Error("Task ID must be a valid UUID");
-            }
-  
-            const selectedUser = modalUsers.find((user) => user?.id === values?.current_user_id);
-            const createdTask: Report = {
-              id: taskId,
-              title: values?.title,
-              ticket_no: ticket_no,
-              status: "pending",
-              priority: values?.priority,
-              current_user: {
-                id: selectedUser?.id || "",
-                first_name: selectedUser?.first_name || "",
-                last_name: selectedUser?.last_name || "",
-              },
-              project_id: values?.project_id,
-              description: values?.description,
-              deadline_minutes: values?.deadline_total_minutes,
-            };
-            const updatedReports = [...reports, createdTask];
-            handleCloseModal();
-            fetchTasks()
-            toast.success("Task Added Successfully");
-            resetForm();
-          } catch (error) {
-            if (error.response?.data?.message?.includes("Ticket number already exists")) {
-              attempts++;
-              continue;
-            }
-            throw error;
+  const handleAddTask = async (values: any, { resetForm }: any) => {
+    setIsSubmitting(true);
+    try {
+      let ticket_no: string;
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+      const existingTicketNumbers = reports.map((report) => report.ticket_no);
+
+      while (!isUnique && attempts < maxAttempts) {
+        ticket_no = generateTicketNumber(existingTicketNumbers);
+        const { status, deadline_hours, deadline_minutes, ...payload } = values;
+        payload.status = "pending";
+        payload.ticket_no = ticket_no;
+        payload.deadline_minutes = values.deadline_total_minutes;
+
+        try {
+          const response = await axiosInstance.post(
+            "/task-maangement",
+            payload
+          );
+          isUnique = true;
+
+          const taskId = response.data.ticket?.id;
+          if (!taskId || !isUUID(taskId)) {
+            throw new Error("Task ID must be a valid UUID");
           }
+
+          const selectedUser = modalUsers.find(
+            (user) => user?.id === values?.current_user_id
+          );
+          const createdTask: Report = {
+            id: taskId,
+            title: values?.title,
+            ticket_no: ticket_no,
+            status: "pending",
+            priority: values?.priority,
+            current_user: {
+              id: selectedUser?.id || "",
+              first_name: selectedUser?.first_name || "",
+              last_name: selectedUser?.last_name || "",
+            },
+            project_id: values?.project_id,
+            description: values?.description,
+            deadline_minutes: values?.deadline_total_minutes,
+          };
+          const updatedReports = [...reports, createdTask];
+          handleCloseModal();
+          fetchTasks();
+          toast.success("Task Added Successfully");
+          resetForm();
+        } catch (error) {
+          if (
+            error.response?.data?.message?.includes(
+              "Ticket number already exists"
+            )
+          ) {
+            attempts++;
+            continue;
+          }
+          throw error;
         }
-  
-        if (!isUnique) {
-          throw new Error("Unable to create task: Could not generate a unique ticket number");
-        }
-      } catch (error) {
-        console.error("Failed to create task:", error);
-        if (error.response) {
-          toast.error(`Failed to create task: ${error.response.data.message || "Unknown error"}`);
-        } else {
-          toast.error(`Failed to create task: ${error.message || "Network error"}`);
-        }
-      } finally {
-        setIsSubmitting(false);
       }
-    };
-  
-  
+
+      if (!isUnique) {
+        throw new Error(
+          "Unable to create task: Could not generate a unique ticket number"
+        );
+      }
+    } catch (error) {
+      console.error("Failed to create task:", error);
+      if (error.response) {
+        toast.error(
+          `Failed to create task: ${
+            error.response.data.message || "Unknown error"
+          }`
+        );
+      } else {
+        toast.error(
+          `Failed to create task: ${error.message || "Network error"}`
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -1378,7 +1652,9 @@ const ProjectDetailsPage = () => {
     const fetchProjectTeam = async () => {
       if (project?.id) {
         try {
-          const response = await axiosInstance.get(`/project-management/project-team/${project?.id}`);
+          const response = await axiosInstance.get(
+            `/project-management/project-team/${project?.id}`
+          );
           const teamMembers = response.data.data || [];
           const mappedUsers: User[] = teamMembers.map((member: any) => ({
             id: member.user.id,
@@ -1397,10 +1673,9 @@ const ProjectDetailsPage = () => {
   }, [project?.id]);
 
   // const filteredTasks = tasks.filter(task =>
-    // task.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  // task.title?.toLowerCase().includes(searchTerm.toLowerCase())
   // );
 
- 
   // const priority1Tasks = filteredTasks.filter(task => task.priority === 'p1' && !(task.status === 'testable' || task.status === 'completed'));
   // const priority2Tasks = filteredTasks.filter(task => task.priority === 'p2' && !(task.status === 'testable' || task.status === 'completed'));
   // const priority3Tasks = filteredTasks.filter(task => task.priority === 'p3' && !(task.status === 'testable' || task.status === 'completed'));
@@ -1417,29 +1692,57 @@ const ProjectDetailsPage = () => {
   );
 
   const priority1Tasks = filteredTasks.filter(
-    (task) => task.priority === "p1" && !(task.status === "testable" || task.status === "completed")
+    (task) =>
+      task.priority === "p1" &&
+      !(task.status === "testable" || task.status === "completed")
   );
   const priority2Tasks = filteredTasks.filter(
-    (task) => task.priority === "p2" && !(task.status === "testable" || task.status === "completed")
+    (task) =>
+      task.priority === "p2" &&
+      !(task.status === "testable" || task.status === "completed")
   );
   const priority3Tasks = filteredTasks.filter(
-    (task) => task.priority === "p3" && !(task.status === "testable" || task.status === "completed")
+    (task) =>
+      task.priority === "p3" &&
+      !(task.status === "testable" || task.status === "completed")
   );
   const unassignedTasks = filteredTasks.filter((task) => !task.current_user);
-  const completedTasks = filteredTasks.filter((task) => task.status === "testable" || task.status === "completed");
-
-  const filteredMembers = teamMembers.filter((member) =>
-    `${member.user.first_name} ${member.user.last_name}`.toLowerCase().includes(search.toLowerCase())
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "testable" || task.status === "completed"
   );
 
-  const statusOptions = ["WORKING", "NOT_WORKING", "MAINTAINING", "SUPERVISE", "ON_HOLD"];
+  const filteredMembers = teamMembers.filter((member) =>
+    `${member.user.first_name} ${member.user.last_name}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  const statusOptions = [
+    "WORKING",
+    "NOT_WORKING",
+    "MAINTAINING",
+    "SUPERVISE",
+    "ON_HOLD",
+  ];
 
   if (loading) {
     return (
       <Box sx={{ p: { xs: 2, md: 4 } }}>
-        <Skeleton variant="rectangular" height={250} sx={{ borderRadius: "20px", mb: 4 }} />
-        <Skeleton variant="rectangular" height={350} sx={{ borderRadius: "20px", mb: 4 }} />
-        <Skeleton variant="rectangular" height={250} sx={{ borderRadius: "20px" }} />
+        <Skeleton
+          variant="rectangular"
+          height={250}
+          sx={{ borderRadius: "20px", mb: 4 }}
+        />
+        <Skeleton
+          variant="rectangular"
+          height={350}
+          sx={{ borderRadius: "20px", mb: 4 }}
+        />
+        <Skeleton
+          variant="rectangular"
+          height={250}
+          sx={{ borderRadius: "20px" }}
+        />
       </Box>
     );
   }
@@ -1498,7 +1801,8 @@ const ProjectDetailsPage = () => {
                 left: 0,
                 width: "100%",
                 height: "4px",
-                background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+                background:
+                  "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
               },
             }}
             onClick={() => setExpanded(!expanded)}
@@ -1546,7 +1850,10 @@ const ProjectDetailsPage = () => {
                   </Button>
                   <IconButton
                     sx={{
-                      "&:hover": { bgcolor: "var(--primary-color-1)", color: "white" },
+                      "&:hover": {
+                        bgcolor: "var(--primary-color-1)",
+                        color: "white",
+                      },
                       transition: "all 0.3s",
                     }}
                     onClick={(e) => {
@@ -1577,13 +1884,18 @@ const ProjectDetailsPage = () => {
                     <strong>Status:</strong> {project?.status}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Client:</strong> {project?.client_details?.length > 0 ? project?.client_details[0]?.name : "—"}
+                    <strong>Client:</strong>{" "}
+                    {project?.client_details?.length > 0
+                      ? project?.client_details[0]?.name
+                      : "—"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Current Phase:</strong> {project.current_phase || "—"}
+                    <strong>Current Phase:</strong>{" "}
+                    {project.current_phase || "—"}
                   </Typography>
                   <Typography variant="body1">
-                    <strong>Start Date:</strong> {formatDate(project?.start_date)}
+                    <strong>Start Date:</strong>{" "}
+                    {formatDate(project?.start_date)}
                   </Typography>
                   <Typography variant="body1">
                     <strong>End Date:</strong> {formatDate(project?.end_date)}
@@ -1591,7 +1903,10 @@ const ProjectDetailsPage = () => {
                   <Typography variant="body1">
                     <strong>Deadline:</strong> {formatDate(project?.deadLine)}
                   </Typography>
-                  <Typography variant="body1" sx={{ gridColumn: { xs: "1", sm: "1 / 3" } }}>
+                  <Typography
+                    variant="body1"
+                    sx={{ gridColumn: { xs: "1", sm: "1 / 3" } }}
+                  >
                     <strong>Description:</strong> {project?.description || "—"}
                   </Typography>
                 </Box>
@@ -1618,7 +1933,10 @@ const ProjectDetailsPage = () => {
                 }}
               >
                 <Box>
-                  <Typography variant="h6" sx={{ color: "var(--primary-color-1)" }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "var(--primary-color-1)" }}
+                  >
                     Project Files
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -1671,28 +1989,35 @@ const ProjectDetailsPage = () => {
                     bgcolor: "rgba(248, 250, 252, 0.6)",
                   }}
                 >
-                  <DescriptionIcon sx={{ fontSize: 56, color: "text.disabled", mb: 1 }} />
+                  <DescriptionIcon
+                    sx={{ fontSize: 56, color: "text.disabled", mb: 1 }}
+                  />
                   <Typography variant="subtitle1" color="text.secondary">
                     No project files yet
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Upload meeting notes, requirements, and other key documents here.
+                    Upload meeting notes, requirements, and other key documents
+                    here.
                   </Typography>
                 </Box>
               ) : (
                 <Stack spacing={2}>
                   {attachments.map((file) => {
-                    const uploadedAt = file.uploaded_at ? new Date(file.uploaded_at) : null;
-                    const hasValidDate = uploadedAt && !Number.isNaN(uploadedAt.getTime());
+                    const uploadedAt = file.uploaded_at
+                      ? new Date(file.uploaded_at)
+                      : null;
+                    const hasValidDate =
+                      uploadedAt && !Number.isNaN(uploadedAt.getTime());
                     const relativeTime = hasValidDate
                       ? formatDistanceToNow(uploadedAt!, { addSuffix: true })
                       : "";
-                    const extension =
-                      file.file_name?.includes(".")
-                        ? file.file_name.split(".").pop()?.toUpperCase()
-                        : undefined;
+                    const extension = file.file_name?.includes(".")
+                      ? file.file_name.split(".").pop()?.toUpperCase()
+                      : undefined;
                     const uploaderName = file.uploaded_by
-                      ? `${file.uploaded_by.first_name || ""} ${file.uploaded_by.last_name || ""}`.trim()
+                      ? `${file.uploaded_by.first_name || ""} ${
+                          file.uploaded_by.last_name || ""
+                        }`.trim()
                       : "";
 
                     return (
@@ -1724,7 +2049,10 @@ const ProjectDetailsPage = () => {
                           <DescriptionIcon />
                         </Box>
                         <Box sx={{ flexGrow: 1, width: "100%" }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          <Typography
+                            variant="subtitle2"
+                            sx={{ fontWeight: 600 }}
+                          >
                             {file.file_name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
@@ -1764,7 +2092,9 @@ const ProjectDetailsPage = () => {
                             onClick={() => handleDeleteAttachment(file.id)}
                             sx={{
                               bgcolor: "rgba(254, 226, 226, 0.6)",
-                              "&:hover": { bgcolor: "rgba(248, 113, 113, 0.2)" },
+                              "&:hover": {
+                                bgcolor: "rgba(248, 113, 113, 0.2)",
+                              },
                             }}
                           >
                             <DeleteOutlineIcon />
@@ -1787,14 +2117,27 @@ const ProjectDetailsPage = () => {
         >
           <Card sx={{ mb: 6 }}>
             <CardContent sx={{ p: { xs: 4, md: 6 } }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                <Typography variant="h6" sx={{ color: "var(--primary-color-1)" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ color: "var(--primary-color-1)" }}
+                >
                   Team Members
                 </Typography>
                 <IconButton
                   sx={{
-                     backgroundColor: "#DCDCDC",
-                    "&:hover": { backgroundColor: "var(--primary-color-1)", color: "white" },
+                    backgroundColor: "#DCDCDC",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                    },
                     transition: "all 0.3s",
                   }}
                   onClick={handleOpenDialog}
@@ -1815,7 +2158,9 @@ const ProjectDetailsPage = () => {
                 </Box>
               ) : filteredMembers?.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 6 }}>
-                  <GroupIcon sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }} />
+                  <GroupIcon
+                    sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }}
+                  />
                   <Typography variant="h6" color="text.secondary" mt={2}>
                     No team members found.
                   </Typography>
@@ -1825,7 +2170,14 @@ const ProjectDetailsPage = () => {
                 </Box>
               ) : (
                 <Box sx={{ width: "100%", overflowX: "hidden" }}>
-                  <TableContainer component={Paper} sx={{ boxShadow: "none", borderRadius: "16px", bgcolor: "rgba(255, 255, 255, 0.9)" }}>
+                  <TableContainer
+                    component={Paper}
+                    sx={{
+                      boxShadow: "none",
+                      borderRadius: "16px",
+                      bgcolor: "rgba(255, 255, 255, 0.9)",
+                    }}
+                  >
                     <Table>
                       <TableHead sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                         <TableRow>
@@ -1839,7 +2191,10 @@ const ProjectDetailsPage = () => {
                       </TableHead>
                       <TableBody>
                         {filteredMembers
-                          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                          .slice(
+                            page * rowsPerPage,
+                            page * rowsPerPage + rowsPerPage
+                          )
                           .map((member, index) => (
                             <TeamMemberRow
                               key={member.id}
@@ -1876,51 +2231,58 @@ const ProjectDetailsPage = () => {
               color: "white",
               mb: 2,
               textAlign: "center",
-              background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              background:
+                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
             }}
           >
             Assign Team Members
           </DialogTitle>
           <DialogContent>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Users</InputLabel>
-                <Select
-                  multiple
-                  value={selectedUsers}
-                  onChange={(e) => setSelectedUsers(e.target.value as string[])}
-                  label="Users"
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((value) => {
-                        const user = availableUsers.find((u) => u.id === value);
-                        return user ? (
-                          <Chip
-                            key={value}
-                            label={`${user.first_name} ${user.last_name}`}
-                            sx={{ borderRadius: "8px" }}
-                            onDelete={(e) => {
-                              e.stopPropagation();
-                              setSelectedUsers((prev) => prev.filter((id) => id !== value));
-                            }}
-                            onMouseDown={(e) => e.stopPropagation()}
-                          />
-                        ) : null;
-                      })}
-                    </Box>
-                  )}
-                >
-                  {availableUsers
-                    .filter((u) => !selectedUsers.includes(u.id))
-                    ?.map((u) => (
-                      <MenuItem key={u.id} value={u.id}>
-                        {`${u.first_name} ${u.last_name} (${u.email})`}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Users</InputLabel>
+              <Select
+                multiple
+                value={selectedUsers}
+                onChange={(e) => setSelectedUsers(e.target.value as string[])}
+                label="Users"
+                renderValue={(selected) => (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((value) => {
+                      const user = availableUsers.find((u) => u.id === value);
+                      return user ? (
+                        <Chip
+                          key={value}
+                          label={`${user.first_name} ${user.last_name}`}
+                          sx={{ borderRadius: "8px" }}
+                          onDelete={(e) => {
+                            e.stopPropagation();
+                            setSelectedUsers((prev) =>
+                              prev.filter((id) => id !== value)
+                            );
+                          }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        />
+                      ) : null;
+                    })}
+                  </Box>
+                )}
+              >
+                {availableUsers
+                  .filter((u) => !selectedUsers.includes(u.id))
+                  ?.map((u) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {`${u.first_name} ${u.last_name} (${u.email})`}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} disabled={isSubmitting} sx={{ color: "var(--primary-color-1)" }}>
+            <Button
+              onClick={handleCloseDialog}
+              disabled={isSubmitting}
+              sx={{ color: "var(--primary-color-1)" }}
+            >
               Cancel
             </Button>
             <Button
@@ -1947,10 +2309,12 @@ const ProjectDetailsPage = () => {
               color: "white",
               mb: 2,
               textAlign: "center",
-              background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              background:
+                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
             }}
           >
-            Change Status for {selectedMember?.user.first_name} {selectedMember?.user.last_name}
+            Change Status for {selectedMember?.user.first_name}{" "}
+            {selectedMember?.user.last_name}
           </DialogTitle>
           <DialogContent>
             <FormControl fullWidth sx={{ mt: 2 }}>
@@ -1988,14 +2352,25 @@ const ProjectDetailsPage = () => {
               color: "white",
               mb: 2,
               textAlign: "center",
-              background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              background:
+                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
             }}
           >
-            {clientDialogMode === "edit" ? "Edit Client Details" : "Add Client Details"}
+            {clientDialogMode === "edit"
+              ? "Edit Client Details"
+              : "Add Client Details"}
           </DialogTitle>
           <DialogContent>
             <form onSubmit={(e) => e.preventDefault()}>
-              <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", mt: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  mb: 2,
+                  alignItems: "center",
+                  mt: 2,
+                }}
+              >
                 <TextField
                   label="Name"
                   value={clientDetails.name}
@@ -2013,7 +2388,9 @@ const ProjectDetailsPage = () => {
                 <TextField
                   label="Contact"
                   value={clientDetails.contact}
-                  onChange={(e) => handleClientChange("contact", e.target.value)}
+                  onChange={(e) =>
+                    handleClientChange("contact", e.target.value)
+                  }
                   fullWidth
                   variant="outlined"
                 />
@@ -2021,7 +2398,11 @@ const ProjectDetailsPage = () => {
             </form>
           </DialogContent>
           <DialogActions>
-            <Button sx={{ color: "var(--primary-color-1)" }} onClick={handleCloseClientDialog} disabled={isSubmitting}>
+            <Button
+              sx={{ color: "var(--primary-color-1)" }}
+              onClick={handleCloseClientDialog}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button
@@ -2029,11 +2410,18 @@ const ProjectDetailsPage = () => {
               color="primary"
               sx={{ bgcolor: "var(--primary-color-1)" }}
               onClick={handleSaveClientDetails}
-              disabled={isSubmitting || (!clientDetails.name.trim() &&
-                !clientDetails.email.trim() &&
-                !clientDetails.contact.trim())}
+              disabled={
+                isSubmitting ||
+                (!clientDetails.name.trim() &&
+                  !clientDetails.email.trim() &&
+                  !clientDetails.contact.trim())
+              }
             >
-              {isSubmitting ? "Saving..." : clientDialogMode === "edit" ? "Save" : "Add"}
+              {isSubmitting
+                ? "Saving..."
+                : clientDialogMode === "edit"
+                ? "Save"
+                : "Add"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2051,18 +2439,31 @@ const ProjectDetailsPage = () => {
               color: "white",
               mb: 2,
               textAlign: "center",
-              background: "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              background:
+                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
             }}
           >
-            {timelineDialogMode === "edit" ? "Edit Project Timeline" : "Add Project Timeline"}
+            {timelineDialogMode === "edit"
+              ? "Edit Project Timeline"
+              : "Add Project Timeline"}
           </DialogTitle>
           <DialogContent>
             <form onSubmit={(e) => e.preventDefault()}>
-              <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", mt: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  mb: 2,
+                  alignItems: "center",
+                  mt: 2,
+                }}
+              >
                 <TextField
                   label="Title"
                   value={timelineDetails.title}
-                  onChange={(e) => handleTimelineChange("title", e.target.value)}
+                  onChange={(e) =>
+                    handleTimelineChange("title", e.target.value)
+                  }
                   fullWidth
                   variant="outlined"
                 />
@@ -2079,7 +2480,11 @@ const ProjectDetailsPage = () => {
             </form>
           </DialogContent>
           <DialogActions>
-            <Button sx={{ color: "var(--primary-color-1)" }} onClick={handleCloseTimelineDialog} disabled={isSubmitting}>
+            <Button
+              sx={{ color: "var(--primary-color-1)" }}
+              onClick={handleCloseTimelineDialog}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button
@@ -2089,7 +2494,11 @@ const ProjectDetailsPage = () => {
               onClick={handleSaveTimelineDetails}
               disabled={isSubmitting || !timelineDetails.title.trim()}
             >
-              {isSubmitting ? "Saving..." : timelineDialogMode === "edit" ? "Save" : "Add"}
+              {isSubmitting
+                ? "Saving..."
+                : timelineDialogMode === "edit"
+                ? "Save"
+                : "Add"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2103,14 +2512,27 @@ const ProjectDetailsPage = () => {
           >
             <Card sx={{ mb: 6 }}>
               <CardContent sx={{ p: { xs: 4, md: 6 } }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                  <Typography variant="h6" sx={{ color: "var(--primary-color-1)" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3,
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{ color: "var(--primary-color-1)" }}
+                  >
                     Client Details
                   </Typography>
                   <IconButton
                     sx={{
                       backgroundColor: "#DCDCDC",
-                      "&:hover": { backgroundColor: "var(--primary-color-1)", color: "white" },
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color-1)",
+                        color: "white",
+                      },
                       transition: "all 0.3s",
                     }}
                     onClick={() => handleOpenClientDialog("add")}
@@ -2120,7 +2542,13 @@ const ProjectDetailsPage = () => {
                 </Box>
                 {project.client_details?.length === 0 ? (
                   <Box sx={{ textAlign: "center", py: 6 }}>
-                    <GroupIcon sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }} />
+                    <GroupIcon
+                      sx={{
+                        fontSize: 80,
+                        color: "text.secondary",
+                        opacity: 0.7,
+                      }}
+                    />
                     <Typography variant="h6" color="text.secondary" mt={2}>
                       No client details found.
                     </Typography>
@@ -2129,10 +2557,17 @@ const ProjectDetailsPage = () => {
                   <Box sx={{ width: "100%", overflowX: "hidden" }}>
                     <TableContainer
                       component={Paper}
-                      sx={{ boxShadow: "none", borderRadius: "16px", bgcolor: "rgba(255, 255, 255, 0.9)", overflowY: "hidden" }}
+                      sx={{
+                        boxShadow: "none",
+                        borderRadius: "16px",
+                        bgcolor: "rgba(255, 255, 255, 0.9)",
+                        overflowY: "hidden",
+                      }}
                     >
                       <Table>
-                        <TableHead sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+                        <TableHead
+                          sx={{ position: "sticky", top: 0, zIndex: 1 }}
+                        >
                           <TableRow>
                             <TableCell>Name</TableCell>
                             <TableCell>Email</TableCell>
@@ -2146,7 +2581,9 @@ const ProjectDetailsPage = () => {
                               key={client.email}
                               client={client}
                               index={index}
-                              onEdit={(client, index) => handleOpenClientDialog("edit", client, index)}
+                              onEdit={(client, index) =>
+                                handleOpenClientDialog("edit", client, index)
+                              }
                             />
                           ))}
                         </TableBody>
@@ -2167,15 +2604,27 @@ const ProjectDetailsPage = () => {
         >
           <Card sx={{ mb: 4 }}>
             <CardContent sx={{ p: { xs: 4, md: 6 } }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: "center" }}>
-                <Typography variant="h6" sx={{ color: "var(--primary-color-1)" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 4,
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ color: "var(--primary-color-1)" }}
+                >
                   Project Timeline
                 </Typography>
                 <IconButton
-
                   sx={{
-                     backgroundColor: "#DCDCDC",
-                    "&:hover": { backgroundColor: "var(--primary-color-1)", color: "white" },
+                    backgroundColor: "#DCDCDC",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                    },
                     transition: "all 0.3s",
                   }}
                   onClick={() => handleOpenTimelineDialog("add")}
@@ -2185,7 +2634,9 @@ const ProjectDetailsPage = () => {
               </Box>
               {project.project_timeline?.length === 0 ? (
                 <Box sx={{ textAlign: "center", py: 6 }}>
-                  <GroupIcon sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }} />
+                  <GroupIcon
+                    sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }}
+                  />
                   <Typography variant="h6" color="text.secondary" mt={2}>
                     No timeline entries found.
                   </Typography>
@@ -2202,15 +2653,23 @@ const ProjectDetailsPage = () => {
                     }}
                   >
                     {project?.project_timeline
-                      ?.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+                      ?.sort(
+                        (a, b) =>
+                          new Date(a.time).getTime() -
+                          new Date(b.time).getTime()
+                      )
                       ?.map((timeline, index) => (
                         <ProjectTimelineItem
                           key={timeline.title}
                           timeline={timeline}
                           index={index}
-                          onEdit={(timeline, index) => handleOpenTimelineDialog("edit", timeline, index)}
+                          onEdit={(timeline, index) =>
+                            handleOpenTimelineDialog("edit", timeline, index)
+                          }
                           isFirst={index === 0}
-                          isLast={index === project.project_timeline?.length - 1}
+                          isLast={
+                            index === project.project_timeline?.length - 1
+                          }
                         />
                       ))}
                   </Timeline>
@@ -2227,33 +2686,47 @@ const ProjectDetailsPage = () => {
           transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
         >
           <TasksContainer>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, px: 3 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: "var(--primary-color-1)" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+                px: 3,
+              }}
+            >
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "var(--primary-color-1)" }}
+              >
                 Tasks
               </Typography>
               <Box>
-              <SearchField
-                label="Search by title"
-                variant="outlined"
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                sx={{ width: { xs: "100%", sm: 300 } }}
-              />
-              <IconButton
-                sx={{
-                backgroundColor: "#DCDCDC",
-                  marginLeft:'10px',
-                  "&:hover": { backgroundColor: "var(--primary-color-1)",color:'white'},
-                  transition: "all 0.3s",
-                }}
-                onClick={handleOpenModal}
-              >
-                <AddIcon />
-              </IconButton>
+                <SearchField
+                  label="Search by title"
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{ width: { xs: "100%", sm: 300 } }}
+                />
+                <IconButton
+                  sx={{
+                    backgroundColor: "#DCDCDC",
+                    marginLeft: "10px",
+                    "&:hover": {
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                    },
+                    transition: "all 0.3s",
+                  }}
+                  onClick={handleOpenModal}
+                >
+                  <AddIcon />
+                </IconButton>
               </Box>
             </Box>
- <Box sx={{ px: 3 }}>
+            <Box sx={{ px: 3 }}>
               {(searchTerm === "" || priority1Tasks.length > 0) && (
                 <TicketSection
                   title="Priority 1 Tickets"
@@ -2301,8 +2774,14 @@ const ProjectDetailsPage = () => {
               )}
               {searchTerm && filteredTasks.length === 0 && (
                 <Box sx={{ textAlign: "center", py: 4, px: 3 }}>
-                  <GroupIcon sx={{ fontSize: 60, color: "text.secondary", opacity: 0.7 }} />
-                  <Typography color="text.secondary" mt={2} sx={{ fontSize: "0.9rem" }}>
+                  <GroupIcon
+                    sx={{ fontSize: 60, color: "text.secondary", opacity: 0.7 }}
+                  />
+                  <Typography
+                    color="text.secondary"
+                    mt={2}
+                    sx={{ fontSize: "0.9rem" }}
+                  >
                     No tickets found matching '{searchTerm}'
                   </Typography>
                 </Box>
@@ -2311,290 +2790,354 @@ const ProjectDetailsPage = () => {
           </TasksContainer>
         </motion.div>
       </Box>
-        <Modal open={openModal} onClose={handleCloseModal}>
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 800,
-              bgcolor: "#ffffff",
-              borderRadius: 2,
-              boxShadow: 24,
-              p: 4,
-            }}
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 800,
+            bgcolor: "#ffffff",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography
+            component="h2"
+            sx={{ mb: 2, fontWeight: "bold", color: "#172b4d" }}
           >
-            <Typography component="h2" sx={{ mb: 2, fontWeight: "bold", color: "#172b4d" }}>
-              {"Add New Task"}
+            {"Add New Task"}
+          </Typography>
+          {error && (
+            <Typography color="error" sx={{ mb: 2, color: "#f44336" }}>
+              {error}
             </Typography>
-            {error && (
-              <Typography color="error" sx={{ mb: 2, color: "#f44336" }}>
-                {error}
-              </Typography>
-            )}
-            <Formik
-              enableReinitialize
-              initialValues={{
-                title: "",
-                priority: "p3",
-                description:  "",
-                project_id:project?.id,
-                current_user_id: "",
-                deadline_hours: "0",
-                deadline_minutes:  "0",
-                deadline_total_minutes:"0",
-              }}
-              validationSchema={taskSchema}
-              onSubmit={handleAddTask}
-            >
-              {({ values, setFieldValue, errors, touched, dirty }) => (
-                <Form>
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+          )}
+          <Formik
+            enableReinitialize
+            initialValues={{
+              title: "",
+              priority: "p3",
+              description: "",
+              project_id: project?.id,
+              current_user_id: "",
+              deadline_hours: "0",
+              deadline_minutes: "0",
+              deadline_total_minutes: "0",
+            }}
+            validationSchema={taskSchema}
+            onSubmit={handleAddTask}
+          >
+            {({ values, setFieldValue, errors, touched, dirty }) => (
+              <Form>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    <Field
+                      as={TextField}
+                      name="title"
+                      label="Title"
+                      fullWidth
+                      margin="none"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": {
+                            borderColor: "var(--primary-color-1)",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "var(--primary-color-2)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "var(--primary-color-2)",
+                          },
+                        },
+                      }}
+                      error={touched.title && !!errors.title}
+                      helperText={touched.title && errors.title}
+                    />
+                    <FormControl
+                      fullWidth
+                      error={touched.priority && !!errors.priority}
+                    >
+                      <InputLabel>Priority</InputLabel>
+
                       <Field
-                        as={TextField}
-                        name="title"
-                        label="Title"
-                        fullWidth
-                        margin="none"
-                                          sx={{
-                                              '& .MuiOutlinedInput-root': {
-                                                  '& fieldset': {
-                                                      borderColor: 'var(--primary-color-1)',
-                                                  },
-                                                  '&:hover fieldset': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                                  '&.Mui-focused fieldset': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                              },
-                                          }}
-                        error={touched.title && !!errors.title}
-                        helperText={touched.title && errors.title}
-                      />
-                                      <FormControl fullWidth error={touched.priority && !!errors.priority}>
-                                          <InputLabel>Priority</InputLabel>
+                        as={Select}
+                        name="priority"
+                        label="Priority"
+                        sx={{
+                          borderRadius: "10px", // or '0.5rem'
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "var(--primary-color-1)",
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "var(--primary-color-2)",
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "var(--primary-color-2)",
+                          },
+                        }}
+                      >
+                        <MenuItem value="p1">P1</MenuItem>
+                        <MenuItem value="p2">P2</MenuItem>
+                        <MenuItem value="p3">P3</MenuItem>
+                      </Field>
 
-                                          <Field
-                                              as={Select}
-                                              name="priority"
-                                              label="Priority"
-                                              sx={{
-                                                  borderRadius: '10px', // or '0.5rem'
-                                                  '& .MuiOutlinedInput-notchedOutline': {
-                                                      borderColor: 'var(--primary-color-1)',
-                                                  },
-                                                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                              }}
-                                          >
-                                              <MenuItem value="p1">P1</MenuItem>
-                                              <MenuItem value="p2">P2</MenuItem>
-                                              <MenuItem value="p3">P3</MenuItem>
-                                          </Field>
+                      <ErrorMessage name="priority">
+                        {(msg) => (
+                          <div style={{ color: "red", fontSize: "0.75rem" }}>
+                            {msg}
+                          </div>
+                        )}
+                      </ErrorMessage>
+                    </FormControl>
 
-                                          <ErrorMessage name="priority">
-                                              {(msg) => (
-                                                  <div style={{ color: 'red', fontSize: '0.75rem' }}>{msg}</div>
-                                              )}
-                                          </ErrorMessage>
-                                      </FormControl>
-
-                    <FormControl fullWidth error={touched.project_id && !!errors.project_id}>
+                    <FormControl
+                      fullWidth
+                      error={touched.project_id && !!errors.project_id}
+                    >
                       <TextField
                         label={<RequiredLabel label="Project" />}
                         variant="outlined"
                         fullWidth
-                        value={project?.title || ''}
+                        value={project?.title || ""}
                         disabled
                         error={touched.project_id && !!errors.project_id}
                         helperText={
-                          touched.project_id && typeof errors.project_id === 'string'
+                          touched.project_id &&
+                          typeof errors.project_id === "string"
                             ? errors.project_id
-                            : ''
+                            : ""
                         }
                       />
                     </FormControl>
-                        <FormControl
-                          fullWidth
-                          error={Boolean(touched.current_user_id && errors?.current_user_id)}
-                        >
-                          <Autocomplete
-                            options={modalUsers}
-                            getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
-                            value={
-                              modalUsers.find((u) => u.id === values.current_user_id) || null
-                            }
-                            onChange={(_, selectedUser) => {
-                              setFieldValue('current_user_id', selectedUser?.id || '');
+                    <FormControl
+                      fullWidth
+                      error={Boolean(
+                        touched.current_user_id && errors?.current_user_id
+                      )}
+                    >
+                      <Autocomplete
+                        options={modalUsers}
+                        getOptionLabel={(option) =>
+                          `${option.first_name} ${option.last_name}`
+                        }
+                        value={
+                          modalUsers.find(
+                            (u) => u.id === values.current_user_id
+                          ) || null
+                        }
+                        onChange={(_, selectedUser) => {
+                          setFieldValue(
+                            "current_user_id",
+                            selectedUser?.id || ""
+                          );
+                        }}
+                        disabled={!values.project_id}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="User"
+                            name="current_user_id"
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "var(--primary-color-1)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "var(--primary-color-2)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "var(--primary-color-2)",
+                                },
+                              },
                             }}
-                            disabled={!values.project_id}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                label="User"
-                                name="current_user_id"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            '& fieldset': {
-                                                borderColor: 'var(--primary-color-1)',
-                                            },
-                                            '&:hover fieldset': {
-                                                borderColor: 'var(--primary-color-2)',
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'var(--primary-color-2)',
-                                            },
-                                        },
-                                    }}
-                                error={Boolean(touched.current_user_id && errors?.current_user_id)}
-                                helperText={
-                                  touched.current_user_id && typeof errors?.current_user_id === 'string'
-                                    ? errors.current_user_id
-                                    : ''
-                                }
-                              />
+                            error={Boolean(
+                              touched.current_user_id && errors?.current_user_id
                             )}
-                            noOptionsText={
-                              values.project_id ? 'No users found' : 'Select a project first'
+                            helperText={
+                              touched.current_user_id &&
+                              typeof errors?.current_user_id === "string"
+                                ? errors.current_user_id
+                                : ""
                             }
                           />
-                        </FormControl>
-                      
-                    </Box>
-                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                      <Field
-                        as={TextField}
-                        name="description"
-                        label="Description"
-                        fullWidth
-                        multiline
-                        rows={7}
-                                          sx={{
-                                              '& .MuiOutlinedInput-root': {
-                                                  '& fieldset': {
-                                                      borderColor: 'var(--primary-color-1)',
-                                                  },
-                                                  '&:hover fieldset': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                                  '&.Mui-focused fieldset': {
-                                                      borderColor: 'var(--primary-color-2)',
-                                                  },
-                                              },
-                                          }}
+                        )}
+                        noOptionsText={
+                          values.project_id
+                            ? "No users found"
+                            : "Select a project first"
+                        }
                       />
-                      <Box sx={{ display: "flex", alignItems: 'center', gap: 2 }}>
-                        <Typography> ETA</Typography>
-                        <Field
-                          as={TextField}
-                          name="deadline_hours"
-                          label="Hours"
-                          type="number"
-                                              sx={{
-                                                  flex: 1,
-                                                  '& .MuiOutlinedInput-root': {
-                                                      '& fieldset': {
-                                                          borderColor: 'var(--primary-color-1)',
-                                                      },
-                                                      '&:hover fieldset': {
-                                                          borderColor: 'var(--primary-color-2)',
-                                                      },
-                                                      '&.Mui-focused fieldset': {
-                                                          borderColor: 'var(--primary-color-2)',
-                                                      },
-                                                  },
-                                              }}                          margin="none"
-                          error={touched.deadline_hours && !!errors.deadline_hours}
-                          helperText={touched.deadline_hours && errors.deadline_hours}
-                          onChange={(e: any) => {
-                            const hours = e.target.value;
-                            setFieldValue("deadline_hours", hours);
-                            const totalMinutes =
-                              (parseFloat(hours) || 0) * 60 +
-                              (parseFloat(values.deadline_minutes) || 0);
-                            setFieldValue("deadline_total_minutes", Math.round(totalMinutes).toString());
-                          }}
-                        />
-                                          <Field
-                                              as={TextField}
-                                              name="deadline_minutes"
-                                              label="Minutes"
-                                              type="number"
-                                              sx={{
-                                                  flex: 1,
-                                                  '& .MuiOutlinedInput-root': {
-                                                      '& fieldset': {
-                                                          borderColor: 'var(--primary-color-1)',
-                                                      },
-                                                      '&:hover fieldset': {
-                                                          borderColor: 'var(--primary-color-2)',
-                                                      },
-                                                      '&.Mui-focused fieldset': {
-                                                          borderColor: 'var(--primary-color-2)',
-                                                      },
-                                                  },
-                                              }}
-                                              margin="none"
-                                              error={touched.deadline_minutes && !!errors.deadline_minutes}
-                                              helperText={touched.deadline_minutes && errors.deadline_minutes}
-                                              onChange={(e: any) => {
-                                                  const minutes = e.target.value;
-                                                  setFieldValue('deadline_minutes', minutes);
-                                                  const totalMinutes =
-                                                      (parseFloat(values.deadline_hours) || 0) * 60 +
-                                                      (parseFloat(minutes) || 0);
-                                                  setFieldValue('deadline_total_minutes', Math.round(totalMinutes).toString());
-                                              }}
-                                          />
-
-                      </Box>
-                      <ErrorMessage name="deadline_total_minutes">
-                        {(msg) => <div style={{ color: "red", fontSize: "0.75rem" }}>{msg}</div>}
-                      </ErrorMessage>
-                    </Box>
+                    </FormControl>
                   </Box>
-                  <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                                  <Button
-                                      variant="outlined"
-                                      onClick={handleCloseModal}
-                                      sx={{
-                                          borderColor: 'var(--primary-color-1)',
-                                          color: 'var(--primary-color-1)',
-                                          '&:hover': {
-                                              borderColor: 'var(--primary-color-2)',
-                                              backgroundColor: 'rgba(0, 0, 0, 0.02)', // optional subtle hover effect
-                                          },
-                                      }}
-                                  >
-                                      Cancel
-                                  </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={isSubmitting || !dirty}
+                  <Box
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    <Field
+                      as={TextField}
+                      name="description"
+                      label="Description"
+                      fullWidth
+                      multiline
+                      rows={7}
                       sx={{
-                        backgroundColor: "var(--primary-color-1)",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "var(--primary-color-1-hover)",
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": {
+                            borderColor: "var(--primary-color-1)",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "var(--primary-color-2)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "var(--primary-color-2)",
+                          },
                         },
                       }}
-                    >
-                      {"Add Task"}
-                    </Button>
+                    />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Typography> ETA</Typography>
+                      <Field
+                        as={TextField}
+                        name="deadline_hours"
+                        label="Hours"
+                        type="number"
+                        sx={{
+                          flex: 1,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "var(--primary-color-1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "var(--primary-color-2)",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "var(--primary-color-2)",
+                            },
+                          },
+                        }}
+                        margin="none"
+                        error={
+                          touched.deadline_hours && !!errors.deadline_hours
+                        }
+                        helperText={
+                          touched.deadline_hours && errors.deadline_hours
+                        }
+                        onChange={(e: any) => {
+                          const hours = e.target.value;
+                          setFieldValue("deadline_hours", hours);
+                          const totalMinutes =
+                            (parseFloat(hours) || 0) * 60 +
+                            (parseFloat(values.deadline_minutes) || 0);
+                          setFieldValue(
+                            "deadline_total_minutes",
+                            Math.round(totalMinutes).toString()
+                          );
+                        }}
+                      />
+                      <Field
+                        as={TextField}
+                        name="deadline_minutes"
+                        label="Minutes"
+                        type="number"
+                        sx={{
+                          flex: 1,
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "var(--primary-color-1)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "var(--primary-color-2)",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "var(--primary-color-2)",
+                            },
+                          },
+                        }}
+                        margin="none"
+                        error={
+                          touched.deadline_minutes && !!errors.deadline_minutes
+                        }
+                        helperText={
+                          touched.deadline_minutes && errors.deadline_minutes
+                        }
+                        onChange={(e: any) => {
+                          const minutes = e.target.value;
+                          setFieldValue("deadline_minutes", minutes);
+                          const totalMinutes =
+                            (parseFloat(values.deadline_hours) || 0) * 60 +
+                            (parseFloat(minutes) || 0);
+                          setFieldValue(
+                            "deadline_total_minutes",
+                            Math.round(totalMinutes).toString()
+                          );
+                        }}
+                      />
+                    </Box>
+                    <ErrorMessage name="deadline_total_minutes">
+                      {(msg) => (
+                        <div style={{ color: "red", fontSize: "0.75rem" }}>
+                          {msg}
+                        </div>
+                      )}
+                    </ErrorMessage>
                   </Box>
-                </Form>
-              )}
-            </Formik>
-          </Box>
-        </Modal>
+                </Box>
+                <Box
+                  sx={{
+                    mt: 3,
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 1,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={handleCloseModal}
+                    sx={{
+                      borderColor: "var(--primary-color-1)",
+                      color: "var(--primary-color-1)",
+                      "&:hover": {
+                        borderColor: "var(--primary-color-2)",
+                        backgroundColor: "rgba(0, 0, 0, 0.02)", // optional subtle hover effect
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting || !dirty}
+                    sx={{
+                      backgroundColor: "var(--primary-color-1)",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "var(--primary-color-1-hover)",
+                      },
+                    }}
+                  >
+                    {"Add Task"}
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          </Formik>
+        </Box>
+      </Modal>
     </ThemeProvider>
   );
 };

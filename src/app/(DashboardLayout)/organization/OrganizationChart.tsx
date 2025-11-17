@@ -130,7 +130,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             transform: "translateX(-50%)",
             width: 2,
             height: 40,
-            bgcolor: "primary.main",
+            bgcolor: "var(--primary-color-1)",
             zIndex: 0,
           }}
         />
@@ -148,18 +148,18 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             boxShadow: level === 0 ? 6 : 3,
             border: `2px solid ${
               level === 0
-                ? "primary.main"
+                ? "var(--primary-color-1)"
                 : level === 1
-                ? "secondary.main"
+                ? "var(--primary-color-2)"
                 : level === 2
-                ? "info.main"
-                : "divider"
+                ? "rgba(7, 152, 189, 0.5)"
+                : "rgba(0, 0, 0, 0.12)"
             }`,
             transition: "all 0.3s ease",
             "&:hover": {
               transform: "translateY(-6px) scale(1.02)",
               boxShadow: 8,
-              borderColor: "primary.dark",
+              borderColor: "var(--primary-color-1)",
             },
             bgcolor: "background.paper",
             cursor: "pointer",
@@ -179,11 +179,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 sx={{
                   width: 64,
                   height: 64,
-                  bgcolor: "primary.main",
+                  bgcolor: "var(--primary-color-1)",
                   fontSize: "1.3rem",
                   fontWeight: 600,
                   border: "3px solid",
-                  borderColor: "primary.light",
+                  borderColor: "rgba(7, 152, 189, 0.3)",
                 }}
               >
                 {initials}
@@ -196,10 +196,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                     onToggle(node.id);
                   }}
                   sx={{
-                    bgcolor: isExpanded ? "primary.main" : "action.hover",
-                    color: isExpanded ? "white" : "text.secondary",
+                    bgcolor: isExpanded ? "var(--primary-color-1)" : "rgba(7, 152, 189, 0.08)",
+                    color: isExpanded ? "white" : "var(--primary-color-1)",
                     "&:hover": {
-                      bgcolor: "primary.dark",
+                      bgcolor: "var(--primary-color-1-hover)",
                       color: "white",
                     },
                     width: 36,
@@ -290,8 +290,8 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                   mb: 1,
                   fontSize: "0.75rem",
                   height: 24,
-                  bgcolor: "primary.light",
-                  color: "primary.dark",
+                  bgcolor: "rgba(7, 152, 189, 0.1)",
+                  color: "var(--primary-color-1)",
                   fontWeight: 500,
                 }}
               />
@@ -339,7 +339,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               transform: "translateX(-50%)",
               width: node.children.length > 1 ? "calc(100% - 80px)" : 2,
               height: 2,
-              bgcolor: "primary.main",
+              bgcolor: "var(--primary-color-1)",
               zIndex: 0,
             },
           }}
@@ -366,7 +366,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                       ? "50%"
                       : 0,
                   height: 2,
-                  bgcolor: "primary.main",
+                  bgcolor: "var(--primary-color-1)",
                   zIndex: 0,
                 },
               }}
@@ -650,11 +650,21 @@ const OrganizationChart: React.FC = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search />
+                    <Search sx={{ color: "var(--primary-color-1)" }} />
                   </InputAdornment>
                 ),
               }}
-              sx={{ minWidth: 250 }}
+              sx={{
+                minWidth: 250,
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "var(--primary-color-1)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "var(--primary-color-1)",
+                  },
+                },
+              }}
             />
 
             <Button
@@ -662,6 +672,15 @@ const OrganizationChart: React.FC = () => {
               startIcon={<Home />}
               onClick={goToTop}
               size="small"
+              sx={{
+                borderColor: "var(--primary-color-1)",
+                color: "var(--primary-color-1)",
+                "&:hover": {
+                  borderColor: "var(--primary-color-2)",
+                  backgroundColor: "rgba(7, 152, 189, 0.08)",
+                },
+                textTransform: "none",
+              }}
             >
               Top
             </Button>
@@ -672,20 +691,64 @@ const OrganizationChart: React.FC = () => {
                 startIcon={<Person />}
                 onClick={goToMe}
                 size="small"
+                sx={{
+                  borderColor: "var(--primary-color-1)",
+                  color: "var(--primary-color-1)",
+                  "&:hover": {
+                    borderColor: "var(--primary-color-2)",
+                    backgroundColor: "rgba(7, 152, 189, 0.08)",
+                  },
+                  textTransform: "none",
+                }}
               >
                 Me
               </Button>
             )}
 
-            <Button variant="outlined" onClick={expandAll} size="small">
+            <Button
+              variant="outlined"
+              onClick={expandAll}
+              size="small"
+              sx={{
+                borderColor: "var(--primary-color-1)",
+                color: "var(--primary-color-1)",
+                "&:hover": {
+                  borderColor: "var(--primary-color-2)",
+                  backgroundColor: "rgba(7, 152, 189, 0.08)",
+                },
+                textTransform: "none",
+              }}
+            >
               Expand All
             </Button>
 
-            <Button variant="outlined" onClick={collapseAll} size="small">
+            <Button
+              variant="outlined"
+              onClick={collapseAll}
+              size="small"
+              sx={{
+                borderColor: "var(--primary-color-1)",
+                color: "var(--primary-color-1)",
+                "&:hover": {
+                  borderColor: "var(--primary-color-2)",
+                  backgroundColor: "rgba(7, 152, 189, 0.08)",
+                },
+                textTransform: "none",
+              }}
+            >
               Collapse All
             </Button>
 
-            <IconButton onClick={() => fetchOrganizationTree()} size="small">
+            <IconButton
+              onClick={() => fetchOrganizationTree()}
+              size="small"
+              sx={{
+                color: "var(--primary-color-1)",
+                "&:hover": {
+                  backgroundColor: "rgba(7, 152, 189, 0.08)",
+                },
+              }}
+            >
               <Refresh />
             </IconButton>
           </Box>
@@ -700,7 +763,11 @@ const OrganizationChart: React.FC = () => {
                 sx={{
                   mb: 1,
                   cursor: "pointer",
-                  "&:hover": { bgcolor: "action.hover" },
+                  border: "1px solid transparent",
+                  "&:hover": {
+                    bgcolor: "rgba(7, 152, 189, 0.08)",
+                    borderColor: "var(--primary-color-1)",
+                  },
                 }}
                 onClick={() => handleSearchSelect(result.id)}
               >
@@ -797,7 +864,14 @@ const OrganizationChart: React.FC = () => {
         <Tooltip title="Zoom In" arrow>
           <IconButton
             onClick={() => setZoomLevel((prev) => Math.min(prev + 10, 200))}
-            sx={{ bgcolor: "background.paper", boxShadow: 3 }}
+            sx={{
+              bgcolor: "background.paper",
+              boxShadow: 3,
+              color: "var(--primary-color-1)",
+              "&:hover": {
+                backgroundColor: "rgba(7, 152, 189, 0.08)",
+              },
+            }}
           >
             <ZoomIn />
           </IconButton>
@@ -805,7 +879,14 @@ const OrganizationChart: React.FC = () => {
         <Tooltip title="Zoom Out" arrow>
           <IconButton
             onClick={() => setZoomLevel((prev) => Math.max(prev - 10, 50))}
-            sx={{ bgcolor: "background.paper", boxShadow: 3 }}
+            sx={{
+              bgcolor: "background.paper",
+              boxShadow: 3,
+              color: "var(--primary-color-1)",
+              "&:hover": {
+                backgroundColor: "rgba(7, 152, 189, 0.08)",
+              },
+            }}
           >
             <ZoomOut />
           </IconButton>
@@ -813,7 +894,14 @@ const OrganizationChart: React.FC = () => {
         <Tooltip title="Reset View" arrow>
           <IconButton
             onClick={resetView}
-            sx={{ bgcolor: "background.paper", boxShadow: 3 }}
+            sx={{
+              bgcolor: "background.paper",
+              boxShadow: 3,
+              color: "var(--primary-color-1)",
+              "&:hover": {
+                backgroundColor: "rgba(7, 152, 189, 0.08)",
+              },
+            }}
           >
             <PanTool />
           </IconButton>

@@ -5,14 +5,7 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Avatar,
-  Paper,
   Card,
   CardContent,
   Button,
@@ -30,6 +23,7 @@ import {
   Input,
   Tooltip,
   Autocomplete,
+  Popover,
 } from '@mui/material';
 import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 import { usePathname } from 'next/navigation';
@@ -43,7 +37,7 @@ import dayjs from 'dayjs';
 import { AxiosError } from 'axios';
 import { uploadFile } from '@/utils/UploadFile';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { Edit, Email, Phone, AssignmentTurnedIn, Delete } from '@mui/icons-material';
+import { Edit, Email, Phone, AssignmentTurnedIn, Delete, Visibility as VisibilityIcon, Close as CloseIcon, OpenInNew as OpenInNewIcon, PersonAddAlt as PersonAddAltIcon } from '@mui/icons-material';
 import { exportUsersToDocx } from '@/utils/exports/ExportDocx';
 import { exportUsersToExcel } from '@/utils/exports/ExportExcel';
 import { CustomPagination } from '@/app/(AuthLayout)/components/Pagination/CustomPagination';
@@ -122,11 +116,13 @@ export default function UsersListTable() {
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(12);
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");  
+  const [detailsUser, setDetailsUser] = useState<User | null>(null);
+  const [detailsAnchorEl, setDetailsAnchorEl] = useState<HTMLElement | null>(null);
 
   const axiosInstance = createAxiosInstance();
   const tenant = Cookies.get('tenant');
@@ -202,7 +198,7 @@ export default function UsersListTable() {
   };
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    setRowsPerPage(parseInt(event.target.value, 12));
     setPage(0);
   };
     const handleDeleteUser=async(userId:string)=>{
@@ -306,42 +302,48 @@ const handleDownloadSampleExcel = async () => {
         </CardContent>
       </Card>
 
-      <Card sx={{ mt: '25px' }}>
+      <Card
+        sx={{
+          mt: '25px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '18px',
+          border: '1px solid #e2e8f0',
+        }}
+      >
         <CardContent sx={{ padding: '20px 20px !important' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" gutterBottom>
-              Users List
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: '#0f172a' }}>
+              Employees
             </Typography>
             <Toaster position="top-right" reverseOrder={false} />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
                 size="small"
-                // label="Search Projects"
                 variant="outlined"
                 fullWidth
-                placeholder="Search by User Name..."
+                placeholder="Search by user name..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 InputProps={{
                   startAdornment: (
-                    <SearchIcon sx={{ color: "var(--primary-color-1)", mr: 1 }} />
+                    <SearchIcon sx={{ color: 'var(--primary-color-1)', mr: 1 }} />
                   ),
                 }}
                 sx={{
-                  width: "250px",
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "var(--primary-color-1)",
+                  width: '260px',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'var(--primary-color-1)',
                     },
-                    "&:hover fieldset": {
-                      borderColor: "var(--primary-color-2)",
+                    '&:hover fieldset': {
+                      borderColor: 'var(--primary-color-2)',
                     },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "var(--primary-color-2)",
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'var(--primary-color-2)',
                     },
                   },
-                  backgroundColor: "#FFF", // Ensure visibility
-                  borderRadius: "4px",
+                  backgroundColor: '#ffffff',
+                  borderRadius: '999px',
                 }}
               />
               <ExportFileDropdown
@@ -350,256 +352,514 @@ const handleDownloadSampleExcel = async () => {
                 exportToDocx={exportUsersToDocx}
                 label="Export Users"
               />
-             {(currentUserPriority < 3) && <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: 'var(--primary-color-1)',
-                  color: 'var(--text-color-2)',
-                  fontWeight: 'bold',
-                  '&:hover': {
-                    backgroundColor: 'var(--primary-color-1-hover)',
-                  },
-                }}
-                onClick={() => setOpenBulkDialog(true)}
-              >
-                Bulk Upload Users
-              </Button>} 
-              <Link href="/users/add-new-user" passHref>
+              {currentUserPriority < 3 && (
                 <Button
                   variant="contained"
                   sx={{
                     backgroundColor: 'var(--primary-color-1)',
                     color: 'var(--text-color-2)',
                     fontWeight: 'bold',
+                    textTransform: 'none',
+                    borderRadius: '999px',
+                    px: 3,
                     '&:hover': {
                       backgroundColor: 'var(--primary-color-1-hover)',
                     },
                   }}
-                  // disabled={currentUserPriority > 2} // Only Superadmin and Administrator can add users
+                  onClick={() => setOpenBulkDialog(true)}
+                >
+                  Bulk Upload
+                </Button>
+              )}
+              <Link href="/users/add-new-user" passHref>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: 'var(--primary-color-2)',
+                    color: 'var(--text-color-2)',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    borderRadius: '999px',
+                    px: 3,
+                    '&:hover': {
+                      backgroundColor: 'var(--primary-color-1-hover)',
+                    },
+                  }}
                 >
                   Add New User
                 </Button>
               </Link>
             </Box>
           </Box>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'var(--primary-color-1)' }}>
-                  {[
-                    'Avatar',
-                    'Name',
-                    'Email',
-                    'Phone',
-                    'Role',
-                    'Designation',
-                    'Department',
-                    'Employee Code',
-                    'Action',
-                    'Assign Role'
-                  ].map((heading) => (
-                    <TableCell
-                      key={heading}
-                      sx={{
-                        fontWeight: 'bold',
-                        color: 'white',
-                        borderBottom: '1px solid #E0E0E0',
-                        py: 1.2,
-                        fontSize: 13,
-                      }}
-                    >
-                      {heading}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((user, index) => {
-                    // Determine if the current user can edit or assign roles to this user
-                    const targetUserPriority = user.role?.priority || 4;
-                    const canEditOrAssign =
-                      currentUserPriority <= 2 || // Superadmin or Administrator can edit all
-                      (currentUserPriority === 3 && targetUserPriority >= 3); // Manager can edit Manager or Employee
 
-                    return (
-                      <TableRow
-                        key={user?.id}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(3, minmax(0, 1fr))',
+                lg: 'repeat(4, minmax(0, 1fr))',
+              },
+              gap: 2.5,
+            }}
+          >
+            {users
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((user) => {
+                const targetUserPriority = user.role?.priority || 4;
+                const canEditOrAssign =
+                  currentUserPriority <= 2 ||
+                  (currentUserPriority === 3 && targetUserPriority >= 3);
+
+                const initials = `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase();
+
+                return (
+                  <Box
+                    key={user.id}
+                    sx={{
+                      position: 'relative',
+                      borderRadius: '18px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 8px 18px rgba(15, 23, 42, 0.05)',
+                      p: 1.75,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 0.6,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        boxShadow: '0 12px 24px rgba(15, 23, 42, 0.10)',
+                        borderColor: 'var(--primary-color-1)',
+                      },
+                    }}
+                  >
+                    {/* Top row: avatar on left, name + employee code + status */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                      <Link href={`/users/${user.id}`}>
+                      <Avatar
+                        src={user.profile_image || ''}
+                        alt={`${user.first_name} ${user.last_name}`}
                         sx={{
-                          backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F7F8FA',
-                          '&:last-child td': { borderBottom: 'none' },
+                          width: 44,
+                          height: 44,
+                          bgcolor: 'var(--primary-color-1)',
+                          fontSize: 18,
+                          fontWeight: 600,
+                          boxShadow: '0 8px 20px rgba(15, 23, 42, 0.18)',
+                          transition: 'transform 0.2s',
                           '&:hover': {
-                            backgroundColor: '#F1F3F4',
-                            cursor: 'pointer',
+                            transform: 'scale(1.05)',
+                            bgcolor: 'var(--primary-color-2)',
                           },
-                          transition: 'background-color 0.3s',
                         }}
                       >
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5, verticalAlign: 'middle' }}>
-                        <Link href={`/users/${user?.id}`}>
-                          <Avatar
-                            src={user.profile_image || ''}
-                            alt={`${user.first_name} ${user.last_name}`}
-                            sx={{ width: 28, height: 28, cursor: 'pointer' }}
-                          />
+                        {!user.profile_image && initials}
+                      </Avatar>
+                      </Link>
+                      <Box sx={{ minWidth: 0 }} className="user-name-container">
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 600,
+                            color: '#0f172a',
+                            lineHeight: 1.2,
+                            mb: 0.25,
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          <Link
+                            href={`/users/${user.id}`}
+                            style={{
+                              textDecoration: 'none',
+                              color: 'inherit',
+                              cursor: 'pointer',
+                              transition: 'color 0.2s',
+                            }}
+                            className="user-name-link"
+                            onMouseOver={e => { e.currentTarget.style.color = 'var(--primary-color-2)'; }}
+                            onMouseOut={e => { e.currentTarget.style.color = 'inherit'; }}
+                          >
+                            {user.first_name} {user.last_name}
                           </Link>
-
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Link href={`/users/${user?.id}`}>
-                            <Box
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {user.employeeCode && (
+                            <Typography
+                              variant="caption"
                               sx={{
-                                width: 'fit-content',
-                                height: '24px',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                fontSize: '12px',
-                                fontWeight: 'medium',
+                                color: '#64748b',
+                                fontWeight: 500,
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              <span
-                                style={{
-                                  width: '6px',
-                                  height: '6px',
-                                  borderRadius: '50%',
-                                  backgroundColor: user.is_active ? '#43A047' : '#D32F2F',
-                                  marginRight: '6px',
-                                }}
-                              />
-                              {user.first_name} {user.last_name}
-                            </Box>
-                          </Link>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Box
+                              {user.employeeCode}
+                            </Typography>
+                          )}
+                          <Chip
+                            label={user.is_active ? 'Active' : 'Inactive'}
+                            size="small"
                             sx={{
-                              ...getEmailChipStyle(user.email),
-                              width: 'fit-content',
-                              height: '24px',
-                              borderRadius: '12px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              fontSize: '12px',
-                              fontWeight: 'medium',
-                              px: 2,
-                              '&:hover': { opacity: 0.8 },
-                              transition: 'opacity 0.3s',
+                              borderRadius: '999px',
+                              fontSize: 10,
+                              fontWeight: 600,
+                              backgroundColor: user.is_active
+                                ? 'rgba(22, 163, 74, 0.08)'
+                                : 'rgba(220, 38, 38, 0.08)',
+                              color: user.is_active ? '#15803d' : '#b91c1c',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Lower content: role, department, contact (non-clickable) */}
+                    <Box sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: '#0ea5e9',
+                          fontWeight: 500,
+                          mb: 0.25,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          fontSize: 13,
+                        }}
+                      >
+                        {user.designation || '—'}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: '#64748b',
+                          fontSize: 12,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {user.department || 'No department'}
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.75, gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                          <Email sx={{ fontSize: 13, color: '#94a3b8' }} />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: '#0f172a',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block',
                             }}
                           >
-                            <a
-                              href={`mailto:${user.email}`}
-                              style={{
-                                color: 'inherit',
-                                textDecoration: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
+                            {user.email}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Phone sx={{ fontSize: 13, color: '#94a3b8' }} />
+                          <Typography variant="caption" sx={{ color: '#0f172a' }}>
+                            {user.phone || '—'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        // mt: 1.5,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <Box />{/* left spacer to keep actions on lower line */}
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="Edit User">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(user);
+                              }}
+                              disabled={!canEditOrAssign}
+                              sx={{ opacity: canEditOrAssign ? 1 : 0.5 }}
+                            >
+                              <Edit sx={{ color: '#0f172a', fontSize: 18 }} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="View Info">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDetailsUser(user);
+                                setDetailsAnchorEl(e.currentTarget);
                               }}
                             >
-                              <Email sx={{ fontSize: '14px' }} />
-                              {user.email}
-                            </a>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Box
-                            sx={{
-                              ...getPhoneChipStyle(user.phone),
-                              width: 'fit-content',
-                              height: '24px',
-                              borderRadius: '12px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              fontSize: '12px',
-                              fontWeight: 'medium',
-                              px: 2,
-                              whiteSpace: 'nowrap',
-                              '&:hover': { opacity: 0.8 },
-                              transition: 'opacity 0.3s',
-                            }}
-                          >
-                            <a
-                              href={user.phone ? `tel:${user.phone}` : '#'}
-                              style={{
-                                color: 'inherit',
-                                textDecoration: 'none',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                              }}
-                            >
-                              <Phone sx={{ fontSize: '10px' }} />
-                              {user.phone || '—'}
-                            </a>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Typography variant="body2" sx={{ color: getAddressColor(user?.role) }} fontSize={13}>
-                            {user?.role?.name || '—'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Typography variant="body2" color="#4A4A4A" fontSize={13}>
-                            {user.designation || '—'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Typography variant="body2" color="#4A4A4A" fontSize={13}>
-                            {user.department || '—'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Typography variant="body2" color="#4A4A4A" fontSize={13}>
-                            {user.employeeCode || '—'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ borderBottom: '1px solid #E0E0E0', py: 1.5 }}>
-                          <Tooltip title="Edit User">
-                          <IconButton
-                            onClick={() => handleEditClick(user)}
-                            disabled={!canEditOrAssign}
-                            sx={{ opacity: canEditOrAssign ? 1 : 0.5 }}
-                          >
-                            <Edit sx={{ color: '#1E88E5', height: '1rem', width: '1rem' }} />
-                          </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete User">
-                          <IconButton
-                            onClick={() => handleDeleteUser(user.id)}
-                            disabled={!canEditOrAssign}
-                            sx={{ opacity: canEditOrAssign ? 1 : 0.5 }}
-                          >
-                            <Delete sx={{ color: '#1E88E5', height: '1rem', width: '1rem' }} />
-                          </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell>
+                              <VisibilityIcon sx={{ color: 'var(--primary-color-1)', fontSize: 18 }} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                         <Tooltip title="Assign Role">
-                           <IconButton
-                            onClick={() => handleAssignRoleDialog(user)}
-                            disabled={!canEditOrAssign}
-                            sx={{ opacity: canEditOrAssign ? 1 : 0.5 }}
-                          >
-                            <AssignmentTurnedIn sx={{ color: '#1E88E5', height: '1rem', width: '1rem' }} />
-                          </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <CustomPagination
-            page={page + 1}
-            rowsPerPage={rowsPerPage}
-            totalCount={users.length}
-            onPageChange={(_, newPage) => setPage(newPage - 1)}
-          />
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={!canEditOrAssign}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAssignRoleDialog(user);
+                              }}
+                              sx={{
+                                opacity: canEditOrAssign ? 1 : 0.5,
+                                color: 'var(--primary-color-1)',
+                              }}
+                            >
+                              <PersonAddAltIcon sx={{ fontSize: 18 }} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
+          </Box>
+
+          <Box sx={{ mt: 3 }}>
+            <CustomPagination
+              page={page + 1}
+              rowsPerPage={rowsPerPage}
+              totalCount={users.length}
+              onPageChange={(_, newPage) => setPage(newPage - 1)}
+            />
+          </Box>
         </CardContent>
       </Card>
+
+      {/* Contact details popover (anchored to View button) */}
+      <Popover
+        open={Boolean(detailsUser && detailsAnchorEl)}
+        anchorEl={detailsAnchorEl}
+        onClose={() => {
+          setDetailsUser(null);
+          setDetailsAnchorEl(null);
+        }}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            p: 1.25,
+            width: 420,
+            maxWidth: '95vw',
+          },
+        }}
+      >
+        {detailsUser && (
+          <Box>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 1.5,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  src={detailsUser.profile_image || ''}
+                  alt={`${detailsUser.first_name} ${detailsUser.last_name}`}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: 'var(--primary-color-1)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  {(!detailsUser.profile_image &&
+                    `${detailsUser.first_name?.[0] || ''}${detailsUser.last_name?.[0] || ''}`.toUpperCase()) ||
+                    ''}
+                </Avatar>
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 12 }}>
+                    {detailsUser.first_name} {detailsUser.last_name}
+                  </Typography>
+                  {detailsUser.employeeCode && (
+                    <Typography variant="caption" sx={{ color: '#64748b', fontSize: 11 }}>
+                      {detailsUser.employeeCode}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Chip
+                  label={detailsUser.is_active ? 'Active' : 'Inactive'}
+                  size="small"
+                  sx={{
+                    borderRadius: '999px',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    backgroundColor: detailsUser.is_active
+                      ? 'rgba(22, 163, 74, 0.08)'
+                      : 'rgba(220, 38, 38, 0.08)',
+                    color: detailsUser.is_active ? '#15803d' : '#b91c1c',
+                  }}
+                />
+                <Tooltip title="Open profile">
+                  <IconButton
+                    size="small"
+                    component={Link}
+                    href={`/users/${detailsUser.id}`}
+                    sx={{ color: 'var(--primary-color-1)' }}
+                  >
+                    <OpenInNewIcon fontSize="inherit" />
+                  </IconButton>
+                </Tooltip>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setDetailsUser(null);
+                    setDetailsAnchorEl(null);
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            </Box>
+
+            <Typography variant="body2" sx={{ mb: 0.75, fontWeight: 600, fontSize: 11 }}>
+              Contact Details
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <Email sx={{ fontSize: 18, color: '#64748b' }} />
+              <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                {detailsUser.email}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+              <Phone sx={{ fontSize: 18, color: '#64748b' }} />
+              <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                {detailsUser.phone || '—'}
+              </Typography>
+            </Box>
+
+            {(() => {
+              const managerUser =
+                detailsUser.reporting_manager &&
+                users.find((u) => u.id === detailsUser.reporting_manager);
+              const managerName = managerUser
+                ? `${managerUser.first_name} ${managerUser.last_name}${
+                    managerUser.employeeCode ? ` (${managerUser.employeeCode})` : ''
+                  }`
+                : 'Not set';
+
+              return (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+                    columnGap: 2,
+                    rowGap: 1.5,
+                  }}
+                >
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      LOCATION
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.address || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      JOB TITLE
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.designation || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      DEPARTMENT
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.department || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      REPORTING MANAGER
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {managerName}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      JOINING DATE
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.joiningDate || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      ROLE
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.role?.name || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      BLOOD GROUP
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.blood_group || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      GENDER
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.gender || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      DATE OF BIRTH
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.dob || 'Not set'}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#94a3b8', letterSpacing: 0.5, fontSize: 9 }}>
+                      EMERGENCY CONTACT
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#0f172a', fontSize: 11 }}>
+                      {detailsUser.emergency_contact || 'Not set'}
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            })()}
+          </Box>
+        )}
+      </Popover>
 
       {editUser && (
         <EditUserDialog
