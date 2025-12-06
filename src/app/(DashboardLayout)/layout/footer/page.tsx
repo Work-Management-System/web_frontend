@@ -10,8 +10,8 @@ const Footer = () => {
     <Box className="footer-making" sx={{ mt: '28px', textAlign: "center" }}>
       <Typography>
         © {currentYear} All rights reserved by{" "}
-        <Link href="https://www.cybrain.co.in/" target="_blank">
-          Cybrain Software Solutions Pvt Ltd
+        <Link href="https://www.manazeit.com/" target="_blank">
+          manazeIT
         </Link>{" "}
       </Typography>
     </Box>

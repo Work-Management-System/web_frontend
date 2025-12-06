@@ -4,14 +4,14 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAoCgUQK2ASmV5RdlDQc-FpPGXwniL6vk0",
-  authDomain: "work-management-10d26.firebaseapp.com",
-  projectId: "work-management-10d26",
-  storageBucket: "work-management-10d26.firebasestorage.app",
-  messagingSenderId: "828838037787",
-  appId: "1:828838037787:web:acd0e7b54ec51a01252bbe",
-  measurementId: "G-74EZ77ZSDE"
-};
+    apiKey: "AIzaSyDLmJUVMDRe7sb-7uZ8Qb0BFKdkJ0XsIno",
+    authDomain: "manazeit666-4b36f.firebaseapp.com",
+    projectId: "manazeit666-4b36f",
+    storageBucket: "manazeit666-4b36f.firebasestorage.app",
+    messagingSenderId: "1062765587674",
+    appId: "1:1062765587674:web:8efef71f599b3b32a789e3",
+    measurementId: "G-19EZRHFN9Y"
+  };
 
 
 // Initialize Firebase app

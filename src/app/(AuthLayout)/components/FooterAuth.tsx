@@ -2,7 +2,7 @@
 import { Box, Typography, useMediaQuery } from '@mui/material';
 import React from 'react';
 import Image from 'next/image';
-import cybrainLogo from '@/assets/Images/cybrain_logo.png';
+import manazeIT from '@/assets/Images/manazeit_logo.png';
 import Link from 'next/link';
 
 import 'react-phone-input-2/lib/style.css';
@@ -43,17 +43,17 @@ function FooterAuth() {
                     <Link href="tel:0172-5053958" style={{ color: '#000' }}>0172-5053958</Link>
                 </Typography>
                 <Typography variant="subtitle2" sx={{ color: '#000', fontSize: '14px', padding: '10px', display: 'flex', gap: '3px', alignItems: 'center',...Mobile && {padding: '0px'} }}>
-                    <EmailIcon sx={{ color: '#027cc1' }} /> <Link href="mailto:info@cybrain.co.in" style={{ color: '#000' }}> info@cybrain.co.in</Link>
+                    <EmailIcon sx={{ color: '#027cc1' }} /> <Link href="mailto:info@manazeit.com" style={{ color: '#000' }}> info@manazeit.com</Link>
                 </Typography>
                 <Typography variant="subtitle2" sx={{ color: '#000', fontSize: '14px', padding: '10px', display: 'flex', gap: '3px', alignItems: 'center',...Mobile && {padding: '0px'} }}>
-                    <LanguageIcon sx={{ color: '#027cc1' }} /><Link href="www.cybrain.co.in" target='_blank' style={{ color: '#000' }}> www.cybrain.co.in</Link>
+                    <LanguageIcon sx={{ color: '#027cc1' }} /><Link href="www.manazeit.com" target='_blank' style={{ color: '#000' }}> www.manazeit.com</Link>
                 </Typography>
             </Box>
             <Box className='social-icons-foot' sx={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <Typography variant="body1" color="initial">Follow Us On: </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <Typography sx={{ color: '#000', fontSize: '14px', }}>
-                        <Link href="https://www.facebook.com/cybrainsoft/" target='_blank'>
+                        <Link href="https://www.facebook.com/manazeit/" target='_blank'>
                             <Image
                                 src={facebook}
                                 alt="facebook"
@@ -65,7 +65,7 @@ function FooterAuth() {
                             /></Link>
                     </Typography>
                     <Typography sx={{ color: '#000', fontSize: '14px', }}>
-                        <Link href="https://x.com/cybrainsoftware" target='_blank'>
+                        <Link href="https://x.com/manazeit" target='_blank'>
                             <Image
                                 src={twitterX}
                                 alt="facebook"
@@ -77,7 +77,7 @@ function FooterAuth() {
                             /></Link>
                     </Typography>
                     <Typography sx={{ color: '#000', fontSize: '14px', }}>
-                        <Link href="https://www.instagram.com/cybrain.co.in/" target='_blank'>
+                        <Link href="https://www.instagram.com/manazeit.com/" target='_blank'>
                             <Image
                                 src={instagram}
                                 alt="facebook"
@@ -89,7 +89,7 @@ function FooterAuth() {
                             /></Link>
                     </Typography>
                     <Typography sx={{ color: '#000', fontSize: '14px', }}>
-                        <Link href="https://linkedin.com/company/cybrain-software-solutions/" target='_blank'>
+                        <Link href="https://linkedin.com/company/manazeit/" target='_blank'>
                             <Image
                                 src={linkedin}
                                 alt="facebook"
@@ -106,9 +106,9 @@ function FooterAuth() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <Typography variant="body1" color="initial">Powered by: </Typography>
                 <Box>
-                    <Link href="www.cybrain.co.in" target='_blank'>
+                    <Link href="www.manazeit.com" target='_blank'>
                         <Image
-                            src={cybrainLogo}
+                            src={manazeIT}
                             alt="logo"
                             width={99}
                             height={21}

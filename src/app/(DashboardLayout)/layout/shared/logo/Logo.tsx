@@ -18,7 +18,7 @@ const Logo = ({ collapsed = false }: { collapsed?: boolean }) => {
   const authData = useAppselector((state) => state.auth.value);
   const tenantId = authData?.tenant?.id;
   const logo = "images/logos/time-sheet-base-logo.png";
-  const fullLogo = "images/logos/cybrain-logos.png";
+  const fullLogo = "images/logos/manazeit_logo.png";
   const [tenantLogo, setTenantLogo] = useState<any | null>(logo);
   const [tenantFullLogo, setTenantFullLogo] = useState<any | null>(fullLogo);
   const router=useRouter();

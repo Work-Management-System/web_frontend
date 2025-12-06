@@ -38,7 +38,7 @@ interface TenantData {
 }
 
 const SetPasswordPage: React.FC = () => {
-    const logo = "images/logos/cybrain-logos.png";
+    const logo = "images/logos/manazeit_logo.png";
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const searchParams = useSearchParams();
