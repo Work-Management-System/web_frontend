@@ -10,7 +10,7 @@ const createAxiosInstance = (): AxiosInstance => {
   const instance = axios.create({
     // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.manazeit.com/api/v1',
     // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://49.13.206.109:9003/api/v1',
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9003/api/v1',
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://103.142.175.224:9003/api/v1',
     headers: {
       'Content-Type': 'application/json',
     },
