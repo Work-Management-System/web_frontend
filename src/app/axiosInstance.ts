@@ -39,6 +39,7 @@ const createAxiosInstance = (): AxiosInstance => {
     (error) => Promise.reject(error)
   );
 
+  
   instance.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: any) => Promise.reject(error)
