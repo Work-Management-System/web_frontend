@@ -16,6 +16,7 @@ const createAxiosInstance = (): AxiosInstance => {
     },
   });
 
+  
   instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
         const accessToken = Cookies.get('access_token');
