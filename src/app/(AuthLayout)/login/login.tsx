@@ -67,12 +67,26 @@ const LoginPage: React.FC = () => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
       const parts = hostname.split(".");
+      
+      // Handle localhost (e.g., subdomain.localhost:3000)
       if (parts.length >= 2 && parts[1] === "localhost") {
         return parts[0];
       }
-      if (parts.length >= 3 && parts[0] !== "localhost" && parts[0] !== "www") {
-        return parts[0];
+      
+      // Handle production domains
+      // For subdomain.example.com, parts.length will be 3
+      // For example.com, parts.length will be 2
+      // Only return subdomain if we have at least 3 parts (subdomain.domain.tld)
+      if (parts.length >= 3) {
+        const subdomain = parts[0];
+        // Exclude common prefixes that aren't subdomains
+        if (subdomain && subdomain !== "www" && subdomain !== "localhost") {
+          return subdomain;
+        }
       }
+      
+      // For 2-part domains (example.com) or other cases, return empty string
+      return "";
     }
     return "";
   };

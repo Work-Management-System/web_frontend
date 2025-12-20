@@ -177,8 +177,34 @@ export default function UserProfilePage() {
   };
 
   const fetchEditUserDetails = async (userId: string) => {
+    // First try to find from users array, otherwise create from user state
     const res = users?.find((edituser) => edituser.id === userId);
-    setEditUser(res);
+    if (res) {
+      setEditUser(res);
+    } else if (user) {
+      // Create editUser from user state if not found in users array
+      const editUserData: EditUser = {
+        id: user.id,
+        is_active: user.is_active,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone: user.phone || null,
+        address: user.address || null,
+        designation: user.designation || null,
+        department: user.department || null,
+        joiningDate: user.joiningDate || null,
+        employeeCode: user.employeeCode || null,
+        role: user.role || null,
+        profile_image: user.profile_image || null,
+        emergency_contact: user.emergency_contact || null,
+        blood_group: user.blood_group || null,
+        gender: user.gender || null,
+        dob: user.dob || null,
+        reporting_manager: user.reporting_manager || null,
+      };
+      setEditUser(editUserData);
+    }
   };
 
   const fetchRoles = async () => {
@@ -204,10 +230,13 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     fetchUser().then(setUser).catch(console.error);
-    if (userId) {
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId && (user || users.length > 0)) {
       fetchEditUserDetails(userId).catch(console.error);
     }
-  }, [users]);
+  }, [users, user]);
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -487,7 +516,7 @@ export default function UserProfilePage() {
                 </div>
               </div>
 
-              {!isSuperAdmin && (
+              { (
                 <div className="mt-6 grid grid-cols-1 gap-3">
                   <Button
                     sx={{

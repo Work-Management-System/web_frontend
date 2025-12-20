@@ -119,12 +119,10 @@ const getAddressColor = (address: string) => {
 
 // Function to get base domain
 const getBaseDomain = () => {
-  const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost";
+  const isLocalhost = window.location.hostname === "localhost";
   return isLocalhost
     ? "localhost:3000"
-    : typeof window !== "undefined"
-      ? window?.location?.hostname.replace(/^[a-zA-Z0-9-]+\./, "")
-      : "example.com";
+    : window?.location?.hostname.replace(/^[a-zA-Z0-9-]+\./, "");
 };
 
 // Modal Component

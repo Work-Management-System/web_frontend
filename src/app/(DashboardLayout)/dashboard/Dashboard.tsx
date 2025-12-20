@@ -681,7 +681,7 @@ export default function Dashboard() {
                             />
 
                             {/* Category Cards */}
-                            <CategoryCards
+                            {/* <CategoryCards
                                 title="Quick Access"
                                 viewAllRoute="/dashboard"
                                 categories={[
@@ -732,14 +732,14 @@ export default function Dashboard() {
                                         route: '/leave-management'
                                     },
                                 ]}
-                            />
+                            /> */}
 
                             {/* Attendance Sidebar - Full Width */}
-                            <Box sx={{ mb: 3 }}>
+                            {/* <Box sx={{ mb: 3 }}>
                                 <DashboardSidebar
                                     onUserClick={(id) => router.push(`/users/${id}`)}
                                 />
-                            </Box>
+                            </Box> */}
                         </>
                     )}
                     <h1 className="text-2xl font-bold mb-4">Tenant Analytics Dashboard</h1>

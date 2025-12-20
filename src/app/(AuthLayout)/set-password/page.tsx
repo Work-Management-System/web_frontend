@@ -106,13 +106,11 @@ const SetPasswordPage: React.FC = () => {
     if (!tenant || !/^[a-zA-Z0-9-]+$/.test(tenant)) {
       return path;
     }
-    const protocol = process.env.NODE_ENV === "production" ? "http" : "http";
-    const isLocalhost = typeof window !== "undefined" && window?.location?.hostname.includes("localhost");
+    const protocol = process.env.NODE_ENV === "production" ? "https" : "https";
+    const isLocalhost =  window?.location?.hostname.includes("localhost");
     const baseDomain = isLocalhost
       ? "localhost:3000"
-      : typeof window !== "undefined"
-        ? window?.location?.hostname.replace(/^[a-zA-Z0-9-]+\./, "")
-        : "example.com";
+      : window?.location?.hostname.replace(/^[a-zA-Z0-9-]+\./, "");
     const port = isLocalhost ? `:${window?.location.port || "3000"}` : "";
     return `${protocol}://${tenant}.${baseDomain}${path}`;
   };
