@@ -2,7 +2,12 @@ import axios from 'axios';
 
 export const uploadFilePublic = async (file: File) => {
     try {
-        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.manazeit.com/api/v1';
+        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        
+        if (!baseURL) {
+            throw new Error('NEXT_PUBLIC_API_BASE_URL is not set in environment variables');
+        }
+        
         const formData = new FormData();
         formData.append("file", file);
 

@@ -177,7 +177,10 @@ export default function RegisterPage() {
 
       setSubdomainChecking(true);
       try {
-        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.manazeit.com/api/v1';
+        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        if (!baseURL) {
+          throw new Error('NEXT_PUBLIC_API_BASE_URL is not configured');
+        }
         const response = await axios.get(
           `${baseURL}/tenants/get-by-subdomain/${subdomain}`,
           { timeout: 5000 }
@@ -348,7 +351,10 @@ export default function RegisterPage() {
       }
 
       try {
-        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.manazeit.com/api/v1';
+        const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+        if (!baseURL) {
+          throw new Error('NEXT_PUBLIC_API_BASE_URL is not configured');
+        }
         
         // Upload logo and background image if provided
         let uploadedLogoUrl: string | undefined;

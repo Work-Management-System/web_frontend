@@ -41,7 +41,7 @@ export default function RootLayout({
             <meta property="og:url" content="https://manazeit.com" />
             <meta property="og:title" content="Manazeit - Work Management System | Streamline Your Team's Productivity" />
             <meta property="og:description" content="The all-in-one platform for project management, task tracking, attendance, and team collaboration. Built for modern teams." />
-            <meta property="og:image" content="https://manazeit.com/images/logos/time-sheet-base-logo.png" />
+            <meta property="og:image" content="https://manazeit.com/images/logos/manazeit_logo.png" />
             <meta property="og:site_name" content="Manazeit" />
             
             {/* Twitter */}
@@ -49,14 +49,14 @@ export default function RootLayout({
             <meta name="twitter:url" content="https://manazeit.com" />
             <meta name="twitter:title" content="Manazeit - Work Management System | Streamline Your Team's Productivity" />
             <meta name="twitter:description" content="The all-in-one platform for project management, task tracking, attendance, and team collaboration. Built for modern teams." />
-            <meta name="twitter:image" content="https://manazeit.com/images/logos/time-sheet-base-logo.png" />
+            <meta name="twitter:image" content="https://manazeit.com/images/logos/manazeit_logo.png" />
             
             {/* Additional SEO */}
             <meta name="theme-color" content="#0798bd" />
             <meta name="application-name" content="Manazeit" />
-            <link rel="icon" type="image/png" href="/images/logos/time-sheet-base-logo.png" />
-            <link rel="apple-touch-icon" href="/images/logos/time-sheet-base-logo.png" />
-            <link rel="shortcut icon" href="/images/logos/time-sheet-base-logo.png" />
+            <link rel="icon" type="image/png" href="/images/logos/manazeit_logo.png" />
+            <link rel="apple-touch-icon" href="/images/logos/manazeit_logo.png" />
+            <link rel="shortcut icon" href="/images/logos/manazeit_logo.png" />
             
             {/* Structured Data for SEO */}
             <script

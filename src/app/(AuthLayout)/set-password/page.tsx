@@ -31,46 +31,113 @@ interface SetPasswordValues {
   confirmPassword: string;
 }
 
-interface TenantData {
-  logo: string;
-  background_image: string;
-  tenant_name: string;
+interface TenantDetails {
+  welcomeNote?: string;
+  backgroundImage?: string;
+  tenantLogo?: string;
+  tenantName?: string;
 }
 
 const SetPasswordPage: React.FC = () => {
-    const logo = "images/logos/manazeit_logo.png";
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const searchParams = useSearchParams();
   const router = useRouter();
   const axiosInstance = createAxiosInstance();
-    const Mobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const Mobile = useMediaQuery(theme.breakpoints.down("sm"));
 
+  const defaultTenantDetails: TenantDetails = {
+    welcomeNote: "PLEASE SET YOUR PASSWORD TO ACTIVATE YOUR ACCOUNT.",
+    backgroundImage: '/images/backgrounds/profileback.jpg',
+    tenantLogo: '/images/logos/time-sheet-base-logo.png',
+    tenantName: "Our Portal",
+  };
+
+  const [tenantDetails, setTenantDetails] = useState<TenantDetails>(defaultTenantDetails);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isEmailDisabled, setIsEmailDisabled] = useState(false);
   const [otpGenerated, setOtpGenerated] = useState(false);
-  const [tenantData, setTenantData] = useState<TenantData | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleTogglePassword = () => setShowPassword((prev) => !prev);
 
+  const getSubdomain = (): string => {
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const parts = hostname.split(".");
+      
+      // Handle localhost (e.g., subdomain.localhost:3000)
+      if (parts.length >= 2 && parts[1] === "localhost") {
+        return parts[0];
+      }
+      
+      // Handle production domains
+      // For subdomain.example.com, parts.length will be 3
+      // For example.com, parts.length will be 2
+      // Only return subdomain if we have at least 3 parts (subdomain.domain.tld)
+      if (parts.length >= 3) {
+        const subdomain = parts[0];
+        // Exclude common prefixes that aren't subdomains
+        if (subdomain && subdomain !== "www" && subdomain !== "localhost") {
+          return subdomain;
+        }
+      }
+      
+      // For 2-part domains (example.com) or other cases, return empty string
+      return "";
+    }
+    return "";
+  };
+
   const fetchTenantData = async () => {
     try {
-      const tenant = Cookies.get("tenant") || searchParams?.get("tenant") || "hwakthu";
-      console.log("Tenant:", tenant);
+      // Priority: subdomain from URL > query param > cookie
+      let tenant = getSubdomain();
+      if (!tenant) {
+        tenant = searchParams?.get("tenant") || Cookies.get("tenant") || "";
+      }
+      
+      if (!tenant) {
+        // No tenant found, use defaults
+        setTenantDetails(defaultTenantDetails);
+        return;
+      }
+      
+      console.log("Fetching tenant data for:", tenant);
       const response = await axiosInstance.get(`/tenants/get-by-subdomain/${tenant}`);
-      if (response.status === 200) {
-        setTenantData({
-          logo: response?.data?.data?.logo || null,
-          background_image: response?.data?.data?.backgroud_image || null,
-          tenant_name: response?.data?.data?.tenant_name || null,
+      console.log("API Response:", response.data);
+      
+      if (response.status === 200 && response.data?.data) {
+        const logo = response?.data?.data?.logo;
+        const background_image = response?.data?.data?.background_image || response?.data?.data?.backgroud_image; // Handle typo in API
+        const welcome_note = response?.data?.data?.welcome_note;
+        const tenant_name = response?.data?.data?.tenant_name;
+        
+        // Fallback to generic assets when tenant images are missing/empty
+        const resolvedLogo =
+          logo && logo.trim() !== '' ? logo : defaultTenantDetails.tenantLogo;
+        const resolvedBackground =
+          background_image && background_image.trim() !== ''
+            ? background_image
+            : defaultTenantDetails.backgroundImage;
+        const welcomeNote = welcome_note || defaultTenantDetails.welcomeNote;
+        const resolvedTenantName = tenant_name || defaultTenantDetails.tenantName;
+
+        setTenantDetails({
+          tenantLogo: resolvedLogo,
+          backgroundImage: resolvedBackground,
+          welcomeNote,
+          tenantName: resolvedTenantName,
         });
       } else {
-        toast.error("Failed to fetch tenant data");
+        setTenantDetails(defaultTenantDetails);
       }
     } catch (error: any) {
       console.error("Error fetching tenant data:", error);
-      toast.error("Failed to load tenant customization");
+      // Use defaults on error instead of showing error toast
+      setTenantDetails(defaultTenantDetails);
     }
   };
 
@@ -86,6 +153,7 @@ const SetPasswordPage: React.FC = () => {
       });
       if (response.status === 200 || response.status === 201) {
         setOtpGenerated(true);
+        setResendCooldown(60); // 60 seconds cooldown
         toast.success(response.data.message || "OTP sent successfully!");
       } else {
         toast.error(response.data.message || "Failed to generate OTP");
@@ -98,6 +166,42 @@ const SetPasswordPage: React.FC = () => {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    if (!formik.values.email) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    if (resendCooldown > 0) {
+      toast.error(`Please wait ${resendCooldown} seconds before resending OTP`);
+      return;
+    }
+    setResendLoading(true);
+    try {
+      const response = await axiosInstance.post(`/auth/resend-otp`, {
+        email: formik.values.email,
+      });
+      if (response.status === 200 || response.status === 201) {
+        setResendCooldown(60); // Reset cooldown to 60 seconds
+        toast.success(response.data.message || "OTP resent successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to resend OTP");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong!";
+      toast.error(errorMessage);
+      
+      // If rate limited, set a longer cooldown
+      if (error?.response?.status === 429 || errorMessage.includes("Maximum resend attempts")) {
+        setResendCooldown(600); // 10 minutes
+      }
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -139,6 +243,19 @@ const SetPasswordPage: React.FC = () => {
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
+        // Ensure tenant is set before making the request
+        const tenantFromQuery = searchParams?.get("tenant");
+        const tenantFromSubdomain = getSubdomain();
+        const tenantFromCookie = Cookies.get("tenant");
+        const tenant = tenantFromQuery || tenantFromSubdomain || tenantFromCookie;
+        
+        if (tenant) {
+          Cookies.set("tenant", tenant, { expires: 7 });
+          console.log("Tenant ensured before API call:", tenant);
+        } else {
+          console.warn("No tenant found - request may fail");
+        }
+        
         const response = await axiosInstance.post(`/auth/set-password`, values);
         if (response.status === 200) {
           toast.success(response.data.message || "Password set successfully!");
@@ -161,65 +278,95 @@ const SetPasswordPage: React.FC = () => {
     },
   });
 
-const getSubdomain = (): string | null => {
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    const parts = hostname.split(".");
-    if (hostname.includes("localhost")) {
-      return parts.length > 2 ? parts[0] : "";
-    } else {
-      return parts.length > 2 ? parts[0] : "";
-    }
-  }
-  return "";
-};
 
+
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendCooldown > 0) {
+      interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [resendCooldown]);
 
   useEffect(() => {
-    const tenant = getSubdomain();
-    const email = searchParams?.get("email");
+    // Fetch tenant data first
+    fetchTenantData();
+    
+    // Priority: query param > subdomain from URL > cookie
+    const tenantFromQuery = searchParams?.get("tenant");
+    const tenantFromSubdomain = getSubdomain();
+    const tenantFromCookie = Cookies.get("tenant");
+    
+    // Determine which tenant to use
+    const tenant = tenantFromSubdomain || tenantFromQuery || tenantFromCookie;
+    
+    // Always set tenant in cookie if we have one
     if (tenant) {
-      Cookies.set("tenant", tenant);
-      fetchTenantData();
+      Cookies.set("tenant", tenant, { expires: 7 }); // Expires in 7 days
+      console.log("Tenant set in cookie:", tenant);
     }
+    
+    const email = searchParams?.get("email");
+    
     if (email) {
       formik.setFieldValue("email", email);
       setIsEmailDisabled(true);
     }
-  }, []);
+  }, [searchParams]);
 
 return (
   <>
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        position: "relative",
-        overflow: "hidden",
-        width: "100vw",
-        backgroundImage: `url(${
-          tenantData?.background_image || "/images/backgrounds/profilebg.jpg"
-        })`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
       <Box
         sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.1)",
-          zIndex: 0,
-          width: "100%",
-          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          position: "relative",
+          overflow: "hidden",
+          width: "100vw",
+          background: `var(--primary-bg-colors)`,
         }}
-      />
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `url(${tenantDetails.backgroundImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            zIndex: 0,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.1)",
+            zIndex: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        />
       <Box
         sx={{
           display: "flex",
@@ -251,9 +398,7 @@ return (
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "flex-start",
-            backgroundImage: `url(${
-              tenantData?.background_image || "/images/backgrounds/profilebg.jpg"
-            })`,
+            backgroundImage: `url(${tenantDetails.backgroundImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -290,7 +435,7 @@ return (
                 ...(Mobile && { fontSize: "1.5rem" }),
               }}
             >
-              Welcome to {tenantData?.tenant_name || "Our Portal"}
+              Welcome to {tenantDetails.tenantName}
             </Typography>
             <Typography
               sx={{
@@ -299,7 +444,7 @@ return (
                 ...(Mobile && { fontSize: "0.9rem" }),
               }}
             >
-              PLEASE SET YOUR PASSWORD TO ACTIVATE YOUR ACCOUNT.
+              {tenantDetails.welcomeNote}
             </Typography>
           </Box>
         </Box>
@@ -336,14 +481,17 @@ return (
           >
             <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
               <Image
-                src={tenantData?.logo || logo}
-                alt="Logo"
+                src={tenantDetails.tenantLogo || defaultTenantDetails.tenantLogo}
+                alt="logo"
                 height={140}
                 width={140}
                 priority
                 unoptimized
                 style={{ objectFit: "contain" }}
-                onError={() => console.log("Failed to load logo image")}
+                onError={() => {
+                  console.log("Failed to load logo image, using default");
+                  setTenantDetails(prev => ({ ...prev, tenantLogo: defaultTenantDetails.tenantLogo }));
+                }}
               />
             </Box>
 
@@ -463,6 +611,33 @@ return (
                   placeholder="OTP"
                   InputProps={{ sx: { borderRadius: "8px", height: "45px" } }}
                 />
+                <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1 }}>
+                  <Button
+                    variant="text"
+                    onClick={resendOtp}
+                    disabled={resendLoading || resendCooldown > 0}
+                    sx={{
+                      color: resendCooldown > 0 ? "#999" : "var(--primary-color-1)",
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      minWidth: "auto",
+                      padding: "4px 8px",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        textDecoration: "underline",
+                      },
+                      "&:disabled": {
+                        color: "#999",
+                      },
+                    }}
+                  >
+                    {resendLoading
+                      ? "Resending..."
+                      : resendCooldown > 0
+                      ? `Resend OTP (${resendCooldown}s)`
+                      : "Resend OTP"}
+                  </Button>
+                </Box>
               </Box>
               </>
             )}

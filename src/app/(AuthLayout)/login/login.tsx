@@ -101,8 +101,14 @@ const LoginPage: React.FC = () => {
         const logo = response?.data?.data?.logo;
         const background_image = response?.data?.data?.background_image;
         const welcome_note = response?.data?.data?.welcome_note;
-        const resolvedLogo = logo || defaultTenantDetails.tenantLogo;
-        const resolvedBackground = background_image || defaultTenantDetails.backgroundImage;
+
+        // Fallback to generic assets when tenant images are missing/empty
+        const resolvedLogo =
+          logo && logo.trim() !== '' ? logo : defaultTenantDetails.tenantLogo;
+        const resolvedBackground =
+          background_image && background_image.trim() !== ''
+            ? background_image
+            : defaultTenantDetails.backgroundImage;
         const welcomeNote = welcome_note || defaultTenantDetails.welcomeNote;
 
         setTenantDetails({
