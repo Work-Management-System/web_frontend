@@ -48,6 +48,9 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false); // For form fetching
   const [submitLoading, setSubmitLoading] = useState(false); // For submit button
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const userPriority = useAppselector((state) => state.role.value.priority);
   const router = useRouter();
   const pathName = usePathname();
@@ -166,6 +169,47 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
         }
 
         if (response?.data?.data) {
+          const tenantId = response?.data?.data?.id || id;
+          
+          // Handle subscription plan assignment if selected
+          if (selectedPlanId && tenantId) {
+            try {
+              const selectedPlan = subscriptionPlans.find(p => p.id === selectedPlanId);
+              
+              if (selectedPlan) {
+                // Check if it's a free plan (SuperAdmin only)
+                if (selectedPlan.type === 'free') {
+                  // Use assign-free-plan endpoint
+                  await axiosInstance.post('/subscription/assign-free-plan', {
+                    tenant_id: tenantId,
+                    plan_id: selectedPlanId,
+                  });
+                  toast.success('Free plan assigned successfully.');
+                } else {
+                  // For paid plans, create subscription (without payment for admin assignment)
+                  const startDate = new Date();
+                  const endDate = new Date();
+                  endDate.setDate(startDate.getDate() + selectedPlan.duration_in_days);
+                  
+                  await axiosInstance.post('/subscription/buy-subscription', {
+                    start_date: startDate.toISOString(),
+                    end_date: endDate.toISOString(),
+                    status: 'active',
+                    plan_id: selectedPlanId,
+                    tenant_id: tenantId,
+                    is_trial: false,
+                    is_paid: false, // Admin assignment, no payment required
+                  });
+                  toast.success('Subscription plan assigned successfully.');
+                }
+              }
+            } catch (subError: any) {
+              console.error('Error assigning subscription:', subError);
+              const subMessage = subError?.response?.data?.message || 'Failed to assign subscription plan.';
+              toast.error(subMessage);
+            }
+          }
+          
           resetForm({ values: initialEmptyValues });
           if (userPriority !== 2) {
             router.push('/tenant-settings');
@@ -182,6 +226,42 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
       }
     },
   });
+
+  // Fetch subscription plans
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await axiosInstance.get("/subscription/list");
+        if (res.data.status) {
+          setSubscriptionPlans(res.data.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription plans:", error);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  // Fetch current subscription for tenant (in edit mode)
+  useEffect(() => {
+    if (isEditMode && id) {
+      const fetchCurrentSubscription = async () => {
+        try {
+          const res = await axiosInstance.get(`/subscription/tenant-plans/${id}`);
+          if (res.data.status && res.data.data.length > 0) {
+            const activeSub = res.data.data.find((sub: any) => sub.status === "active");
+            if (activeSub) {
+              setCurrentSubscription(activeSub);
+              setSelectedPlanId(activeSub.plan.id);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching current subscription:", error);
+        }
+      };
+      fetchCurrentSubscription();
+    }
+  }, [id, isEditMode]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -851,6 +931,60 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
                   </Box>
                 </Box>
               </Box>
+
+              {/* Subscription Plan Section */}
+              {isEditMode && (
+                <Box sx={{ border: '1px solid #ddd', mb: '20px' }}>
+                  <Typography sx={{ background: '#ddd', padding: '10px 20px' }}>
+                    Subscription Plan:
+                  </Typography>
+                  <Box sx={{ padding: '20px' }}>
+                    {currentSubscription && (
+                      <Box sx={{ mb: 2, p: 2, backgroundColor: '#F5F5F5', borderRadius: '8px' }}>
+                        <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                          Current Subscription:
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#666' }}>
+                          Plan: {currentSubscription.plan.name}
+                          {currentSubscription.is_trial && ' (Free Trial)'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#666', fontSize: '12px' }}>
+                          Status: {currentSubscription.status}
+                        </Typography>
+                      </Box>
+                    )}
+                    <FormControl fullWidth>
+                      <InputLabel>Change Subscription Plan</InputLabel>
+                      <Select
+                        value={selectedPlanId}
+                        onChange={(e) => setSelectedPlanId(e.target.value)}
+                        displayEmpty
+                        sx={{
+                          backgroundColor: bgColor,
+                          '& fieldset': { border: '1px solid #ddd', borderRadius: '7px' },
+                        }}
+                      >
+                        <MenuItem value="">
+                          <em>Select a plan (optional)</em>
+                        </MenuItem>
+                        {subscriptionPlans.map((plan) => (
+                          <MenuItem key={plan.id} value={plan.id}>
+                            {plan.name} - ₹{plan.price}/month
+                            {plan.employee_limit && ` (Up to ${plan.employee_limit} employees)`}
+                            {!plan.employee_limit && ' (Unlimited employees)'}
+                            {plan.type === 'free' && ' - Free Plan'}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <Typography variant="caption" sx={{ color: '#666', mt: 1, display: 'block' }}>
+                      {selectedPlanId && selectedPlanId !== currentSubscription?.plan?.id
+                        ? 'Selected plan will be assigned after saving tenant details.'
+                        : 'Leave empty to keep current subscription.'}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
 
               <Box sx={{ display: 'flex', gap: '10px', justifyContent: 'right' }}>
                   <LoadingButton

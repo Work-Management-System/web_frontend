@@ -30,6 +30,8 @@ type Plan = {
   duration_in_days: number;
   type: string;
   is_active: boolean;
+  employee_limit?: number | null;
+  is_trial_eligible?: boolean;
 };
 
 // Helper function to determine color for price (green palette)
@@ -121,7 +123,9 @@ export default function SubscriptionPlanList() {
       'Name',
       'Price',
       'Duration In Days',
+      'Employee Limit',
       'Type',
+      'Trial Eligible',
       'Description',
     ].map((heading) => (
       <TableCell
@@ -197,6 +201,11 @@ export default function SubscriptionPlanList() {
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
+                      <Typography variant="body2" sx={{ color: "#4A4A4A" }}>
+                        {plan.employee_limit ? `Up to ${plan.employee_limit}` : 'Unlimited'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Box
                         sx={{
                           ...getTypeChipStyle(plan.type),
@@ -211,6 +220,24 @@ export default function SubscriptionPlanList() {
                         }}
                       >
                         {plan.type}
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
+                      <Box
+                        sx={{
+                          backgroundColor: plan.is_trial_eligible ? "#C8E6C9" : "#FFCDD2",
+                          color: plan.is_trial_eligible ? "#2E7D32" : "#C62828",
+                          width: "60px",
+                          height: "24px",
+                          borderRadius: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          fontWeight: "medium",
+                        }}
+                      >
+                        {plan.is_trial_eligible ? "Yes" : "No"}
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>

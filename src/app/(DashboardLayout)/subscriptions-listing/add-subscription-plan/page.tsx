@@ -43,13 +43,23 @@ const CreateSubscription = () => {
       .min(3, "Plan name must be at least 3 characters long"),
     price: Yup.number()
       .required("Price is required")
-      .positive("Price must be a positive number"),
+      .min(0, "Price must be 0 or greater"),
     duration_in_days: Yup.number()
       .required("Duration is required")
       .positive("Duration must be a positive number")
       .integer("Duration must be an integer"),
     type: Yup.string().required("Type is required"),
     description: Yup.string().optional(),
+    employee_limit: Yup.number()
+      .nullable()
+      .positive("Employee limit must be positive")
+      .integer("Employee limit must be an integer")
+      .when('type', {
+        is: 'free',
+        then: (schema) => schema.nullable(),
+        otherwise: (schema) => schema.required("Employee limit is required for paid plans"),
+      }),
+    is_trial_eligible: Yup.boolean().optional(),
   });
 
   const formik = useFormik({
@@ -59,6 +69,8 @@ const CreateSubscription = () => {
       duration_in_days: "",
       type: "",
       description: "",
+      employee_limit: "",
+      is_trial_eligible: false,
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -68,6 +80,8 @@ const CreateSubscription = () => {
         price: Number(values.price),
         duration_in_days: Number(values.duration_in_days),
         type: values.type,
+        employee_limit: values.employee_limit ? Number(values.employee_limit) : null,
+        is_trial_eligible: values.is_trial_eligible || false,
       };
 
       try {
@@ -310,6 +324,100 @@ const CreateSubscription = () => {
                       {formik.errors.type}
                     </Typography>
                   )}
+                </Box>
+
+                {/* Employee Limit */}
+                <Box
+                  sx={{
+                    width: "49%",
+                    ...smallMobile && { width: "100%" },
+                    ...biggerMobile && { width: "48%" },
+                    ...tablet && { width: "48%" },
+                    minHeight: "90px",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <label>Employee Limit {formik.values.type === 'free' && '(Leave empty for unlimited)'}</label>
+                  <TextField
+                    fullWidth
+                    placeholder={formik.values.type === 'free' ? "Unlimited (leave empty)" : "Enter employee limit"}
+                    name="employee_limit"
+                    type="number"
+                    value={formik.values.employee_limit}
+                    onBlur={formik.handleBlur}
+                    onChange={formik.handleChange}
+                    disabled={formik.values.type === 'free'}
+                    error={formik.touched.employee_limit && Boolean(formik.errors.employee_limit)}
+                    sx={{
+                      width: "100%",
+                      marginBottom: "0px",
+                      backgroundColor: bgColor,
+                      "& input": {
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        fontSize: "14px",
+                        borderRadius: "7px",
+                        height: "auto",
+                      },
+                      "& input .Mui-focused": { border: borderFocus },
+                      "& label": { fontSize: "14px", top: "-5px" },
+                      "& label.Mui-focused": { fontSize: "16px", top: "0px", color: buttonColor },
+                      "& fieldset": { border: "1px solid #ddd", borderRadius: "7px" },
+                      "& .css-mun56l-MuiInputBase-root-MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: borderFocus,
+                        borderRadius: "7px",
+                      },
+                    }}
+                  />
+                  {formik.touched.employee_limit && formik.errors.employee_limit && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1, fontSize: "12px" }}>
+                      {formik.errors.employee_limit}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Is Trial Eligible */}
+                <Box
+                  sx={{
+                    width: "49%",
+                    ...smallMobile && { width: "100%" },
+                    ...biggerMobile && { width: "48%" },
+                    ...tablet && { width: "48%" },
+                    minHeight: "90px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <FormControl fullWidth>
+                    <label>Eligible for Free Trial?</label>
+                    <Select
+                      name="is_trial_eligible"
+                      value={formik.values.is_trial_eligible ? "true" : "false"}
+                      onChange={(e) => formik.setFieldValue('is_trial_eligible', e.target.value === "true")}
+                      disabled={formik.values.type === 'free'}
+                      fullWidth
+                      displayEmpty
+                      sx={{
+                        width: "100%",
+                        marginBottom: "0px",
+                        backgroundColor: bgColor,
+                        height: "44px",
+                        "& select": {
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          fontSize: "14px",
+                          borderRadius: "7px",
+                          height: "auto",
+                        },
+                        "& fieldset": { border: "1px solid #ddd", borderRadius: "7px" },
+                      }}
+                    >
+                      <MenuItem value="false">No</MenuItem>
+                      <MenuItem value="true">Yes</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
 
                 {/* Description */}

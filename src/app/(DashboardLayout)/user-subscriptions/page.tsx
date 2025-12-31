@@ -27,6 +27,8 @@ type Plan = {
   duration_in_days: number;
   type: string;
   is_active: boolean;
+  employee_limit?: number | null; // null = unlimited
+  is_trial_eligible?: boolean;
   features?: string[];
 };
 
@@ -35,6 +37,8 @@ type TenantSubscription = {
   start_date: string;
   end_date: string;
   status: string;
+  is_trial?: boolean;
+  is_paid?: boolean;
   plan: Plan;
 };
 
@@ -94,33 +98,98 @@ export default function SubscriptionPlanPage() {
       return;
     }
 
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + selectedPlan.duration_in_days);
+    // For paid plans, create Razorpay order
+    if (selectedPlan.type === 'paid') {
+      try {
+        // Create Razorpay order
+        const orderRes = await axiosInstance.post('/subscription/create-razorpay-order', {
+          plan_id: id,
+          tenant_id: tenantId,
+          amount: parseFloat(selectedPlan.price),
+          currency: 'INR',
+        });
 
-    const payload = {
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
-      status: "active",
-      plan_id: id,
-      tenant_id: tenantId,
-    };
+        if (orderRes.data.status === 'success') {
+          const order = orderRes.data.data;
+          
+          // Load Razorpay script and initialize payment
+          await loadRazorpayScript();
+          
+          const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '', // Add to .env
+            amount: order.amount,
+            currency: order.currency,
+            name: 'ManazeIT',
+            description: `Subscription: ${selectedPlan.name}`,
+            order_id: order.id,
+            handler: async function (response: any) {
+              try {
+                // Verify payment
+                const verifyRes = await axiosInstance.post('/subscription/verify-razorpay-payment', {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  plan_id: id,
+                  tenant_id: tenantId,
+                });
 
-    try {
-      const res = await axiosInstance.post(`/subscription/buy-subscription`, payload);
-      if (res.data.status === "success") {
-        setIsSubscriptionActive(true); 
-        toast.success("Subscription activated successfully!");
-        await loadData();
-      } else {
-        setIsSubscriptionActive(false); 
-        toast.error("Failed to activate subscription");
+                if (verifyRes.data.status === 'success') {
+                  setIsSubscriptionActive(true);
+                  toast.success('Payment successful! Subscription activated.');
+                  await loadData();
+                } else {
+                  toast.error('Payment verification failed');
+                }
+              } catch (error: any) {
+                console.error('Payment verification error:', error);
+                toast.error(error?.response?.data?.message || 'Payment verification failed');
+              }
+            },
+            prefill: {
+              name: authData.user?.email || '',
+              email: authData.user?.email || '',
+            },
+            theme: {
+              color: '#0798bd',
+            },
+            modal: {
+              ondismiss: function() {
+                toast.error('Payment cancelled');
+              },
+            },
+          };
+
+          const razorpay = (window as any).Razorpay;
+          if (razorpay) {
+            const razorpayInstance = new razorpay(options);
+            razorpayInstance.open();
+          } else {
+            throw new Error('Razorpay SDK not loaded');
+          }
+        }
+      } catch (error: any) {
+        console.error('Error creating Razorpay order:', error);
+        toast.error(error?.response?.data?.message || 'Failed to initialize payment');
       }
-    } catch (error) {
-      setIsSubscriptionActive(false);
-      console.error("Error selecting plan:", error);
-      toast.error("Error activating subscription");
+    } else {
+      // For free plans (shouldn't happen for regular users, but handle it)
+      toast.error('Free plans can only be assigned by SuperAdmin');
     }
+  };
+
+  const loadRazorpayScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).Razorpay) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+      document.body.appendChild(script);
+    });
   };
 
   if (loading) {
@@ -146,30 +215,29 @@ export default function SubscriptionPlanPage() {
     }
   };
 
-  const getDefaultFeatures = (name: string) => {
-    switch (name.toLowerCase()) {
-      case "ultra pro":
-        return [
-          "Basic auto tracking",
-          "Standard transaction clearing",
-          "Email support",
-          "Limited widget access",
-        ];
-      case "enterprise":
-        return [
-          "Basic auto tracking",
-          "Standard transaction clearing",
-          "Email support",
-          "Limited widget access",
-        ];
-      default:
-        return [
-          "2 auto tracking",
-          "7 Day transaction clearing",
-          "24/7 Customer support",
-          "All widget access",
-        ];
+  const getDefaultFeatures = (plan: Plan) => {
+    const employeeLimit = plan.employee_limit 
+      ? `Up to ${plan.employee_limit} employees`
+      : 'Unlimited employees';
+    
+    const baseFeatures = [
+      employeeLimit,
+      "Auto time tracking",
+      "Transaction clearing",
+      "24/7 Customer support",
+      "All widget access",
+    ];
+
+    if (plan.name.toLowerCase().includes('professional')) {
+      return [
+        ...baseFeatures,
+        "Advanced analytics",
+        "Priority support",
+        "Custom integrations",
+      ];
     }
+
+    return baseFeatures;
   };
 
   if (tenantSubscription) {
@@ -218,8 +286,18 @@ export default function SubscriptionPlanPage() {
               {plan.description || "No description available"}
             </Typography>
             <Typography variant="body2" color="var(--secondary-color)" /* #333333 */>
-              <strong>Status:</strong> {status}
+              <strong>Status:</strong> {status} {tenantSubscription.is_trial && '(Free Trial)'}
             </Typography>
+            {plan.employee_limit && (
+              <Typography variant="body2" color="var(--secondary-color)" /* #333333 */>
+                <strong>Employee Limit:</strong> Up to {plan.employee_limit} employees
+              </Typography>
+            )}
+            {!plan.employee_limit && (
+              <Typography variant="body2" color="var(--secondary-color)" /* #333333 */>
+                <strong>Employee Limit:</strong> Unlimited
+              </Typography>
+            )}
             <Typography variant="body2" color="var(--secondary-color)" /* #333333 */>
               <strong>Start Date:</strong> {new Date(start_date).toLocaleDateString()}
             </Typography>
@@ -227,7 +305,7 @@ export default function SubscriptionPlanPage() {
               <strong>End Date:</strong> {new Date(end_date).toLocaleDateString()}
             </Typography>
             <List sx={{ mt: 0, padding: 0 }}>
-              {(plan.features || getDefaultFeatures(plan.name)).map((feature, index) => (
+              {(plan.features || getDefaultFeatures(plan)).map((feature, index) => (
                 <ListItem key={index} disablePadding sx={{ py: 0.5 }}>
                   <ListItemIcon sx={{ minWidth: 30, color: "var(--primary-color-1)" /* #0798bd */ }}>
                     <CheckIcon />
@@ -243,20 +321,26 @@ export default function SubscriptionPlanPage() {
           <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
             <Button
               variant="contained"
-              color="primary"
               fullWidth
               sx={{
                 backgroundColor: "var(--primary-color-1)" /* #0798bd */,
-                color: "var(--text-color)" /* #ffffff */,
+                color: "var(--text-color-2) !important" /* White for dark background */,
                 "&:hover": {
                   backgroundColor: "var(--primary-color-1-hover)" /* #0799bdc8 */,
+                  color: "var(--text-color-2) !important",
+                },
+                "& .MuiButtonBase-root": {
+                  color: "var(--text-color-2) !important",
+                },
+                "& .MuiButton-root": {
+                  color: "var(--text-color-2) !important",
                 },
                 textTransform: "none",
                 padding: "8px 16px",
                 fontSize: "16px",
               }}
               component={Link}
-              href="/manage-subscription"
+              href="/subscriptions-listing"
             >
               Manage Subscription
             </Button>
@@ -353,8 +437,34 @@ export default function SubscriptionPlanPage() {
                   >
                     {plan.description || "No description available"}
                   </Typography>
+                  {plan.employee_limit && (
+                    <Typography
+                      variant="body2"
+                      sx={{ 
+                        mb: 1, 
+                        textAlign: "left",
+                        fontWeight: "bold",
+                        color: "var(--primary-color-1)" /* #0798bd */
+                      }}
+                    >
+                      👥 Up to {plan.employee_limit} employees
+                    </Typography>
+                  )}
+                  {!plan.employee_limit && plan.type === 'free' && (
+                    <Typography
+                      variant="body2"
+                      sx={{ 
+                        mb: 1, 
+                        textAlign: "left",
+                        fontWeight: "bold",
+                        color: "var(--primary-color-1)" /* #0798bd */
+                      }}
+                    >
+                      👥 Unlimited employees
+                    </Typography>
+                  )}
                   <List sx={{ mt: 0, padding: 0 }}>
-                    {(plan.features || getDefaultFeatures(plan.name)).map((feature, index) => (
+                    {(plan.features || getDefaultFeatures(plan)).map((feature, index) => (
                       <ListItem key={index} disablePadding sx={{ py: 0.5 }}>
                         <ListItemIcon
                           sx={{ minWidth: 30, color: "var(--primary-color-1)" /* #0798bd */ }}

@@ -71,6 +71,17 @@ export type Tenant = {
   tenant_phone?: string;
   tenant_email?: string;
   reporting_email?: string;
+  active_subscription?: {
+    id: string;
+    plan: {
+      id: string;
+      name: string;
+      price: string;
+      employee_limit?: number | null;
+    };
+    status: string;
+    is_trial?: boolean;
+  } | null;
 };
 
 // Helper functions for styling
@@ -395,7 +406,32 @@ export default function TenantList() {
       params: searchQuery ? { tenant_name: searchQuery } : {},
     });
     if (!res.data.status) throw new Error("Failed to fetch tenants");
-    return res.data.data;
+    const tenants = res.data.data;
+    
+    // Fetch subscription for each tenant
+    const tenantsWithSubscriptions = await Promise.all(
+      tenants.map(async (tenant: Tenant) => {
+        try {
+          const subRes = await axiosInstance.get(`/subscription/tenant-plans/${tenant.id}`);
+          if (subRes.data.status === "success" && subRes.data.data.length > 0) {
+            // Find active subscription
+            const activeSub = subRes.data.data.find(
+              (sub: any) => sub.status === "active"
+            );
+            return {
+              ...tenant,
+              active_subscription: activeSub || null,
+            };
+          }
+          return { ...tenant, active_subscription: null };
+        } catch (error) {
+          console.error(`Error fetching subscription for tenant ${tenant.id}:`, error);
+          return { ...tenant, active_subscription: null };
+        }
+      })
+    );
+    
+    return tenantsWithSubscriptions;
   };
 
   const handleRowClick = (tenant: Tenant) => {
@@ -860,6 +896,7 @@ export default function TenantList() {
       'Email',
       'Phone',
       'Status',
+      'Subscription Plan',
       'Address',
       'Website',
     ].map((heading) => (
@@ -1024,6 +1061,32 @@ export default function TenantList() {
                         />
                         {tenant.status === "active" ? "Active" : "Inactive"}
                       </Box>
+                    </TableCell>
+                    <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
+                      {tenant.active_subscription ? (
+                        <Box
+                          sx={{
+                            backgroundColor: tenant.active_subscription.is_trial ? "#FFF3E0" : "#E8F5E9",
+                            color: tenant.active_subscription.is_trial ? "#EF6C00" : "#43A047",
+                            width: "fit-content",
+                            height: "24px",
+                            borderRadius: "12px",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "12px",
+                            fontWeight: "medium",
+                            px: 2,
+                            gap: 0.5,
+                          }}
+                        >
+                          {tenant.active_subscription.plan.name}
+                          {tenant.active_subscription.is_trial && " (Trial)"}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" sx={{ color: "#B0BEC5" }}>
+                          No Plan
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Typography variant="body2" sx={{ color: getAddressColor(tenant.address || "—") }}>
