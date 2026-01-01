@@ -1,4 +1,6 @@
 "use client";
+// Import polyfill first to fix React 19 compatibility
+import '@/utils/react-dom-polyfill';
 import { styled, Container, Box, useMediaQuery } from "@mui/material";
 import React, { createContext, useEffect, useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
@@ -10,6 +12,7 @@ import { useAppselector } from "@/redux/store";
 import createAxiosInstance from "../axiosInstance";
 import { useRouter } from "next/navigation";
 import { PaletteChangeProvider } from "@/contextapi/PaletteChangeContext";
+import { TourProvider } from "@/contextapi/TourContext";
 import { getMessaging, getToken } from "firebase/messaging";
 import app from '@/utils/firebase';
 
@@ -189,9 +192,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <PaletteChangeProvider>
-      <MainWrapper className="mainwrapper">
-        <NextTopLoader />
-        <SubscriptionContext.Provider value={{ isSubscriptionActive, setIsSubscriptionActive }}>
+      <TourProvider>
+        <MainWrapper className="mainwrapper">
+          <NextTopLoader />
+          <SubscriptionContext.Provider value={{ isSubscriptionActive, setIsSubscriptionActive }}>
           {/* Sidebar */}
           {isSubscriptionActive && (
 
@@ -236,6 +240,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </PageWrapper>
         </SubscriptionContext.Provider>
       </MainWrapper>
+      </TourProvider>
     </PaletteChangeProvider>
   );
 }

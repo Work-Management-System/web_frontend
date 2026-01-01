@@ -134,7 +134,7 @@ const Sidebar = ({
   if (lgUp) {
     return (
       <>
-        <Box sx={{ width: collapsed ? collapsedWidth : sidebarWidth, flexShrink: 0 }}>
+        <Box sx={{ width: collapsed ? collapsedWidth : sidebarWidth, flexShrink: 0 }} data-tour="sidebar">
           <Drawer
             anchor="left"
             open={isSidebarOpen}

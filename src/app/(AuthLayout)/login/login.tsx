@@ -159,7 +159,30 @@ const LoginPage: React.FC = () => {
 
           if (response.status === 200 && response.data?.data?.loginUrl) {
             if (typeof window !== 'undefined') {
-              window.location.href = response.data.data.loginUrl;
+              const loginUrl = response.data.data.loginUrl;
+              const currentHostname = window.location.hostname;
+              const isLocalhost = currentHostname.includes('localhost') || currentHostname === '127.0.0.1';
+              
+              // If on localhost, use relative URL instead of full URL from backend
+              if (isLocalhost) {
+                // Extract just the path and query from the loginUrl
+                try {
+                  const url = new URL(loginUrl);
+                  const relativePath = url.pathname + url.search;
+                  window.location.href = relativePath;
+                } catch (e) {
+                  // If URL parsing fails, try to extract path manually
+                  const pathMatch = loginUrl.match(/\/login[^?]*(?:\?.*)?/);
+                  if (pathMatch) {
+                    window.location.href = pathMatch[0];
+                  } else {
+                    window.location.href = `/login?email=${encodeURIComponent(values.email)}`;
+                  }
+                }
+              } else {
+                // For production, use the full URL from backend
+                window.location.href = loginUrl;
+              }
             }
           } else {
             toast.error("Failed to fetch subdomain. Please try again.");
@@ -215,7 +238,12 @@ const LoginPage: React.FC = () => {
               resetForm();
               
               // Navigate to dashboard after a brief delay
+              // Use relative URL to stay on current domain (localhost or production)
               setTimeout(() => {
+                const currentHostname = window.location.hostname;
+                const isLocalhost = currentHostname.includes('localhost') || currentHostname === '127.0.0.1';
+                
+                // Always use relative URL to preserve current domain
                 window.location.href = "/dashboard";
               }, 300);
             } catch (loginError: any) {

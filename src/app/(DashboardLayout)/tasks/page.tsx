@@ -49,6 +49,7 @@ import KanbanBoardSkeleton from "@/app/KanbanBoardSkeleton";
 import { EditorContainer} from "../components/kanban-card/TaskDetailsModal";
 import Tiptap from "../components/kanban-card/Tiptap";
 import SegmentIcon from '@mui/icons-material/Segment';
+import { usePageTour } from '@/hooks/usePageTour';
 
 // Type Definitions
 interface Report {
@@ -145,6 +146,7 @@ const ConfirmDialog = ({ open, onClose, onConfirm }) => {
 };
 
 const KanbanBoard: React.FC = () => {
+  usePageTour(); // Trigger tour on first visit
   const { reports, projects, fetchTasks, handleTaskDrop, handleDeleteTask, taskId, setTaskId, viewProjectTasks, setViewProjectTasks,tasksLoading,viewDepartmentTasks,setViewDepartmentTasks,setViewTeamTasks,setTasksLoading} = useTaskContext();
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [columnTasks, setColumnTasks] = useState<{

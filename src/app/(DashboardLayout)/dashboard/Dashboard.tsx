@@ -30,6 +30,7 @@ import ReportIcon from '@mui/icons-material/Report';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import toast from 'react-hot-toast';
+import { usePageTour } from '@/hooks/usePageTour';
 
 // Dynamically import react-apexcharts
 const ReactApexChart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -100,6 +101,7 @@ interface User {
 }
 
 export default function Dashboard() {
+    usePageTour(); // Trigger tour on first visit
     const { paletteChangeSignal } = usePaletteChange();
     const axiosInstance = createAxiosInstance();
     const [groupBy, setGroupBy] = useState<'month' | 'day'>('month');
@@ -946,20 +948,20 @@ export default function Dashboard() {
                                 <Grid item xs={12} lg={8}>
                                     {/* User Tasks and Project Overview */}
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, mt: 3 }}>
-                                        <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                        <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }} data-tour="user-tasks">
                                             <UserTasks
                                                 users={allUsers}
                                                 reports={filteredReports}
                                                 columns={columns}
                                             />
                                         </Box>
-                                        <Box sx={{ flex: 1 }}>
+                                        <Box sx={{ flex: 1 }} data-tour="project-overview">
                                             <ProjectOverview projects={analytics?.allProjectDetails} />
                                         </Box>
                                     </Box>
 
                                     {/* Charts Section */}
-                                    <div className="space-y-6" style={{ marginTop: '24px' }}>
+                                    <div className="space-y-6" style={{ marginTop: '24px' }} data-tour="analytics-charts">
                                 {/* Pie Charts in One Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {/* Pie Chart: Project Phases */}

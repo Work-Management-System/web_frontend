@@ -1,4 +1,6 @@
 "use client";
+// Import polyfill first to fix React 19 compatibility with react-joyride
+import '@/utils/react-dom-polyfill';
 import { baselightTheme } from "@/utils/theme/DefaultColors";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
