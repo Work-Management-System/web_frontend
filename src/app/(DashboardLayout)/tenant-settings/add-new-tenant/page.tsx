@@ -954,18 +954,39 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
                       </Box>
                     )}
                     <FormControl fullWidth>
-                      <InputLabel>Change Subscription Plan</InputLabel>
+                      <InputLabel 
+                        id="subscription-plan-label"
+                        sx={{
+                          backgroundColor: bgColor,
+                          px: 0.5,
+                          '&.Mui-focused': {
+                            color: buttonColor,
+                          },
+                        }}
+                      >
+                        Change Subscription Plan
+                      </InputLabel>
                       <Select
+                        labelId="subscription-plan-label"
                         value={selectedPlanId}
                         onChange={(e) => setSelectedPlanId(e.target.value)}
+                        label="Change Subscription Plan"
                         displayEmpty
                         sx={{
                           backgroundColor: bgColor,
                           '& fieldset': { border: '1px solid #ddd', borderRadius: '7px' },
+                          '& .MuiSelect-select': {
+                            padding: '10px 14px',
+                            fontSize: '14px',
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            border: borderFocus,
+                            borderRadius: '7px',
+                          },
                         }}
                       >
                         <MenuItem value="">
-                          <em>Select a plan (optional)</em>
+                          <em style={{ fontStyle: 'normal', color: '#999' }}>Select a plan (optional)</em>
                         </MenuItem>
                         {subscriptionPlans.map((plan) => (
                           <MenuItem key={plan.id} value={plan.id}>
@@ -992,7 +1013,7 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
                     variant="contained"
                     loading={submitLoading}
                     loadingPosition='start'
-                    disabled={!formik.dirty}
+                    disabled={!formik.isValid || submitLoading}
                     sx={{
                       backgroundColor: blueText,
                       borderRadius: '50px',
