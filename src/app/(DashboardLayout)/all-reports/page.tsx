@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import createAxiosInstance from '@/app/axiosInstance';
+import { useAppselector } from '@/redux/store';
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -197,6 +198,7 @@ const UserReport = () => {
     const [ticketData, setTicketData] = useState<Ticket[]>([]);
     const [error, setError] = useState<string | null>(null);
     const axiosInstance = createAxiosInstance();
+    const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
 
     const fetchWorkLogs = async () => {
         try {
@@ -219,6 +221,13 @@ const UserReport = () => {
     };
 
     const fetchTickets = async () => {
+        // Skip API call for SuperAdmin (priority 1)
+        if (userPriority === 1) {
+            setTicketData([]);
+            setLoadingTickets(false);
+            return;
+        }
+        
         try {
             setLoadingTickets(true);
             setError(null);

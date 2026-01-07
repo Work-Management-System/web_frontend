@@ -149,7 +149,7 @@ const TenantDetailsModal = ({
   if (!open || !tenant) return null;
 
   const baseDomain = getBaseDomain();
-  const portalUrl = `http://${tenant.subdomain}.${baseDomain}`;
+  const portalUrl = `http://${tenant?.subdomain || ''}.${baseDomain}`;
 
   return (
     <Dialog
@@ -271,7 +271,7 @@ const TenantDetailsModal = ({
           >
             <EmailIcon sx={{ fontSize: "14px", mr: 1 }} />
             <a
-              href={tenant?.tenant_email ? `mailto:${tenant.tenant_email}` : "#"}
+              href={tenant?.tenant_email ? `mailto:${tenant?.tenant_email}` : "#"}
               style={{ color: "inherit", textDecoration: "none" }}
             >
               {tenant?.tenant_email || "—"}
@@ -297,7 +297,7 @@ const TenantDetailsModal = ({
           >
             <PhoneIcon sx={{ fontSize: "14px", mr: 1 }} />
             <a
-              href={tenant?.tenant_phone ? `tel:${tenant.tenant_phone}` : "#"}
+              href={tenant?.tenant_phone ? `tel:${tenant?.tenant_phone}` : "#"}
               style={{ color: "inherit", textDecoration: "none" }}
             >
               {tenant?.tenant_phone || "—"}
@@ -396,23 +396,29 @@ export default function TenantList() {
   const axiosInstance = createAxiosInstance();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const userPriyority = useAppselector((state) => state.role.value.priority);
+  const userPriyority = useAppselector((state) => state.role.value?.priority ?? 0);
   const tenantId = useAppselector((state) => state.auth.value?.tenant?.id); 
   const [searchQuery, setSearchQuery] = useState("");
   const router=useRouter();
   
   const fetchTenants = async (searchQuery = '') => {
-    const res = await axiosInstance.get("/tenants/list", {
-      params: searchQuery ? { tenant_name: searchQuery } : {},
-    });
-    if (!res.data.status) throw new Error("Failed to fetch tenants");
-    const tenants = res.data.data;
+    try {
+      const res = await axiosInstance.get("/tenants/list", {
+        params: searchQuery ? { tenant_name: searchQuery } : {},
+      });
+      console.log("Tenants API response:", res.data);
+      if (!res.data.status) {
+        console.error("API returned non-success status:", res.data);
+        throw new Error("Failed to fetch tenants");
+      }
+      const tenants = res.data.data || [];
+      console.log("Fetched tenants:", tenants);
     
     // Fetch subscription for each tenant
     const tenantsWithSubscriptions = await Promise.all(
       tenants.map(async (tenant: Tenant) => {
         try {
-          const subRes = await axiosInstance.get(`/subscription/tenant-plans/${tenant.id}`);
+          const subRes = await axiosInstance.get(`/subscription/tenant-plans/${tenant?.id}`);
           if (subRes.data.status === "success" && subRes.data.data.length > 0) {
             // Find active subscription
             const activeSub = subRes.data.data.find(
@@ -425,13 +431,17 @@ export default function TenantList() {
           }
           return { ...tenant, active_subscription: null };
         } catch (error) {
-          console.error(`Error fetching subscription for tenant ${tenant.id}:`, error);
+          console.error(`Error fetching subscription for tenant ${tenant?.id}:`, error);
           return { ...tenant, active_subscription: null };
         }
       })
     );
     
-    return tenantsWithSubscriptions;
+      return tenantsWithSubscriptions;
+    } catch (error) {
+      console.error("Error in fetchTenants:", error);
+      throw error;
+    }
   };
 
   const handleRowClick = (tenant: Tenant) => {
@@ -447,18 +457,30 @@ export default function TenantList() {
     setSearchQuery(e.target.value);
   };
   useEffect(() => {
+    console.log("Component mounted/updated - userPriority:", userPriyority, "loading:", loading, "searchQuery:", searchQuery);
     const delayDebounce = setTimeout(() => {
-    fetchTenants(searchQuery)
-      .then(setTenants)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-    }, 500); 
+      fetchTenants(searchQuery)
+        .then((data) => {
+          console.log("Setting tenants:", data);
+          setTenants(data);
+        })
+        .catch((error) => {
+          console.error('Error fetching tenants:', error);
+          setTenants([]);
+        })
+        .finally(() => {
+          console.log("Setting loading to false");
+          setLoading(false);
+        });
+    }, searchQuery ? 500 : 0); // No delay for initial load, 500ms for search
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  }, [searchQuery]); // Run on mount and when searchQuery changes
 
   const tenant = tenants.find((t) => t.id === tenantId);
 
   const isMobile = useMediaQuery('(min-width: 320px) and (max-width: 767px)');
+
+  console.log("Render check - loading:", loading, "userPriority:", userPriyority, "tenants count:", tenants.length, "tenantId:", tenantId);
 
   if (loading) {
     return (
@@ -563,7 +585,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.tenant_name}
+                      {tenant?.tenant_name || 'N/A'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -574,12 +596,12 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.subdomain}
+                      {tenant?.subdomain || "—"}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {tenant.is_active ? (
+                      {tenant?.is_active ? (
                         <CheckCircle sx={{ color: 'var(--primary-color-2)' }} />
                       ) : (
                         <Cancel sx={{ color: 'var(--primary-color-2)' }} />
@@ -590,9 +612,9 @@ export default function TenantList() {
                     </Box>
                     <Typography
                       variant="body2"
-                      sx={{ color: tenant.is_active ? 'var(--text-color)' : 'var(--primary-color-2)' }}
+                      sx={{ color: tenant?.is_active ? 'var(--text-color)' : 'var(--primary-color-2)' }}
                     >
-                      {tenant.status} ({tenant.is_active ? 'Active' : 'Inactive'})
+                      {tenant?.status || 'N/A'} ({tenant?.is_active ? 'Active' : 'Inactive'})
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -603,7 +625,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.website_url || 'Not provided'}
+                      {tenant?.website_url || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -614,7 +636,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.tenant_phone || 'Not provided'}
+                      {tenant?.tenant_phone || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -625,7 +647,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.tenant_email || 'Not provided'}
+                      {tenant?.tenant_email || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -636,7 +658,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.address || 'Not provided'}
+                      {tenant?.address || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -647,7 +669,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.reporting_email || 'Not provided'}
+                      {tenant?.reporting_email || 'Not provided'}
                     </Typography>
                   </Box>
                 </Box>
@@ -692,9 +714,9 @@ export default function TenantList() {
                         Logo:
                       </Typography>
                     </Box>
-                    {tenant.logo ? (
+                    {tenant?.logo ? (
                       <img
-                        src={tenant.logo}
+                        src={tenant?.logo}
                         alt="Tenant Logo"
                         style={{
                           width: '100%',
@@ -720,9 +742,9 @@ export default function TenantList() {
                         Background Image:
                       </Typography>
                     </Box>
-                    {tenant.background_image ? (
+                    {tenant?.background_image ? (
                       <img
-                        src={tenant.background_image}
+                        src={tenant?.background_image}
                         alt="Background Image"
                         style={{
                           width: '100%',
@@ -785,7 +807,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.administrator_user.first_name || 'Not provided'}
+                      {tenant?.administrator_user.first_name || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: isMobile ? '100%' : '1 1 45%', minWidth: isMobile ? 'auto' : 220 }}>
@@ -796,7 +818,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.administrator_user.last_name || 'Not provided'}
+                      {tenant?.administrator_user.last_name || 'Not provided'}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: '100%' }}>
@@ -808,7 +830,7 @@ export default function TenantList() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ color: 'var(--text-color)' }}>
-                      {tenant.administrator_user.email || 'Not provided'}
+                      {tenant?.administrator_user.email || 'Not provided'}
                     </Typography>
                   </Box>
                 </Box>
@@ -873,7 +895,8 @@ export default function TenantList() {
               exportToDocx={exportTenantsToDocx}
               label="Export Tenants"
             />
-       <Link href="/tenant-settings/add-new-tenant" passHref>
+       {userPriyority === 1 && (
+            <Link href="/tenant-settings/add-new-tenant" passHref>
               <Button variant="contained" sx={{backgroundColor: "var(--primary-color-2)", color: "var(--text-color-2)", textTransform: "none",fontWeight: "bold",
                 "&:hover": {
                   backgroundColor: "var(--primary-color-2-hover)" /* #0799bdc8 */,
@@ -881,6 +904,7 @@ export default function TenantList() {
                 Add New Tenant
               </Button>
             </Link>
+       )}
             </Box>
           </Box>
 
@@ -917,16 +941,35 @@ export default function TenantList() {
 </TableHead>
 
               <TableBody>
-                {tenants.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((tenant, index) => (
+                {(() => {
+                  const filteredTenants = userPriyority === 1 ? tenants : (tenantId ? tenants.filter(t => t.id === tenantId) : []);
+                  console.log("Filtered tenants for display:", filteredTenants.length, "userPriority:", userPriyority, "total tenants:", tenants.length);
+                  if (filteredTenants.length === 0) {
+                    return (
+                      <TableRow key="no-tenants">
+                        <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                          <Typography variant="body2" color="textSecondary">
+                            {userPriyority === 1 ? "No tenants found" : "No tenant data available"}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                  return filteredTenants.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((tenant, index) => (
                   <TableRow
-                    key={tenant.id}
-                    onClick={() => handleRowClick(tenant)}
+                    key={tenant?.id}
+                    onClick={() => {
+                      // Only allow SuperAdmin to view all tenants, regular tenants can only view their own
+                      if (userPriyority === 1 || tenant.id === tenantId) {
+                        handleRowClick(tenant);
+                      }
+                    }}
                     sx={{
                       backgroundColor: index % 2 === 0 ? "#FFFFFF" : "#F7F8FA",
                       "&:last-child td": { borderBottom: "none" },
                       "&:hover": {
                         backgroundColor: "#F1F3F4",
-                        cursor: "pointer",
+                        cursor: userPriyority === 1 || tenant.id === tenantId ? "pointer" : "default",
                       },
                       transition: "background-color 0.3s",
                     }}
@@ -935,16 +978,23 @@ export default function TenantList() {
                       sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5, verticalAlign: "middle" }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link href={`/tenant-settings/add-new-tenant?id=${tenant?.id}`}>
+                      {userPriyority === 1 ? (
+                        <Link href={`/tenant-settings/add-new-tenant?id=${tenant?.id}`}>
+                          <Avatar
+                            src={tenant?.logo || ""}
+                            sx={{ width: 32, height: 32, cursor: "pointer" }}
+                          />
+                        </Link>
+                      ) : (
                         <Avatar
-                          src={tenant.logo || ""}
-                          sx={{ width: 32, height: 32, cursor: "pointer" }}
+                          src={tenant?.logo || ""}
+                          sx={{ width: 32, height: 32 }}
                         />
-                      </Link>
+                      )}
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Typography variant="body2" color="#4A4A4A">
-                        {tenant.tenant_name}
+                        {tenant?.tenant_name || 'N/A'}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
@@ -961,18 +1011,18 @@ export default function TenantList() {
                           px: 2,
                         }}
                       >
-                        {tenant.subdomain}
+                        {tenant?.subdomain || "—"}
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Typography variant="body2" color="#4A4A4A">
-                        {tenant.administrator_user.first_name} {tenant.administrator_user.last_name}
+                        {tenant?.administrator_user.first_name} {tenant?.administrator_user.last_name}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Box
                         sx={{
-                          ...getEmailChipStyle(tenant.tenant_email || "—"),
+                          ...getEmailChipStyle(tenant?.tenant_email || "—"),
                           width: "fit-content",
                           height: "24px",
                           borderRadius: "12px",
@@ -988,7 +1038,7 @@ export default function TenantList() {
                         }}
                       >
                         <a
-                          href={tenant.tenant_email ? `mailto:${tenant.tenant_email}` : "#"}
+                          href={tenant?.tenant_email ? `mailto:${tenant?.tenant_email}` : "#"}
                           style={{
                             color: "inherit",
                             textDecoration: "none",
@@ -998,14 +1048,14 @@ export default function TenantList() {
                           }}
                         >
                           <EmailIcon sx={{ fontSize: "14px" }} />
-                          {tenant.tenant_email || "—"}
+                          {tenant?.tenant_email || "—"}
                         </a>
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Box
                         sx={{
-                          ...getPhoneChipStyle(tenant.tenant_phone || "—"),
+                          ...getPhoneChipStyle(tenant?.tenant_phone || "—"),
                           width: "fit-content",
                           height: "24px",
                           borderRadius: "12px",
@@ -1021,7 +1071,7 @@ export default function TenantList() {
                         }}
                       >
                         <a
-                          href={tenant.tenant_phone ? `tel:${tenant.tenant_phone}` : "#"}
+                          href={tenant?.tenant_phone ? `tel:${tenant?.tenant_phone}` : "#"}
                           style={{
                             color: "inherit",
                             textDecoration: "none",
@@ -1031,14 +1081,14 @@ export default function TenantList() {
                           }}
                         >
                           <PhoneIcon sx={{ fontSize: "14px" }} />
-                          {tenant.tenant_phone || "—"}
+                          {tenant?.tenant_phone || "—"}
                         </a>
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Box
                         sx={{
-                          ...getStatusChipStyle(tenant.status),
+                          ...getStatusChipStyle(tenant?.status),
                           width: "fit-content",
                           height: "24px",
                           borderRadius: "12px",
@@ -1055,19 +1105,19 @@ export default function TenantList() {
                             height: "8px",
                             borderRadius: "50%",
                             backgroundColor:
-                              tenant.status.toLowerCase() === "active" ? "#43A047" : "#D32F2F",
+                              tenant?.status?.toLowerCase() === "active" ? "#43A047" : "#D32F2F",
                             marginRight: "8px",
                           }}
                         />
-                        {tenant.status === "active" ? "Active" : "Inactive"}
+                        {tenant?.status === "active" ? "Active" : "Inactive"}
                       </Box>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
-                      {tenant.active_subscription ? (
+                      {tenant?.active_subscription ? (
                         <Box
                           sx={{
-                            backgroundColor: tenant.active_subscription.is_trial ? "#FFF3E0" : "#E8F5E9",
-                            color: tenant.active_subscription.is_trial ? "#EF6C00" : "#43A047",
+                            backgroundColor: tenant?.active_subscription.is_trial ? "#FFF3E0" : "#E8F5E9",
+                            color: tenant?.active_subscription.is_trial ? "#EF6C00" : "#43A047",
                             width: "fit-content",
                             height: "24px",
                             borderRadius: "12px",
@@ -1079,8 +1129,8 @@ export default function TenantList() {
                             gap: 0.5,
                           }}
                         >
-                          {tenant.active_subscription.plan.name}
-                          {tenant.active_subscription.is_trial && " (Trial)"}
+                          {tenant?.active_subscription.plan.name}
+                          {tenant?.active_subscription.is_trial && " (Trial)"}
                         </Box>
                       ) : (
                         <Typography variant="body2" sx={{ color: "#B0BEC5" }}>
@@ -1089,14 +1139,14 @@ export default function TenantList() {
                       )}
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
-                      <Typography variant="body2" sx={{ color: getAddressColor(tenant.address || "—") }}>
-                        {tenant.address || "—"}
+                      <Typography variant="body2" sx={{ color: getAddressColor(tenant?.address || "—") }}>
+                        {tenant?.address || "—"}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ borderBottom: "1px solid #E0E0E0", py: 1.5 }}>
                       <Box
                         sx={{
-                          ...getWebsiteChipStyle(tenant.website_url || "—"),
+                          ...getWebsiteChipStyle(tenant?.website_url || "—"),
                           width: "fit-content",
                           height: "24px",
                           borderRadius: "12px",
@@ -1112,7 +1162,7 @@ export default function TenantList() {
                         }}
                       >
                         <a
-                          href={tenant.website_url || "#"}
+                          href={tenant?.website_url || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -1124,12 +1174,13 @@ export default function TenantList() {
                           }}
                         >
                           <LinkIcon sx={{ fontSize: "14px" }} />
-                          {tenant.website_url || "—"}
+                          {tenant?.website_url || "—"}
                         </a>
                       </Box>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ));
+                })()}
               </TableBody>
             </Table>
           </TableContainer>

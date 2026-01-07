@@ -134,13 +134,14 @@ const renderIcon = (segment: string) => {
 };
 const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const userRole = useAppselector(state => state.role.value)
+  const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorE, setAnchorE] = useState(null);
   const [notifications, setNotifications] = useState<any>();
   const [total, setTotal] = useState<number>(0);
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const [roles, setRoles] = useState<any[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>(userRole.id);
+  const [selectedRole, setSelectedRole] = useState<string>(userRole?.id || '');
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [page, setPage] = useState(1);
@@ -164,14 +165,34 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
 
   const messaging = getMessaging(app);
   onMessage(messaging, (payload) => {
-    fetchNotifications()
+    // Only fetch if not SuperAdmin
+    if (userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
+      fetchNotifications();
+    }
   });
 
   const fetchNotifications = async () => {
+    // Skip API call if no user ID, invalid user ID, or if SuperAdmin (priority 1)
+    const userId = authData?.user?.id;
+    const roleName = userRole?.name;
+    
+    // Check if SuperAdmin by priority or role name
+    if (!userId || 
+        userId === 'null' || 
+        userId === 'undefined' || 
+        userPriority === 1 || 
+        roleName === 'SuperAdmin' || 
+        roleName === 'Developer') {
+      setNotifications([]);
+      setTotalUnread(0);
+      setTotal(0);
+      return;
+    }
+    
     try {
       const response = await axiosInstance.get(`notification`, {
         params: {
-          userId: authData?.user?.id,
+          userId: userId,
           page: 1,
           limit: 20,
           sort: 'createdAt:desc'
@@ -190,8 +211,14 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
       setTotal(responseData.total);
       setTotalUnread(filteredUnreadCount); // 👈 override unread count here
     }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching notifications:', error);
+      // If it's a 400 error, likely invalid user ID or SuperAdmin - set empty state
+      if (error?.response?.status === 400 || error?.response?.status === 401) {
+        setNotifications([]);
+        setTotalUnread(0);
+        setTotal(0);
+      }
     }
   };
 
@@ -219,6 +246,9 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
         Cookies.set("access_token", token);
         const decoded = jwtDecode<DecodedToken>(token);
         const role = await fetchRole(decoded?.role?.id);
+        if (!role) {
+          console.warn('Role not found after switch');
+        }
         let authDataUpdated = {
           user: {
             id: decoded.user.id,
@@ -253,11 +283,24 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   };
 
   const fetchRole = async (id: string) => {
-    const res = await axiosInstance.get(`/role-management/get-one/${id}`);
-    if (!res.data.status) throw new Error("Failed to fetch users");
-    const data: any = await res.data;
-    dispatch(setRoleDetails(data?.data));
-    return data.data;
+    if (!id || id === 'null' || id === 'undefined') {
+      return null;
+    }
+    try {
+      const res = await axiosInstance.get(`/role-management/get-one/${id}`);
+      if (!res.data?.status) {
+        return null;
+      }
+      const data: any = await res.data;
+      if (data?.data) {
+        dispatch(setRoleDetails(data.data));
+        return data.data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching role:', error);
+      return null;
+    }
   };
 
   function getFirstPathSegment(url?: string): string {
@@ -268,9 +311,17 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   }
 
   useEffect(() => {
-    fetchNotifications();
+    // Only fetch notifications if role is loaded and user is not SuperAdmin
+    if (userRole && userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
+      fetchNotifications();
+    } else if (userPriority === 1 || userRole?.name === 'SuperAdmin' || userRole?.name === 'Developer') {
+      // Set empty state for SuperAdmin
+      setNotifications([]);
+      setTotalUnread(0);
+      setTotal(0);
+    }
     fetchUserRoles();
-  }, []);
+  }, [userRole, userPriority]);
 
   const handleOnClick = async (item: any) => {
     setSelectedNotification(item);

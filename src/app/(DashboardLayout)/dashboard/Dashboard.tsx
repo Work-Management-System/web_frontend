@@ -113,8 +113,8 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isFilterFormVisible, setIsFilterFormVisible] = useState(false);
-    const userPriority = useAppselector((state) => state.role.value.priority);
     const role = useAppselector((state) => state.role.value);
+    const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
     const user = useAppselector((state) => state.user.user);
     const [chartKey, setChartKey] = useState(0); // Key to force chart re-render
     const [filteredReports, setFilteredReports] = useState<Report[]>([]);
@@ -258,6 +258,12 @@ export default function Dashboard() {
     };
 
     const fetchTeamUsersCount = async () => {
+        // Skip API call for SuperAdmin (priority 1)
+        if (userPriority === 1) {
+            setTeamUsersCount(0);
+            return;
+        }
+        
         try {
             // For all roles, get total user count
             const response = await axiosInstance.get('/user/list');
@@ -316,6 +322,12 @@ export default function Dashboard() {
     }, []);
 
     const fetchUsers = async () => {
+        // Skip API call for SuperAdmin (priority 1)
+        if (userPriority === 1) {
+            setAllUsers([]);
+            return;
+        }
+        
         try {
             const response = await axiosInstance.get(userPriority === 4 ? `/user/find-one/${user.id}` : userPriority === 3 ? `/user/team-list/${user.id}` : "/user/list");
 
@@ -331,6 +343,12 @@ export default function Dashboard() {
     };
 
     const fetchTasks = async () => {
+        // Skip API call for SuperAdmin (priority 1)
+        if (userPriority === 1) {
+            setFilteredReports([]);
+            return;
+        }
+        
         try {
             let apiUrl = userPriority === 4 ? `/task-maangement/by-user/${user.id}` : `/task-maangement/list`;
             const response = await axiosInstance.get(apiUrl);
@@ -1269,7 +1287,7 @@ export default function Dashboard() {
 
 
 const UserTasks = ({ users, reports, columns }) => {
-    const userPriority = useAppselector((state) => state.role.value.priority);
+    const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
     // Group tasks by user and priority
     const userTasks = useMemo(() => {
         const taskMap = {};

@@ -72,7 +72,7 @@ export default function RoleList() {
   const [mode, setMode] = useState<'edit' | 'add'>("add");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const userPriyority = useAppselector((state) => state.role.value.priority);
+  const userPriyority = useAppselector((state) => state.role.value?.priority ?? 0);
   
 
   const pathName = usePathname();

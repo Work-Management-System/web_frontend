@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { useTour } from '@/contextapi/TourContext';
-import { getTourByRoute, isTourCompleted } from '@/utils/tours/tourConfigs';
+import { useTour, isTourCompleted } from '@/contextapi/TourContext';
+import { getTourByRoute } from '@/utils/tours/tourConfigs';
 
 /**
  * Hook to automatically trigger tour when user visits a page for the first time
@@ -34,5 +34,8 @@ export const usePageTour = () => {
     return () => clearTimeout(timer);
   }, [pathname, runTour]);
 };
+
+
+
 
 

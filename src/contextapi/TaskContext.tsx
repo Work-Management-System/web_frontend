@@ -130,8 +130,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         apiUrl = `/task-maangement/by-project/${projectId}`;
       } else if (userId) {
         apiUrl = `/task-maangement/by-user/${userId}`;
-      } else if ((currentUserRole?.priority && currentUserRole?.priority < 3)) {
+      } else if ((currentUserRole?.priority && currentUserRole?.priority < 3 && currentUserRole?.priority !== 1)) {
         apiUrl = `/task-maangement/list`;
+      } else if (currentUserRole?.priority === 1) {
+        // Skip API call for SuperAdmin (priority 1)
+        setTasksLoading(false);
+        setTasks([]);
+        return;
       }
       //  else if (currentUserRole?.priority && currentUserRole?.priority == 3) {
       //   apiUrl = `/task-maangement/list-userwise/${authData?.user.id}`;

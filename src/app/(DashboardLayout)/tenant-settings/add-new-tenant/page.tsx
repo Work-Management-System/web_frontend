@@ -51,12 +51,26 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
   const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
-  const userPriority = useAppselector((state) => state.role.value.priority);
+  const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
+  const currentTenantId = useAppselector((state) => state.auth.value?.tenant?.id);
   const router = useRouter();
   const pathName = usePathname();
   const searchParams = useSearchParams();
   const id = propTenantId || searchParams?.get("id");
   const isEditMode = id ? true : false;
+  
+  // Restrict non-SuperAdmin users to only edit their own tenant
+  useEffect(() => {
+    if (isEditMode && userPriority !== 1 && id && currentTenantId && id !== currentTenantId) {
+      toast.error('You can only edit your own tenant.');
+      router.push('/tenant-settings');
+    }
+    // Prevent non-SuperAdmin from creating new tenants
+    if (!isEditMode && userPriority !== 1) {
+      toast.error('Only SuperAdmin can create new tenants.');
+      router.push('/tenant-settings');
+    }
+  }, [isEditMode, id, currentTenantId, userPriority, router]);
 
   const axiosInstance = createAxiosInstance();
 

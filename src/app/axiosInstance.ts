@@ -32,23 +32,29 @@ const createAxiosInstance = (): AxiosInstance => {
           const urlParams = new URLSearchParams(window.location.search);
           tenant = urlParams.get('tenant') || null;
           
-          // Also try to extract from hostname
+          // Also try to extract from hostname (only if it's a valid subdomain)
           if (!tenant) {
             const hostname = window.location.hostname;
-            if (hostname.includes('localhost')) {
+            
+            // Skip extraction for plain localhost or 127.0.0.1 (no subdomain)
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              tenant = null; // Explicitly set to null to avoid setting header
+            } else if (hostname.includes('localhost')) {
+              // For subdomain.localhost:3000 format
               const parts = hostname.split('.');
-              if (parts.length >= 2 && parts[0] !== 'localhost') {
+              if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== '127') {
                 tenant = parts[0];
               }
             } else {
+              // For production domains: subdomain.example.com
               const parts = hostname.split('.');
-              if (parts.length > 2) {
+              if (parts.length > 2 && parts[0] !== 'www') {
                 tenant = parts[0];
               }
             }
           }
           
-          // Set in cookie if found
+          // Set in cookie if found (and not null)
           if (tenant) {
             Cookies.set('tenant', tenant, { expires: 7 });
           }
