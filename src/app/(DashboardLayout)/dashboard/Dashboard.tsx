@@ -958,18 +958,18 @@ export default function Dashboard() {
                             </Box>
 
                             {/* Attendance Sidebar - Full Width */}
-                            <Box sx={{ mb: 3 }} data-tour="dashboard-attendance-sidebar">
+                            <Box sx={{ mb: 3, width: "100%" }} data-tour="dashboard-attendance-sidebar">
                                 <DashboardSidebar
                                     onUserClick={(id) => router.push(`/users/${id}`)}
                                 />
                             </Box>
 
                             {/* Main Content Grid */}
-                            <Grid container spacing={3} sx={{ mb: 3 }}>
+                            <Grid container spacing={3} sx={{ mb: 3, width: "100%", maxWidth: "100%" }}>
                                 {/* Left Column - Main Content */}
-                                <Grid item xs={12} lg={8}>
+                                <Grid item xs={12} lg={12} sx={{ width: "100%", maxWidth: "100%" }}>
                                     {/* User Tasks and Project Overview */}
-                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, mt: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 3, mt: 3, width: "100%" }}>
                                         <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }} data-tour="user-tasks">
                                             <UserTasks
                                                 users={allUsers}
@@ -983,7 +983,7 @@ export default function Dashboard() {
                                     </Box>
 
                                     {/* Charts Section */}
-                                    <div className="space-y-6" style={{ marginTop: '24px' }} data-tour="analytics-charts">
+                                    <div className="space-y-6" style={{ marginTop: '24px', width: '100%', maxWidth: '100%' }} data-tour="analytics-charts">
                                 {/* Pie Charts in One Row */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     {/* Pie Chart: Project Phases */}

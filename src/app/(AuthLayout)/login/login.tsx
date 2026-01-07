@@ -812,20 +812,20 @@ const LoginPage: React.FC = () => {
                 display: "flex", 
                 justifyContent: "center", 
                 alignItems: "center",
-                minHeight: "60px",
-                height: "60px",
+                minHeight: isMobile ? "100px" : "120px",
+                height: isMobile ? "100px" : "120px",
               }}>
                 <Image
                   src={tenantLogo}
                   alt="logo"
-                  height={60}
-                  width={200}
+                  height={isMobile ? 100 : 120}
+                  width={isMobile ? 200 : 240}
                   priority
                   unoptimized
                   style={{ 
                     objectFit: "contain",
-                    maxHeight: "60px",
-                    maxWidth: "200px",
+                    maxHeight: isMobile ? "100px" : "120px",
+                    maxWidth: isMobile ? "200px" : "240px",
                     width: "auto",
                     height: "auto"
                   }}
@@ -856,8 +856,8 @@ const LoginPage: React.FC = () => {
               }}>
                 <Box sx={{ 
                   display: "flex", 
-                  alignItems: "flex-start", 
-                  gap: 2,
+                  alignItems: "center", 
+                  gap: 0,
                   position: "relative"
                 }}>
                   <TextField
@@ -872,6 +872,7 @@ const LoginPage: React.FC = () => {
                     placeholder="Enter your email"
                     sx={{
                       flex: 1,
+                      pr: isMobile ? "25px" : "25px", // Add padding to prevent text overlap with button
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
                         height: isMobile ? "56px" : "60px",
@@ -881,14 +882,18 @@ const LoginPage: React.FC = () => {
                           borderColor: "rgba(255, 255, 255, 0.3)",
                           borderWidth: "1px",
                         },
-                        "&:hover fieldset": {
-                          borderColor: "rgba(255, 255, 255, 0.5)",
+                        "&:hover": {
                           backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.5)",
+                          },
                         },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "rgba(255, 255, 255, 0.8)",
-                          borderWidth: "1px",
+                        "&.Mui-focused": {
                           backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.8)",
+                            borderWidth: "1px",
+                          },
                         },
                         "&.Mui-error fieldset": {
                           borderColor: "#ef4444",
@@ -897,6 +902,10 @@ const LoginPage: React.FC = () => {
                       "& .MuiInputBase-input": {
                         padding: isMobile ? "18px 20px" : "20px 22px",
                         color: "#1f2937",
+                        "&::placeholder": {
+                          color: "#6b7280",
+                          opacity: 1,
+                        },
                       },
                       "& .MuiFormHelperText-root": {
                         position: "absolute",
@@ -919,8 +928,7 @@ const LoginPage: React.FC = () => {
                       borderRadius: "50%",
                       boxShadow: formik.values.email ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "none",
                       flexShrink: 0,
-                      alignSelf: "flex-start",
-                      mt: 0,
+                      ml: "-16px", // Increased negative margin to remove gap
                       transition: "all 0.3s ease",
                       "&:hover:not(:disabled)": {
                         backgroundColor: formik.values.email ? "#2563eb" : "#d1d5db",
@@ -1015,8 +1023,8 @@ const LoginPage: React.FC = () => {
                   sx={{
                     position: "relative",
                     display: "flex",
-                    alignItems: "flex-start",
-                    gap: 2,
+                    alignItems: "center",
+                    gap: 0, // Remove gap between password field and arrow button
                   }}
                 >
                   <TextField
@@ -1030,8 +1038,32 @@ const LoginPage: React.FC = () => {
                     variant="outlined"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleTogglePassword}
+                            edge="end"
+                            sx={{
+                              color: "#1e40af",
+                              "&:hover": {
+                                backgroundColor: "rgba(30, 64, 175, 0.1)",
+                              },
+                            }}
+                          >
+                            {showPassword ? (
+                              <VisibilityOff sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            ) : (
+                              <Visibility sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
                       flex: 1,
+                      pr: isMobile ? "72px" : "25px", // Add padding to prevent text overlap with arrow button
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "16px",
                         height: isMobile ? "56px" : "60px",
@@ -1040,13 +1072,17 @@ const LoginPage: React.FC = () => {
                         "& fieldset": {
                           border: "none",
                         },
-                        "&:hover fieldset": {
-                          border: "none",
+                        "&:hover": {
                           backgroundColor: "#93c5fd",
+                          "& fieldset": {
+                            border: "none",
+                          },
                         },
-                        "&.Mui-focused fieldset": {
-                          border: "none",
+                        "&.Mui-focused": {
                           backgroundColor: "#bfdbfe",
+                          "& fieldset": {
+                            border: "none",
+                          },
                         },
                         "&.Mui-error fieldset": {
                           border: "none",
@@ -1055,12 +1091,13 @@ const LoginPage: React.FC = () => {
                           backgroundColor: "#fecaca",
                         },
                       },
-                      "& input": {
-                        color: "#ffffff",
+                      "& .MuiInputBase-input": {
+                        color: "#1e40af",
                         fontWeight: 500,
                         fontSize: isMobile ? "16px" : "17px",
+                        paddingRight: isMobile ? "50px" : "56px", // Space for eye icon
                         "&::placeholder": {
-                          color: "rgba(255, 255, 255, 0.8)",
+                          color: "rgba(30, 64, 175, 0.7)",
                           opacity: 1,
                         },
                       },
@@ -1074,23 +1111,20 @@ const LoginPage: React.FC = () => {
                     }}
                   />
                   
-                  {/* Circular Submit Button - At End of Card */}
+                  {/* Circular Submit Button - Positioned at End */}
                   <IconButton
                     type="submit"
                     disabled={formik.isSubmitting || loading || !formik.values.password}
                     sx={{
-                      width: isMobile ? "60px" : "68px",
-                      height: isMobile ? "60px" : "68px",
+                      width: isMobile ? "56px" : "60px",
+                      height: isMobile ? "56px" : "60px",
                       backgroundColor: "#ffffff",
                       color: "#3b82f6",
                       borderRadius: "50%",
                       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-                      position: "absolute",
-                      right: "-8px",
-                      top: 0,
                       flexShrink: 0,
                       zIndex: 2,
-                      alignSelf: "flex-start",
+                      ml: "-16px", // Increased negative margin to remove gap
                       "&:hover:not(:disabled)": {
                         backgroundColor: "#ffffff",
                         transform: "scale(1.05)",
@@ -1105,7 +1139,7 @@ const LoginPage: React.FC = () => {
                       },
                     }}
                   >
-                    <ArrowForward sx={{ fontSize: isMobile ? "26px" : "30px", fontWeight: 600 }} />
+                    <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px", fontWeight: 600 }} />
                   </IconButton>
                 </Box>
               </Box>
