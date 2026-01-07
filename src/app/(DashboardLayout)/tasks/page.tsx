@@ -522,8 +522,9 @@ const actuallyAddTask = async (values, { resetForm }) => {
           p: 0,
           minHeight: "100vh",
         }}
+        data-tour="kanban-board"
       >
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2 }} data-tour="task-filters">
           <Box
             sx={{
               display: 'flex',
@@ -773,6 +774,7 @@ const actuallyAddTask = async (values, { resetForm }) => {
                 fontSize: '0.8rem', // Smaller font size
                 '&:hover': { backgroundColor: '#e6f0fa' },
               }}
+              data-tour="clear-task-filters"
             >
               Clear filters
             </Button>
@@ -803,6 +805,7 @@ const actuallyAddTask = async (values, { resetForm }) => {
                   backgroundColor: 'var(--primary-color-1-hover)',
                 },
               }}
+              data-tour="add-task-button"
             >
               Add Task
             </Button>

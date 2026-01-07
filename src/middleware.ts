@@ -62,6 +62,15 @@ export default async function middleware(req: NextRequest) {
   const normalizedPath = normalizePath(pathname);
   const jwtToken = req.cookies.get("access_token")?.value;
 
+  // Block broken image URLs immediately to prevent 404 loops
+  if (
+    pathname.includes('profilePlaceholder') ||
+    pathname.includes('a6143582309785dca610') ||
+    pathname.includes('/static/media/profilePlaceholder')
+  ) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   let isAuthenticated = false;
 
   if (

@@ -689,16 +689,18 @@ export default function Dashboard() {
     ];
 
     return (
-        <div className="container mx-auto">
+        <div className="container mx-auto" data-tour="dashboard-root">
             {userPriority === 1 && (
                 <>
                     {analytics && (
                         <>
                             {/* Welcome Banner */}
-                            <WelcomeBanner 
-                                newItemsCount={analytics?.worklogCountYesterday || 0}
-                                onReviewClick={() => router.push('/my-reports')}
-                            />
+                            <div data-tour="welcome-banner">
+                                <WelcomeBanner 
+                                    newItemsCount={analytics?.worklogCountYesterday || 0}
+                                    onReviewClick={() => router.push('/my-reports')}
+                                />
+                            </div>
 
                             {/* Category Cards */}
                             {/* <CategoryCards
@@ -900,6 +902,7 @@ export default function Dashboard() {
                             />
 
                             {/* Category Cards */}
+                            <Box data-tour="dashboard-quick-access">
                             <CategoryCards
                                 title="Quick Access"
                                 viewAllRoute="/dashboard"
@@ -952,9 +955,10 @@ export default function Dashboard() {
                                     },
                                 ]}
                             />
+                            </Box>
 
                             {/* Attendance Sidebar - Full Width */}
-                            <Box sx={{ mb: 3 }}>
+                            <Box sx={{ mb: 3 }} data-tour="dashboard-attendance-sidebar">
                                 <DashboardSidebar
                                     onUserClick={(id) => router.push(`/users/${id}`)}
                                 />

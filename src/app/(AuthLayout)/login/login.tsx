@@ -14,7 +14,8 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowForward } from "@mui/icons-material";
+import { Avatar } from "@mui/material";
 import Link from "next/link";
 import * as Yup from "yup";
 import { useFormik } from "formik";
@@ -32,6 +33,8 @@ interface TenantDetails {
   welcomeNote?: string;
   backgroundImage?: string;
   tenantLogo?: string;
+  tagline?: string;
+  tenantName?: string;
 }
 
 interface LoginValues {
@@ -42,7 +45,9 @@ interface LoginValues {
 
 const LoginPage: React.FC = () => {
   const theme = useTheme();
-  const Mobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // < 600px
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // 600px - 900px
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md")); // >= 900px
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,6 +56,8 @@ const LoginPage: React.FC = () => {
     welcomeNote: "MAGIC IS IN THE DETAILS",
     backgroundImage: '/images/backgrounds/profileback.jpg',
     tenantLogo: '/images/logos/time-sheet-base-logo.png',
+    tagline: "Please use your credentials to login.",
+    tenantName: "",
   };
 
   const [tenantDetails, setTenantDetails] = useState<TenantDetails>(defaultTenantDetails);
@@ -60,8 +67,126 @@ const LoginPage: React.FC = () => {
   const [tenantSubdomain, setTenantSubdomain] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [emailFromUrl, setEmailFromUrl] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    profile_image?: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  } | null>(null);
+  const [cardColors, setCardColors] = useState<{
+    primary: string;
+    secondary: string;
+  }>({
+    primary: "#3b82f6",
+    secondary: "#2563eb",
+  });
 
   const axiosInstance = createAxiosInstance();
+
+  // Extract dominant colors from image
+  const extractColorsFromImage = (imageUrl: string): Promise<{ primary: string; secondary: string }> => {
+    return new Promise((resolve) => {
+      const img = document.createElement("img");
+      img.crossOrigin = "anonymous";
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          if (!ctx) {
+            resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+            return;
+          }
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = imageData.data;
+          
+          // Sample colors from the image
+          const colorMap = new Map<string, number>();
+          const sampleSize = 100; // Sample every Nth pixel for performance
+          
+          for (let i = 0; i < pixels.length; i += sampleSize * 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const a = pixels[i + 3];
+            
+            // Skip transparent pixels
+            if (a < 128) continue;
+            
+            // Convert to hex
+            const hex = `#${[r, g, b].map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            }).join("")}`;
+            
+            colorMap.set(hex, (colorMap.get(hex) || 0) + 1);
+          }
+
+          // Get most common colors
+          const sortedColors = Array.from(colorMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+          if (sortedColors.length >= 2) {
+            // Use the two most dominant colors
+            resolve({
+              primary: sortedColors[0][0],
+              secondary: sortedColors[1][0],
+            });
+          } else if (sortedColors.length === 1) {
+            // If only one color, create a darker variant for secondary
+            const primary = sortedColors[0][0];
+            const rgb = primary.match(/\w\w/g)?.map(x => parseInt(x, 16)) || [59, 130, 246];
+            const darker = rgb.map(c => Math.max(0, c - 30));
+            const secondary = `#${darker.map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            }).join("")}`;
+            resolve({ primary, secondary });
+          } else {
+            resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+          }
+        } catch (error) {
+          console.error("Error extracting colors:", error);
+          resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+        }
+      };
+
+      img.onerror = () => {
+        resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+      };
+
+      img.src = imageUrl;
+    });
+  };
+
+  // Extract colors from background image and logo
+  const extractTenantColors = async () => {
+    try {
+      // Try to extract from background image first
+      if (tenantDetails.backgroundImage) {
+        const colors = await extractColorsFromImage(tenantDetails.backgroundImage);
+        setCardColors(colors);
+        return;
+      }
+      
+      // Fallback to logo if background image is not available
+      if (tenantDetails.tenantLogo) {
+        const colors = await extractColorsFromImage(tenantDetails.tenantLogo);
+        setCardColors(colors);
+        return;
+      }
+    } catch (error) {
+      console.error("Error extracting tenant colors:", error);
+      // Keep default colors
+    }
+  };
 
   const getSubdomain = (): string => {
     if (typeof window !== "undefined") {
@@ -101,6 +226,7 @@ const LoginPage: React.FC = () => {
         const logo = response?.data?.data?.logo;
         const background_image = response?.data?.data?.background_image;
         const welcome_note = response?.data?.data?.welcome_note;
+        const tenant_name = response?.data?.data?.tenant_name;
 
         // Fallback to generic assets when tenant images are missing/empty
         const resolvedLogo =
@@ -110,11 +236,14 @@ const LoginPage: React.FC = () => {
             ? background_image
             : defaultTenantDetails.backgroundImage;
         const welcomeNote = welcome_note || defaultTenantDetails.welcomeNote;
+        const tagline = `Welcome to ${tenant_name || 'our platform'}`;
 
         setTenantDetails({
           tenantLogo: resolvedLogo,
           backgroundImage: resolvedBackground,
           welcomeNote,
+          tagline,
+          tenantName: tenant_name,
         });
       } else {
         setTenantDetails(defaultTenantDetails);
@@ -146,6 +275,7 @@ const LoginPage: React.FC = () => {
     onSubmit: async (values: LoginValues, { resetForm }) => {
       if (step === 1) {
         try {
+          setLoading(true);
           console.log("Step 1: Email submitted:", values.email);
           const tenant = getSubdomain();
           const params = new URLSearchParams({ email: values.email });
@@ -158,40 +288,52 @@ const LoginPage: React.FC = () => {
           console.log("API Response:", response.data);
 
           if (response.status === 200 && response.data?.data?.loginUrl) {
-            if (typeof window !== 'undefined') {
-              const loginUrl = response.data.data.loginUrl;
-              const currentHostname = window.location.hostname;
-              const isLocalhost = currentHostname.includes('localhost') || currentHostname === '127.0.0.1';
-              
-              // If on localhost, use relative URL instead of full URL from backend
-              if (isLocalhost) {
-                // Extract just the path and query from the loginUrl
-                try {
-                  const url = new URL(loginUrl);
-                  const relativePath = url.pathname + url.search;
-                  window.location.href = relativePath;
-                } catch (e) {
-                  // If URL parsing fails, try to extract path manually
-                  const pathMatch = loginUrl.match(/\/login[^?]*(?:\?.*)?/);
-                  if (pathMatch) {
-                    window.location.href = pathMatch[0];
-                  } else {
-                    window.location.href = `/login?email=${encodeURIComponent(values.email)}`;
+            // Set user info with email (we'll try to fetch more details if possible)
+            // For now, use email and default profile image
+            setUserInfo({
+              profile_image: '/images/profile/defaultprofile.jpg',
+              first_name: '',
+              last_name: '',
+              email: values.email,
+            });
+
+            // Try to fetch user info by email from the tenant
+            // This might not work if endpoint doesn't exist, but we'll try
+            const subdomain = response.data?.data?.subdomain;
+            if (subdomain) {
+              try {
+                // Try to get user info - this might need a new endpoint
+                // For now, we'll just use the email
+                const userResponse = await axiosInstance.get(`/user/find-by-email/${encodeURIComponent(values.email)}`, {
+                  headers: {
+                    'tenant': subdomain
                   }
+                });
+                if (userResponse.status === 200 && userResponse.data?.data) {
+                  setUserInfo({
+                    profile_image: userResponse.data.data.profile_image || '/images/profile/defaultprofile.jpg',
+                    first_name: userResponse.data.data.first_name || '',
+                    last_name: userResponse.data.data.last_name || '',
+                    email: userResponse.data.data.email || values.email,
+                  });
                 }
-              } else {
-                // For production, use the full URL from backend
-                window.location.href = loginUrl;
+              } catch (userError) {
+                console.log("Could not fetch user details, using email only");
+                // Keep the default userInfo we set above
               }
             }
+
+            // Move to step 2 instead of redirecting
+            setStep(2);
+            setLoading(false);
           } else {
             toast.error("Failed to fetch subdomain. Please try again.");
+            setLoading(false);
           }
         } catch (error: any) {
           const errorMessage =
             error?.response?.data?.message || "Failed to fetch subdomain. Please try again.";
           toast.error(errorMessage);
-        } finally {
           setLoading(false);
         }
       } else {
@@ -405,11 +547,40 @@ const LoginPage: React.FC = () => {
     fetchTenantData();
     const email = searchParams.get("email");
     if (email) {
-      setEmailFromUrl(decodeURIComponent(email));
+      const decodedEmail = decodeURIComponent(email);
+      setEmailFromUrl(decodedEmail);
       setStep(2);
-      formik.setFieldValue("email", decodeURIComponent(email));
+      formik.setFieldValue("email", decodedEmail);
+      
+      // Try to fetch user info
+      const fetchUserByEmail = async () => {
+        try {
+          const userResponse = await axiosInstance.get(`/user/find-by-email/${encodeURIComponent(decodedEmail)}`);
+          if (userResponse.status === 200 && userResponse.data?.data) {
+            setUserInfo({
+              profile_image: userResponse.data.data.profile_image || '/images/profile/defaultprofile.jpg',
+              first_name: userResponse.data.data.first_name || '',
+              last_name: userResponse.data.data.last_name || '',
+              email: userResponse.data.data.email || decodedEmail,
+            });
+          } else {
+            setUserInfo({ email: decodedEmail });
+          }
+        } catch (error) {
+          console.log("Could not fetch user info");
+          setUserInfo({ email: decodedEmail });
+        }
+      };
+      fetchUserByEmail();
     }
   }, [searchParams]);
+
+  // Re-extract colors when tenant details change
+  useEffect(() => {
+    if (tenantDetails.backgroundImage || tenantDetails.tenantLogo) {
+      extractTenantColors();
+    }
+  }, [tenantDetails.backgroundImage, tenantDetails.tenantLogo]);
 
   const backgroundImage = tenantDetails.backgroundImage;
   const tenantLogo = tenantDetails.tenantLogo;
@@ -510,9 +681,10 @@ const LoginPage: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          height: "100vh",
+          minHeight: "100vh",
           position: "relative",
           overflow: "hidden",
           width: "100vw",
@@ -520,273 +692,445 @@ const LoginPage: React.FC = () => {
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-        }}
-      >
-        <Box
-          sx={{
+          padding: isMobile ? "20px 20px 180px 20px" : "40px 40px 200px 40px",
+          "&::before": {
+            content: '""',
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
             zIndex: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        />
+          },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.05)",
+            zIndex: 0,
+          },
+        }}
+      >
+        {/* Time and Date Display */}
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "60%",
-            maxWidth: "1200px",
-            height: "75vh",
-            minHeight: "400px",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            borderRadius: "16px",
-            overflow: "hidden",
+            position: "absolute",
+            top: isMobile ? "20px" : "40px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            textAlign: "center",
             zIndex: 1,
-            ...(Mobile && {
-              flexDirection: "column",
-              width: "90%",
-              height: "auto",
-              minHeight: "auto",
-              margin: "20px",
-            }),
           }}
         >
-          <Box
+          <Typography
             sx={{
-              flex: 1,
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "flex-start",
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-              position: "relative",
-              ...(Mobile && {
-                height: "auto",
-                minHeight: "300px",
-                alignItems: "center",
-                textAlign: "center",
-              }),
+              fontSize: isMobile ? "1.5rem" : "2rem",
+              fontWeight: 600,
+              color: "#ffffff",
+              mb: 0.5,
+              textShadow: "0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3)",
             }}
           >
-            <Box
+            {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} {new Date().toLocaleDateString('en-US', { weekday: 'short' })}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: isMobile ? "0.875rem" : "1rem",
+              fontWeight: 400,
+              color: "rgba(255, 255, 255, 0.95)",
+              textShadow: "0 2px 6px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </Typography>
+        </Box>
+
+        {/* Welcome Text and Tagline */}
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: isMobile ? "20px" : "40px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            textAlign: "center",
+            zIndex: 1,
+            maxWidth: "90%",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: isMobile ? "1.25rem" : "1.75rem",
+              fontWeight: 700,
+              color: "#ffffff",
+              mb: 1,
+              textShadow: "0 2px 10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {tenantDetails.welcomeNote || "Welcome"}
+          </Typography>
+          {tenantDetails.tagline && (
+            <Typography
               sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0, 0, 0, 0.3)",
-                zIndex: 1,
-                width: "100%",
-                height: "100%",
+                fontSize: isMobile ? "0.875rem" : "1rem",
+                fontWeight: 400,
+                color: "rgba(255, 255, 255, 0.9)",
+                textShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)",
               }}
-            />
-            <Box sx={{ position: "relative", zIndex: 2, padding: "40px" }}>
-              <Typography
-                variant="h3"
-                sx={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#fff",
-                  mb: 2,
-                  ...(Mobile && { fontSize: "1.5rem" }),
-                }}
-              >
-                {welcomeNote}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "0.85rem",
-                  color: "#fff",
-                  ...(Mobile && { fontSize: "0.9rem" }),
-                }}
-              >
-                PLEASE USE YOUR CREDENTIALS TO LOGIN. <br />
-                IF YOU ARE NOT A MEMBER, PLEASE REGISTER.
-              </Typography>
-            </Box>
-          </Box>
+            >
+              {tenantDetails.tagline}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Step 1: Email Entry */}
+        {step === 1 && (
           <Card
             component="form"
             onSubmit={formik.handleSubmit}
             sx={{
-              flex: 1,
-              height: "100%",
-              background: "#fff",
-              boxShadow: "none",
-              padding: 3,
-              textAlign: "center",
-              ...(Mobile && {
-                padding: 2,
-                width: "100%",
-                height: "auto",
-              }),
-              borderRadius: "0 16px 16px 0",
+              width: isMobile ? "90%" : isTablet ? "420px" : "480px",
+              maxWidth: "480px",
+              background: `linear-gradient(135deg, ${cardColors.primary} 0%, ${cardColors.secondary} 100%)`,
+              borderRadius: "24px",
+              padding: isMobile ? "40px 32px" : "48px 40px",
+              boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
+              position: "relative",
+              zIndex: 1,
+              mt: isMobile ? "80px" : "100px",
+              transition: "background 0.5s ease, box-shadow 0.5s ease",
             }}
           >
-            <CardContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                height: "100%",
-                minHeight: "400px",
-                ...(Mobile && { minHeight: "auto" }),
-              }}
-            >
-              <Box sx={{ mb: 1, display: "flex", justifyContent: "center" }}>
+            <CardContent sx={{ padding: 0 }}>
+              {/* Logo */}
+              <Box sx={{ 
+                mb: 4, 
+                display: "flex", 
+                justifyContent: "center", 
+                alignItems: "center",
+                minHeight: "60px",
+                height: "60px",
+              }}>
                 <Image
                   src={tenantLogo}
                   alt="logo"
-                  height={140}
-                  width={140}
+                  height={60}
+                  width={200}
                   priority
                   unoptimized
-                  style={{ objectFit: "contain" }}
+                  style={{ 
+                    objectFit: "contain",
+                    maxHeight: "60px",
+                    maxWidth: "200px",
+                    width: "auto",
+                    height: "auto"
+                  }}
                   onError={() => console.log("Failed to load logo image")}
                 />
               </Box>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#000",
-                  mb: 3,
-                  ...(Mobile && { fontSize: "1.2rem" }),
-                }}
-              >
-                Login
-              </Typography>
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  name="email"
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
-                  variant="outlined"
-                  placeholder="E-MAIL"
-                  disabled={step === 2}
-                  InputProps={{
-                    sx: { borderRadius: "8px", height: "45px" },
-                  }}
-                />
-              </Box>
-              {step === 2 && (
-                <>
-                  <Box sx={{ mb: 2 }}>
-                    <TextField
-                      fullWidth
-                      name="password"
-                      value={formik.values.password}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched.password && Boolean(formik.errors.password)}
-                      helperText={formik.touched.password && formik.errors.password}
-                      variant="outlined"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="PASSWORD"
-                      InputProps={{
-                        sx: { borderRadius: "8px", height: "45px" },
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton onClick={handleTogglePassword} edge="end">
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                      ...(Mobile && { flexDirection: "row", justifyContent: "space-between" }),
-                    }}
-                  >
-                    <Link href={{ pathname: "/set-password", query: { email: formik.values.email } }}>                      <Typography
-                      sx={{
-                        fontSize: "0.9rem",
-                        color: "#000",
-                        textDecoration: "none",
-                        "&:hover": { textDecoration: "underline" },
-                        ...(Mobile && { fontSize: "0.8rem" }),
-                      }}
-                    >
-                      Forgot password?
-                    </Typography>
-                    </Link>
-                    <Button
-                      variant="contained"
-                      type="submit"
-                      disabled={formik.isSubmitting || loading}
-                      sx={{
-                        backgroundColor: "var(--primary-color-1)",
-                        color: "#fff",
-                        padding: "10px 30px",
-                        borderRadius: "30px",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        "&:hover": {
-                          backgroundColor: "var(--primary-color-1-hover)",
-                        },
-                        ...(Mobile && { fontSize: "0.9rem", padding: "8px 20px" }),
-                      }}
-                    >
-                      {formik.isSubmitting || loading ? "Logging in..." : "Login"}
-                    </Button>
-                  </Box>
-                </>
-              )}
-              {step === 1 && (
-                <Box
+              <Box sx={{ mb: 4, textAlign: "center" }}>
+                <Typography
+                  variant="h4"
                   sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    mb: 2,
+                    fontSize: isMobile ? "2.25rem" : "2.75rem",
+                    fontWeight: 700,
+                    color: "#ffffff",
+                    mb: 4,
+                    letterSpacing: "-0.5px",
+                    lineHeight: 1.2,
+                    textShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
                   }}
                 >
-                  <Button
-                    variant="contained"
+                  Login
+                </Typography>
+              </Box>
+              {/* Email Input and Next Button in Single Row */}
+              <Box sx={{ 
+                display: "flex", 
+                flexDirection: "column",
+                gap: 1,
+              }}>
+                <Box sx={{ 
+                  display: "flex", 
+                  alignItems: "flex-start", 
+                  gap: 2,
+                  position: "relative"
+                }}>
+                  <TextField
+                    fullWidth
+                    name="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.email && Boolean(formik.errors.email)}
+                    helperText={formik.touched.email && formik.errors.email}
+                    variant="outlined"
+                    placeholder="Enter your email"
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        height: isMobile ? "56px" : "60px",
+                        fontSize: isMobile ? "16px" : "17px",
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        "& fieldset": {
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderWidth: "1px",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "rgba(255, 255, 255, 0.5)",
+                          backgroundColor: "#ffffff",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "rgba(255, 255, 255, 0.8)",
+                          borderWidth: "1px",
+                          backgroundColor: "#ffffff",
+                        },
+                        "&.Mui-error fieldset": {
+                          borderColor: "#ef4444",
+                        },
+                      },
+                      "& .MuiInputBase-input": {
+                        padding: isMobile ? "18px 20px" : "20px 22px",
+                        color: "#1f2937",
+                      },
+                      "& .MuiFormHelperText-root": {
+                        position: "absolute",
+                        top: "100%",
+                        marginTop: "4px",
+                        marginLeft: 0,
+                        color: "#ffffff",
+                        textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
+                      },
+                    }}
+                  />
+                  <IconButton
                     type="submit"
                     disabled={formik.isSubmitting || loading || !formik.values.email}
                     sx={{
-                      backgroundColor: "var(--primary-color-1)",
-                      color: "#fff",
-                      padding: "10px 30px",
-                      borderRadius: "30px",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      "&:hover": {
-                        backgroundColor: "var(--primary-color-1-hover)",
+                      width: isMobile ? "56px" : "60px",
+                      height: isMobile ? "56px" : "60px",
+                      backgroundColor: formik.values.email ? "#3b82f6" : "#e5e7eb",
+                      color: formik.values.email ? "#ffffff" : "#9ca3af",
+                      borderRadius: "50%",
+                      boxShadow: formik.values.email ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "none",
+                      flexShrink: 0,
+                      alignSelf: "flex-start",
+                      mt: 0,
+                      transition: "all 0.3s ease",
+                      "&:hover:not(:disabled)": {
+                        backgroundColor: formik.values.email ? "#2563eb" : "#d1d5db",
+                        transform: "scale(1.05)",
                       },
-                      ...(Mobile && { fontSize: "0.9rem", padding: "8px 20px" }),
+                      "&:disabled": {
+                        backgroundColor: "#f3f4f6",
+                        color: "#9ca3af",
+                      },
                     }}
                   >
-                    {loading ? "Processing..." : "Next"}
-                  </Button>
+                    <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px" }} />
+                  </IconButton>
                 </Box>
-              )}
+              </Box>
             </CardContent>
           </Card>
-        </Box>
+        )}
+
+        {/* Step 2: Profile Card with Password */}
+        {step === 2 && userInfo && (
+          <Card
+            component="form"
+            onSubmit={formik.handleSubmit}
+            sx={{
+              width: isMobile ? "90%" : isTablet ? "480px" : "540px",
+              maxWidth: "540px",
+              background: `linear-gradient(135deg, ${cardColors.primary} 0%, ${cardColors.secondary} 100%)`,
+              borderRadius: "24px",
+              padding: isMobile ? "48px 32px" : "56px 40px",
+              boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
+              position: "relative",
+              zIndex: 1,
+              mt: isMobile ? "80px" : "100px",
+              mb: isMobile ? "160px" : "180px",
+              transition: "background 0.5s ease, box-shadow 0.5s ease",
+            }}
+          >
+            <CardContent sx={{ padding: 0 }}>
+              {/* Profile Picture */}
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
+                <Avatar
+                  src={userInfo.profile_image || '/images/profile/defaultprofile.jpg'}
+                  alt={userInfo.first_name || 'User'}
+                  sx={{
+                    width: isMobile ? 100 : 120,
+                    height: isMobile ? 100 : 120,
+                    border: "4px solid rgba(255, 255, 255, 0.3)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+                    mb: 2,
+                  }}
+                />
+                
+                {/* User Name */}
+                <Typography
+                  sx={{
+                    fontSize: isMobile ? "1.5rem" : "1.75rem",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    textAlign: "center",
+                    mb: 0.5,
+                  }}
+                >
+                  {userInfo.first_name && userInfo.last_name
+                    ? `${userInfo.first_name} ${userInfo.last_name}`
+                    : userInfo.first_name || userInfo.email?.split('@')[0] || 'User'}
+                </Typography>
+                
+                {/* Email */}
+                <Typography
+                  sx={{
+                    fontSize: isMobile ? "0.938rem" : "1rem",
+                    fontWeight: 400,
+                    color: "rgba(255, 255, 255, 0.95)",
+                    textAlign: "center",
+                  }}
+                >
+                  {userInfo.email || formik.values.email}
+                </Typography>
+              </Box>
+
+              {/* Password Field with Action Button */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  mb: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    name="password"
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.password && Boolean(formik.errors.password)}
+                    helperText={formik.touched.password && formik.errors.password}
+                    variant="outlined"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "16px",
+                        height: isMobile ? "56px" : "60px",
+                        fontSize: isMobile ? "16px" : "17px",
+                        backgroundColor: "#bfdbfe",
+                        "& fieldset": {
+                          border: "none",
+                        },
+                        "&:hover fieldset": {
+                          border: "none",
+                          backgroundColor: "#93c5fd",
+                        },
+                        "&.Mui-focused fieldset": {
+                          border: "none",
+                          backgroundColor: "#bfdbfe",
+                        },
+                        "&.Mui-error fieldset": {
+                          border: "none",
+                        },
+                        "&.Mui-error": {
+                          backgroundColor: "#fecaca",
+                        },
+                      },
+                      "& input": {
+                        color: "#ffffff",
+                        fontWeight: 500,
+                        fontSize: isMobile ? "16px" : "17px",
+                        "&::placeholder": {
+                          color: "rgba(255, 255, 255, 0.8)",
+                          opacity: 1,
+                        },
+                      },
+                      "& .MuiFormHelperText-root": {
+                        position: "absolute",
+                        top: "100%",
+                        marginTop: "4px",
+                        marginLeft: 0,
+                        color: "#ef4444",
+                      },
+                    }}
+                  />
+                  
+                  {/* Circular Submit Button - At End of Card */}
+                  <IconButton
+                    type="submit"
+                    disabled={formik.isSubmitting || loading || !formik.values.password}
+                    sx={{
+                      width: isMobile ? "60px" : "68px",
+                      height: isMobile ? "60px" : "68px",
+                      backgroundColor: "#ffffff",
+                      color: "#3b82f6",
+                      borderRadius: "50%",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                      position: "absolute",
+                      right: "-8px",
+                      top: 0,
+                      flexShrink: 0,
+                      zIndex: 2,
+                      alignSelf: "flex-start",
+                      "&:hover:not(:disabled)": {
+                        backgroundColor: "#ffffff",
+                        transform: "scale(1.05)",
+                        boxShadow: "0 6px 16px rgba(0, 0, 0, 0.25)",
+                      },
+                      "&:active:not(:disabled)": {
+                        transform: "scale(0.98)",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "rgba(255, 255, 255, 0.5)",
+                        color: "rgba(59, 130, 246, 0.5)",
+                      },
+                    }}
+                  >
+                    <ArrowForward sx={{ fontSize: isMobile ? "26px" : "30px", fontWeight: 600 }} />
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Forgot Password Link */}
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <Link href={{ pathname: "/set-password", query: { email: formik.values.email } }}>
+                  <Typography
+                    sx={{
+                      fontSize: isMobile ? "0.875rem" : "0.938rem",
+                      color: "#ffffff",
+                      textDecoration: "none",
+                      fontWeight: 400,
+                      "&:hover": { 
+                        textDecoration: "underline",
+                      },
+                    }}
+                  >
+                    Forget Password?
+                  </Typography>
+                </Link>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
       </Box>
       <Toaster position={"top-right"} toastOptions={{ className: "react-hot-toast" }} gutter={2} />
     </>

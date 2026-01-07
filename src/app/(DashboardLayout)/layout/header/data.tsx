@@ -1,21 +1,22 @@
+// Using public paths instead of imports to avoid webpack issues
+const img1 = '/images/profile/user-1.jpg';
+const img2 = '/images/profile/user-1.jpg'; // Fallback to existing image
+const img3 = '/images/profile/user-1.jpg'; // Fallback to existing image
+const img4 = '/images/profile/user-1.jpg'; // Fallback to existing image
 
-import img1 from 'src/assets/images/profile/user-1.jpg';
-import img2 from 'src/assets/images/profile/user-2.jpg';
-import img3 from 'src/assets/images/profile/user-3.jpg';
-import img4 from 'src/assets/images/profile/user-4.jpg';
+// Using default profile image as fallback for icons
+const icon1 = '/images/profile/defaultprofile.jpg';
+const icon2 = '/images/profile/defaultprofile.jpg';
+const icon3 = '/images/profile/defaultprofile.jpg';
 
-import icon1 from 'src/assets/images/svgs/icon-account.svg'
-import icon2 from 'src/assets/images/svgs/icon-inbox.svg'
-import icon3 from 'src/assets/images/svgs/icon-tasks.svg'
-
-import ddIcon1 from 'src/assets/images/svgs/icon-dd-chat.svg'
-import ddIcon2 from 'src/assets/images/svgs/icon-dd-cart.svg'
-import ddIcon3 from 'src/assets/images/svgs/icon-dd-invoice.svg'
-import ddIcon4 from 'src/assets/images/svgs/icon-dd-date.svg'
-import ddIcon5 from 'src/assets/images/svgs/icon-dd-mobile.svg'
-import ddIcon6 from 'src/assets/images/svgs/icon-dd-lifebuoy.svg'
-import ddIcon7 from 'src/assets/images/svgs/icon-dd-message-box.svg'
-import ddIcon8 from 'src/assets/images/svgs/icon-dd-application.svg'
+const ddIcon1 = '/images/profile/defaultprofile.jpg';
+const ddIcon2 = '/images/profile/defaultprofile.jpg';
+const ddIcon3 = '/images/profile/defaultprofile.jpg';
+const ddIcon4 = '/images/profile/defaultprofile.jpg';
+const ddIcon5 = '/images/profile/defaultprofile.jpg';
+const ddIcon6 = '/images/profile/defaultprofile.jpg';
+const ddIcon7 = '/images/profile/defaultprofile.jpg';
+const ddIcon8 = '/images/profile/defaultprofile.jpg';
 
 //
 // Notifications dropdown

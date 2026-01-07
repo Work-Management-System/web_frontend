@@ -3,15 +3,26 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTour, isTourCompleted } from '@/contextapi/TourContext';
 import { getTourByRoute } from '@/utils/tours/tourConfigs';
+import { useAppselector } from '@/redux/store';
 
 /**
- * Hook to automatically trigger tour when user visits a page for the first time
- * Usage: Add `usePageTour()` at the top of your page component
+ * Hook to automatically trigger tour when user visits a page for the first time.
+ * It is role-aware: Administrator, Manager and Employee each get their own tour key
+ * so tours can be tailored and tracked independently.
+ *
+ * Usage: Add `usePageTour()` at the top of your page component.
  */
 export const usePageTour = () => {
   const pathname = usePathname();
   const { runTour } = useTour();
   const hasRunTour = useRef(false);
+
+  // Read current role priority from Redux
+  const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
+
+  // Map priority to a stable role segment used in tour keys
+  const roleSegment: 'admin' | 'manager' | 'employee' =
+    userPriority === 2 ? 'admin' : userPriority === 3 ? 'manager' : 'employee';
 
   useEffect(() => {
     // Reset when pathname changes
@@ -19,12 +30,14 @@ export const usePageTour = () => {
 
     // Small delay to ensure page is fully rendered
     const timer = setTimeout(() => {
-      const baseRoute = pathname.replace(/^\//, '').split('/')[0];
-      const tourKey = baseRoute || 'dashboard';
-      
-      // Check if tour exists for this route
-      const tourSteps = getTourByRoute(pathname);
-      
+      const baseRoute = pathname.replace(/^\//, '').split('/')[0] || 'dashboard';
+
+      // Tour key is route + role segment so each role can have its own completion state
+      const tourKey = `${baseRoute}-${roleSegment}`;
+
+      // Get steps for route and role
+      const tourSteps = getTourByRoute(pathname, roleSegment);
+
       if (tourSteps && !isTourCompleted(tourKey) && !hasRunTour.current) {
         hasRunTour.current = true;
         runTour(tourKey, tourSteps);
@@ -32,10 +45,6 @@ export const usePageTour = () => {
     }, 500); // Wait 500ms for page to render
 
     return () => clearTimeout(timer);
-  }, [pathname, runTour]);
+  }, [pathname, roleSegment, runTour]);
 };
-
-
-
-
 

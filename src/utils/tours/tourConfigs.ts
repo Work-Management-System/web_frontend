@@ -1,10 +1,26 @@
 import { Step } from 'react-joyride';
 
+// Small helper to adjust intros by role
+const roleLabel = (roleSegment?: string) => {
+  switch (roleSegment) {
+    case 'admin':
+      return ' As an Administrator, you can see and manage data for your entire tenant.';
+    case 'manager':
+      return ' As a Manager, this view focuses on your team and projects you coordinate.';
+    case 'employee':
+      return ' As an Employee, this view highlights your own work and activity.';
+    default:
+      return '';
+  }
+};
+
 // Dashboard Tour
-export const dashboardTour: Step[] = [
+export const dashboardTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to your Dashboard! This is your central hub where you can see an overview of all your work.',
+    content: `Welcome to your Dashboard! This is your central hub where you can see an overview of work, projects, and reports.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -30,16 +46,18 @@ export const dashboardTour: Step[] = [
   },
   {
     target: '[data-tour="sidebar"]',
-    content: 'Use the sidebar to navigate between different sections like Tasks, Projects, Reports, and more.',
+    content: 'Use the sidebar to navigate between different sections like Tasks, Projects, Reports, Attendance, and more.',
     placement: 'right',
   },
 ];
 
 // Tasks Tour
-export const tasksTour: Step[] = [
+export const tasksTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to the Tasks section! Here you can manage all your tasks using a Kanban board.',
+    content: `Welcome to the Tasks section! Here you can manage work using a Kanban board.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -61,10 +79,12 @@ export const tasksTour: Step[] = [
 ];
 
 // Projects Tour
-export const projectsTour: Step[] = [
+export const projectsTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Projects! Here you can view and manage all your projects.',
+    content: `Welcome to Projects! Here you can view and manage all your projects.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -91,10 +111,12 @@ export const projectsTour: Step[] = [
 ];
 
 // Work Reports Tour
-export const workReportsTour: Step[] = [
+export const workReportsTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Work Reports! Here you can log your daily work and track time spent on different tasks.',
+    content: `Welcome to Work Reports! Here you can log daily work and analyze time spent on tasks.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -121,10 +143,12 @@ export const workReportsTour: Step[] = [
 ];
 
 // Attendance Tour
-export const attendanceTour: Step[] = [
+export const attendanceTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Attendance! Track your clock in/out times and view your attendance history.',
+    content: `Welcome to Attendance! Track clock in/out times and review attendance history.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -151,10 +175,12 @@ export const attendanceTour: Step[] = [
 ];
 
 // Leave Management Tour
-export const leaveManagementTour: Step[] = [
+export const leaveManagementTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Leave Management! Here you can apply for leave, view your leave balance, and track leave requests.',
+    content: `Welcome to Leave Management! Apply for leave, view balances, and track requests here.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -181,10 +207,12 @@ export const leaveManagementTour: Step[] = [
 ];
 
 // Users Tour
-export const usersTour: Step[] = [
+export const usersTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Users Management! Here you can view and manage all users in your organization.',
+    content: `Welcome to Users Management! Here you can view and manage people in your organization.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -211,10 +239,12 @@ export const usersTour: Step[] = [
 ];
 
 // Settings Tour
-export const settingsTour: Step[] = [
+export const settingsTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Settings! Configure departments, designations, and other organizational settings here.',
+    content: `Welcome to Settings! Configure departments, designations, roles, and other organizational options here.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -236,10 +266,12 @@ export const settingsTour: Step[] = [
 ];
 
 // Organization Tour
-export const organizationTour: Step[] = [
+export const organizationTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: 'Welcome to Organization! View your organization chart, employee documents, and organizational structure.',
+    content: `Welcome to Organization! View your organization chart, employee documents, and structure.${roleLabel(
+      roleSegment,
+    )}`,
     placement: 'center',
     disableBeacon: true,
   },
@@ -260,8 +292,8 @@ export const organizationTour: Step[] = [
   },
 ];
 
-// Tour key to config mapping
-export const tourConfigs: Record<string, Step[]> = {
+// Tour key to config mapping (role-aware via factory functions)
+const baseTourConfigs: Record<string, (roleSegment?: string) => Step[]> = {
   dashboard: dashboardTour,
   tasks: tasksTour,
   'project-listing': projectsTour,
@@ -275,10 +307,12 @@ export const tourConfigs: Record<string, Step[]> = {
   organization: organizationTour,
 };
 
-// Get tour config by route
-export const getTourByRoute = (route: string): Step[] | null => {
+// Get tour config by route and optional role
+export const getTourByRoute = (route: string, roleSegment?: string): Step[] | null => {
   // Extract base route (remove leading slash and get first segment)
-  const baseRoute = route.replace(/^\//, '').split('/')[0];
-  return tourConfigs[baseRoute] || null;
+  const baseRoute = route.replace(/^\//, '').split('/')[0] || 'dashboard';
+  const factory = baseTourConfigs[baseRoute];
+  if (!factory) return null;
+  return factory(roleSegment);
 };
 

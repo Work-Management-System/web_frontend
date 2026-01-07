@@ -216,8 +216,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Page Content */}
             <Container
               sx={{
-                paddingTop: "90px",
-                paddingX: { xs: 2, sm: 3, md: 4 },
+                paddingTop: { xs: "80px", sm: "85px", md: "90px" },
+                paddingX: { xs: 1, sm: 2, md: 3, lg: 4 },
                 maxWidth: "100% !important",
                 minWidth: "100% !important",
                 position: "relative",
@@ -226,9 +226,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               <Box
                 sx={{
-                  minHeight: "calc(100vh - 170px)",
-                  mt: { xs: 1, md: 2 },
-                  borderRadius: "16px",
+                  minHeight: { xs: "calc(100vh - 150px)", sm: "calc(100vh - 160px)", md: "calc(100vh - 170px)" },
+                  mt: { xs: 0.5, sm: 1, md: 2 },
+                  borderRadius: { xs: "8px", sm: "12px", md: "16px" },
                 }}
               >
                 {children}

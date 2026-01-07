@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box, AppBar, Toolbar, styled, Stack, IconButton, Menu, MenuItem, Typography,
   Grid, Badge, FormControl, Select, InputLabel,
@@ -147,7 +147,8 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-
+  const failedImagesRef = useRef<Set<string>>(new Set());
+  
   const router = useRouter();
   const axiosInstance = createAxiosInstance();
   let dateNow = dayjs();
@@ -161,6 +162,14 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const handleMenuClose = () => {
     setSelectedNotification(null);
     setAnchorEl(null);
+  };
+
+  // Helper function to check if image URL is broken
+  const isBrokenImageUrl = (url: string | null | undefined): boolean => {
+    if (!url) return true;
+    return url.includes('profilePlaceholder') || 
+           url.includes('a6143582309785dca610') ||
+           (url.includes('/static/media/') && !url.startsWith('http'));
   };
 
   const messaging = getMessaging(app);
@@ -202,12 +211,23 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
     if (responseData) {
       const notifications = responseData.notifications || [];
 
+      // Filter out broken image URLs (webpack-generated paths that don't exist)
+      const sanitizedNotifications = notifications.map((n: any) => {
+        if (n.img && isBrokenImageUrl(n.img)) {
+          // Remove broken image URL to prevent 404 loops - completely remove the img property
+          console.warn('Removing broken image URL from notification:', n.img);
+          const { img, ...rest } = n;
+          return rest;
+        }
+        return n;
+      });
+
       //  Filter out Reminder notifications
-      const filteredUnreadCount = notifications.filter(
+      const filteredUnreadCount = sanitizedNotifications.filter(
         n => n.isRead === false && !n.title?.toLowerCase().includes('reminder')
       ).length;
 
-      setNotifications(notifications);
+      setNotifications(sanitizedNotifications);
       setTotal(responseData.total);
       setTotalUnread(filteredUnreadCount); // 👈 override unread count here
     }
@@ -310,6 +330,71 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
     return parts[0] || "default";
   }
 
+  // Global error handler to prevent image retry loops
+  useEffect(() => {
+    const handleImageError = (e: ErrorEvent | Event) => {
+      const target = e.target as HTMLImageElement;
+      if (target && target.src && (
+        target.src.includes('profilePlaceholder') || 
+        target.src.includes('a6143582309785dca610') ||
+        target.src.includes('/static/media/profilePlaceholder')
+      )) {
+        // Prevent browser from retrying by setting to empty SVG and removing error handler
+        target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
+        target.style.display = 'none';
+        target.onerror = null; // Remove error handler to prevent retries
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        return false;
+      }
+    };
+
+    // Add global error listener for window errors
+    window.addEventListener('error', handleImageError, true);
+    
+    // Also intercept all img elements and add error handlers
+    const interceptImages = () => {
+      const images = document.querySelectorAll('img');
+      images.forEach((img) => {
+        if (img.src && (
+          img.src.includes('profilePlaceholder') || 
+          img.src.includes('a6143582309785dca610') ||
+          img.src.includes('/static/media/profilePlaceholder')
+        )) {
+          img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
+          img.style.display = 'none';
+          img.onerror = null;
+        } else {
+          // Add error handler to all images to catch broken ones
+          const originalOnError = img.onerror;
+          img.onerror = (e) => {
+            if (img.src && (
+              img.src.includes('profilePlaceholder') || 
+              img.src.includes('a6143582309785dca610') ||
+              img.src.includes('/static/media/profilePlaceholder')
+            )) {
+              img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
+              img.style.display = 'none';
+              img.onerror = null;
+            } else if (originalOnError) {
+              originalOnError.call(img, e);
+            }
+          };
+        }
+      });
+    };
+
+    // Run immediately and set up observer for new images
+    interceptImages();
+    const observer = new MutationObserver(interceptImages);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    return () => {
+      window.removeEventListener('error', handleImageError, true);
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     // Only fetch notifications if role is loaded and user is not SuperAdmin
     if (userRole && userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
@@ -390,27 +475,37 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
 
           <Box flexGrow={1} />
 
-          <Stack spacing={1} direction="row" alignItems="center">
+          <Stack 
+            spacing={Mobile ? 0.5 : 1} 
+            direction="row" 
+            alignItems="center"
+            sx={{
+              flexWrap: Mobile ? 'nowrap' : 'wrap',
+              gap: Mobile ? '4px' : '8px',
+            }}
+          >
             {userRole?.priority !== 1 && <OnlineToggle />}
             {roles.length > 1 && (
               <Box>
                 <Button
                   variant="contained"
-                  size="small"
+                  size={Mobile ? "small" : "small"}
                   onClick={handleClick}
                   disabled={isSwitching}
                   sx={{
-                    borderRadius: '16px',
+                    borderRadius: Mobile ? '12px' : '16px',
                     textTransform: 'none',
                     backgroundColor: 'var(--primary-color-2)',
-                    fontWeight:'20x',
+                    fontWeight: '500',
                     color: 'white',
-                    padding: '4px 12px',
+                    padding: Mobile ? '3px 8px' : '4px 12px',
+                    fontSize: Mobile ? '0.75rem' : '0.875rem',
+                    minWidth: Mobile ? 'auto' : 'auto',
                     '&:hover': { backgroundColor: 'var(--primary-color-1)' },
                   }}
-                  endIcon={<ArrowDropDownIcon />}
+                  endIcon={<ArrowDropDownIcon sx={{ fontSize: Mobile ? '16px' : '20px' }} />}
                 >
-                  {selectedRoleName}
+                  {Mobile ? selectedRoleName.substring(0, 10) + (selectedRoleName.length > 10 ? '...' : '') : selectedRoleName}
                 </Button>
                 <Popover
                   open={open}
@@ -449,10 +544,12 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 aria-controls="notification-menu"
                 aria-haspopup="true"
                 onClick={handleMenuClick}
+                size={Mobile ? "small" : "medium"}
                 sx={{
-                  ml: 2,
+                  ml: Mobile ? 1 : 2,
                   position: 'relative',
                   transition: 'all 0.2s ease',
+                  padding: Mobile ? '6px' : '8px',
                   '&:hover': {
                     transform: 'scale(1.1)',
                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
@@ -465,14 +562,17 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                     '& .MuiBadge-badge': {
                       color: 'white',
                       backgroundColor: orangeText,
-                      fontSize: '0.75rem',
-                      height: '18px',
-                      minWidth: '18px',
+                      fontSize: Mobile ? '0.65rem' : '0.75rem',
+                      height: Mobile ? '16px' : '18px',
+                      minWidth: Mobile ? '16px' : '18px',
                       borderRadius: '50%',
                     },
                   }}
                 >
-                  <NotificationsActiveIcon sx={{ color: blueText, fontSize: '28px' }} />
+                  <NotificationsActiveIcon sx={{ 
+                    color: blueText, 
+                    fontSize: Mobile ? '22px' : '28px' 
+                  }} />
                 </Badge>
               </IconButton>
               <Menu
@@ -482,11 +582,11 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 onClose={handleMenuClose}
                 anchorOrigin={{
                   vertical: 'bottom',
-                  horizontal: 'center',
+                  horizontal: Mobile ? 'right' : 'left',
                 }}
                 transformOrigin={{
                   vertical: 'top',
-                  horizontal: 'center',
+                  horizontal: Mobile ? 'right' : 'left',
                 }}
                 PaperProps={{
                   sx: {
@@ -504,13 +604,21 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 {!selectedNotification && (
                   <Box sx={{
                     background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
-                    padding: '16px',
+                    padding: Mobile ? '12px' : '16px',
                     borderBottom: '1px solid #e0e0e0',
                   }}>
-                    <Typography variant="h6" sx={{ color: '#fff', fontSize: '1.2rem', fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ 
+                      color: '#fff', 
+                      fontSize: Mobile ? '1rem' : '1.2rem', 
+                      fontWeight: 600 
+                    }}>
                       Notifications
                     </Typography>
-                    <Typography sx={{ color: '#f0f0f0', fontSize: '0.85rem', mt: 0.5 }}>
+                    <Typography sx={{ 
+                      color: '#f0f0f0', 
+                      fontSize: Mobile ? '0.75rem' : '0.85rem', 
+                      mt: 0.5 
+                    }}>
                       {totalUnread === 1
                         ? `You have ${totalUnread} unread notification`
                         : totalUnread > 1
@@ -523,9 +631,9 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 {/* List view */}
                 {!selectedNotification && (
                   <Box sx={{
-                    maxHeight: '320px',
+                    maxHeight: Mobile ? '60vh' : '320px',
                     overflowY: 'auto',
-                    padding: '8px',
+                    padding: Mobile ? '4px' : '8px',
                     '&::-webkit-scrollbar': {
                       width: '6px',
                     },
@@ -541,17 +649,16 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                           key={item?.id}
                           onClick={() => handleOnClick(item)}
                           sx={{
-                            padding: "12px 16px",
-                            borderRadius: "12px",
-                            margin: "4px 8px",
+                            padding: Mobile ? "10px 12px" : "12px 16px",
+                            borderRadius: Mobile ? "8px" : "12px",
+                            margin: Mobile ? "2px 4px" : "4px 8px",
                             backgroundColor: getBgColor(getFirstPathSegment(item?.url), item?.is_read),
                             transition: "all 0.2s ease",
                             "&:hover": {
-                              backgroundColor: "rgba(0, 0, 0, 0.05)", // soft hover
-                              transform: "translateY(-2px)",
-                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                              backgroundColor: "rgba(0, 0, 0, 0.05)",
+                              transform: Mobile ? "none" : "translateY(-2px)",
+                              boxShadow: Mobile ? "none" : "0 2px 8px rgba(0, 0, 0, 0.1)",
                             },
-                            ...smallMobile && { maxWidth: "320px" },
                           }}
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
@@ -567,11 +674,26 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                                 overflow: 'hidden', // ensures image stays inside the circle
                               }}
                             >
-                              {item?.img ? (
+                              {item?.img && 
+                               !isBrokenImageUrl(item.img) &&
+                               !failedImagesRef.current.has(item.img) ? (
                                 <Box
                                   component="img"
                                   src={item.img}
                                   alt="profile"
+                                  onError={(e) => {
+                                    // Immediately prevent retry by clearing src and hiding
+                                    const target = e.target as HTMLImageElement;
+                                    if (target) {
+                                      target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E'; // Use empty SVG to prevent retry
+                                      target.style.display = 'none';
+                                      target.onerror = null; // Remove error handler to prevent retries
+                                    }
+                                    // Mark this image as failed using ref (no re-render)
+                                    if (item?.img) {
+                                      failedImagesRef.current.add(item.img);
+                                    }
+                                  }}
                                   sx={{
                                     width: '100%',
                                     height: '100%',
@@ -583,28 +705,40 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                               )}
                             </Box>
 
-                            <Box sx={{ flexGrow: 1 }}>
+                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                               <Typography
                                 sx={{
-                                  fontSize: '0.95rem',
+                                  fontSize: Mobile ? '0.85rem' : '0.95rem',
                                   fontWeight: item?.is_read ? 400 : 500,
                                   color: '#333',
                                   lineHeight: 1.4,
+                                  wordBreak: 'break-word',
                                 }}
                               >
                                 {item?.title}
                               </Typography>
-                              <Typography sx={{ color: '#888', fontSize: '0.8rem', mt: 0.5 }}>
+                              <Typography sx={{ 
+                                color: '#888', 
+                                fontSize: Mobile ? '0.7rem' : '0.8rem', 
+                                mt: 0.5 
+                              }}>
                                 {dateNow?.from(item?.created_at, true)} ago
                               </Typography>
                             </Box>
-                            <ChevronRightIcon sx={{ color: '#888', fontSize: '18px' }} />
+                            <ChevronRightIcon sx={{ 
+                              color: '#888', 
+                              fontSize: Mobile ? '16px' : '18px',
+                              flexShrink: 0,
+                            }} />
                           </Box>
                         </MenuItem>
                       ))
                     ) : (
-                      <Box sx={{ padding: '16px', textAlign: 'center' }}>
-                        <Typography sx={{ fontSize: '0.9rem', color: '#666' }}>
+                      <Box sx={{ padding: Mobile ? '12px' : '16px', textAlign: 'center' }}>
+                        <Typography sx={{ 
+                          fontSize: Mobile ? '0.8rem' : '0.9rem', 
+                          color: '#666' 
+                        }}>
                           No notifications yet. You're all clear!
                         </Typography>
                       </Box>
@@ -615,32 +749,49 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 {/* Detail view */}
                 {selectedNotification && (
                   <Box sx={{
-                    width: '360px',
+                    width: Mobile ? '100%' : '360px',
+                    maxWidth: Mobile ? '100%' : '360px',
                     background: '#fff',
-                    borderRadius: '12px',
-                    padding: '16px',
+                    borderRadius: Mobile ? '8px' : '12px',
+                    padding: Mobile ? '12px' : '16px',
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                   }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: Mobile ? 1.5 : 2 }}>
                       <IconButton
                         onClick={() => setSelectedNotification(null)}
+                        size={Mobile ? "small" : "medium"}
                         sx={{
                           color: blueText,
                           '&:hover': { backgroundColor: '#f0f4ff' },
                         }}
                       >
-                        <ArrowLeft sx={{ fontSize: '24px' }} />
+                        <ArrowLeft sx={{ fontSize: Mobile ? '20px' : '24px' }} />
                       </IconButton>
-                      <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: blueText, ml: 1 }}>
+                      <Typography sx={{ 
+                        fontSize: Mobile ? '0.95rem' : '1.1rem', 
+                        fontWeight: 600, 
+                        color: blueText, 
+                        ml: 1,
+                        wordBreak: 'break-word',
+                      }}>
                         {selectedNotification?.title || 'Notification'}
                       </Typography>
                     </Box>
-                    <Box sx={{ borderTop: '1px solid #e0e0e0', pt: 2, mb: 2 }}>
-                      <Typography sx={{ fontSize: '0.9rem', color: '#444', lineHeight: 1.6 }}>
+                    <Box sx={{ borderTop: '1px solid #e0e0e0', pt: Mobile ? 1.5 : 2, mb: Mobile ? 1.5 : 2 }}>
+                      <Typography sx={{ 
+                        fontSize: Mobile ? '0.8rem' : '0.9rem', 
+                        color: '#444', 
+                        lineHeight: 1.6,
+                        wordBreak: 'break-word',
+                      }}>
                         {selectedNotification?.body || 'No content available.'}
                       </Typography>
                     </Box>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#888', textAlign: 'right' }}>
+                    <Typography sx={{ 
+                      fontSize: Mobile ? '0.7rem' : '0.8rem', 
+                      color: '#888', 
+                      textAlign: 'right' 
+                    }}>
                       {selectedNotification?.created_at
                         ? new Date(selectedNotification.created_at).toLocaleString()
                         : 'No date available'}
