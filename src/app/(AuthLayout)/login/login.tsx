@@ -80,6 +80,10 @@ const LoginPage: React.FC = () => {
     primary: "#3b82f6",
     secondary: "#2563eb",
   });
+  const [logoError, setLogoError] = useState(false);
+  const [backgroundError, setBackgroundError] = useState(false);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
+  const [currentBackgroundUrl, setCurrentBackgroundUrl] = useState<string | null>(null);
 
   const axiosInstance = createAxiosInstance();
 
@@ -191,6 +195,13 @@ const LoginPage: React.FC = () => {
   const getSubdomain = (): string => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
+      
+      // Check if hostname is an IP address (e.g., 127.0.0.1, 192.168.1.1)
+      const ipAddressRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (ipAddressRegex.test(hostname)) {
+        return "";
+      }
+      
       const parts = hostname.split(".");
       
       // Handle localhost (e.g., subdomain.localhost:3000)
@@ -216,27 +227,122 @@ const LoginPage: React.FC = () => {
     return "";
   };
 
+  // Normalize URL for localhost development
+  const normalizeLocalhostUrl = (url: string): string => {
+    try {
+      // Check if URL contains 127.0.0.1 with subdomain (invalid format)
+      const invalidLocalhostPattern = /^https?:\/\/([^.]+)\.127\.0\.0\.1(:\d+)?/;
+      const match = url.match(invalidLocalhostPattern);
+      
+      if (match) {
+        const subdomain = match[1];
+        const pathAndQuery = url.replace(invalidLocalhostPattern, '');
+        
+        // Use current window's port (frontend port) instead of backend port
+        const currentPort = typeof window !== "undefined" ? window.location.port : '';
+        const port = currentPort ? `:${currentPort}` : '';
+        
+        // Convert to valid localhost format: subdomain.localhost:frontendPort
+        const normalizedUrl = `http://${subdomain}.localhost${port}${pathAndQuery}`;
+        console.log("Normalized URL from", url, "to", normalizedUrl);
+        console.log("Using frontend port:", currentPort || "default");
+        return normalizedUrl;
+      }
+      
+      // Also handle if URL already has subdomain.localhost but wrong port
+      const localhostPattern = /^https?:\/\/([^.]+)\.localhost(:\d+)?/;
+      const localhostMatch = url.match(localhostPattern);
+      if (localhostMatch && typeof window !== "undefined") {
+        const subdomain = localhostMatch[1];
+        const pathAndQuery = url.replace(localhostPattern, '');
+        const currentPort = window.location.port;
+        const port = currentPort ? `:${currentPort}` : '';
+        
+        // Reconstruct with correct frontend port
+        const normalizedUrl = `http://${subdomain}.localhost${port}${pathAndQuery}`;
+        console.log("Fixed localhost URL port from", url, "to", normalizedUrl);
+        return normalizedUrl;
+      }
+      
+      return url;
+    } catch (error) {
+      console.error("Error normalizing URL:", error);
+      return url;
+    }
+  };
+
   const fetchTenantData = async () => {
     try {
       const tenant = getSubdomain();
-      console.log("Fetching tenant data for:", tenant);
-      const response = await axiosInstance.get(`/tenants/get-by-subdomain/${tenant}`);
-      console.log("API Response:", response.data);
+      const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+      console.log("=== Fetching Tenant Data ===");
+      console.log("Current hostname:", hostname);
+      console.log("Detected subdomain:", tenant);
+      console.log("Current URL:", typeof window !== "undefined" ? window.location.href : "");
+      
+      // Only fetch tenant data if we have a valid, non-empty subdomain
+      if (!tenant || typeof tenant !== 'string' || tenant.trim() === '' || tenant === '127' || tenant === 'localhost') {
+        console.log("No valid subdomain found, using default tenant details");
+        setTenantDetails(defaultTenantDetails);
+        return;
+      }
+
+      // Set tenant in cookie to ensure axios instance uses it
+      if (tenant && typeof window !== "undefined") {
+        Cookies.set('tenant', tenant, { expires: 7, path: '/' });
+        console.log("Tenant cookie set:", tenant);
+      }
+
+      const response = await axiosInstance.get(`/tenants/get-by-subdomain/${encodeURIComponent(tenant)}`);
+      console.log("Tenant API Response:", response.data);
       if (response.status === 200 && response.data?.data) {
         const logo = response?.data?.data?.logo;
         const background_image = response?.data?.data?.background_image;
         const welcome_note = response?.data?.data?.welcome_note;
         const tenant_name = response?.data?.data?.tenant_name;
 
-        // Fallback to generic assets when tenant images are missing/empty
+        console.log("=== Extracted Tenant Data ===");
+        console.log("Logo from API:", logo);
+        console.log("Background Image from API:", background_image);
+        console.log("Welcome Note:", welcome_note);
+        console.log("Tenant Name:", tenant_name);
+
+        // Validate URLs before using them
+        const isValidUrl = (url: string): boolean => {
+          if (!url || url.trim() === '') return false;
+          try {
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+          } catch {
+            return false;
+          }
+        };
+
+        // Fallback to generic assets when tenant images are missing/empty or invalid
+        // Note: We'll try to use the tenant images, but if they fail to load (CORS/403),
+        // the error handlers will fall back to defaults
         const resolvedLogo =
-          logo && logo.trim() !== '' ? logo : defaultTenantDetails.tenantLogo;
+          logo && logo.trim() !== '' && isValidUrl(logo) 
+            ? logo 
+            : defaultTenantDetails.tenantLogo;
         const resolvedBackground =
-          background_image && background_image.trim() !== ''
+          background_image && background_image.trim() !== '' && isValidUrl(background_image)
             ? background_image
             : defaultTenantDetails.backgroundImage;
+        
+        // Store original URLs for fallback handling
+        const originalLogo = logo;
+        const originalBackground = background_image;
         const welcomeNote = welcome_note || defaultTenantDetails.welcomeNote;
         const tagline = `Welcome to ${tenant_name || 'our platform'}`;
+
+        console.log("=== Resolved Tenant Data ===");
+        console.log("Resolved Logo:", resolvedLogo);
+        console.log("Resolved Background:", resolvedBackground);
+        console.log("Welcome Note:", welcomeNote);
+        console.log("Tagline:", tagline);
+        console.log("Logo URL valid:", logo ? isValidUrl(logo) : false);
+        console.log("Background URL valid:", background_image ? isValidUrl(background_image) : false);
 
         setTenantDetails({
           tenantLogo: resolvedLogo,
@@ -245,10 +351,18 @@ const LoginPage: React.FC = () => {
           tagline,
           tenantName: tenant_name,
         });
+        
+        // Store current URLs for error handling
+        setCurrentLogoUrl(resolvedLogo);
+        setCurrentBackgroundUrl(resolvedBackground);
+        
+        console.log("Tenant details state updated");
       } else {
+        console.log("No tenant data in response, using defaults");
         setTenantDetails(defaultTenantDetails);
       }
     } catch (error: any) {
+      console.log("Error fetching tenant data:", error);
       setTenantDetails(defaultTenantDetails);
     }
   };
@@ -286,48 +400,110 @@ const LoginPage: React.FC = () => {
           const response = await axiosInstance.get(`/auth/tenant-subdomain?${params.toString()}`);
 
           console.log("API Response:", response.data);
+          console.log("Response status:", response.status);
+          console.log("Response data.data:", response.data?.data);
+          console.log("Response data.status:", response.data?.status);
+          console.log("Response data.statusCode:", response.data?.statusCode);
 
-          if (response.status === 200 && response.data?.data?.loginUrl) {
-            // Set user info with email (we'll try to fetch more details if possible)
-            // For now, use email and default profile image
+          // Check for successful response with loginUrl
+          // Handle both possible response structures
+          const responseData = response.data?.data || response.data;
+          const loginUrl = responseData?.loginUrl || response.data?.loginUrl;
+          const subdomain = responseData?.subdomain || response.data?.subdomain;
+          
+          console.log("Extracted loginUrl:", loginUrl);
+          console.log("Extracted subdomain:", subdomain);
+          console.log("LoginUrl type:", typeof loginUrl);
+          console.log("LoginUrl truthy:", !!loginUrl);
+          
+          // Check if response is successful (handle both status 200 and statusCode 200)
+          const isSuccess = response.status === 200 || response.data?.statusCode === 200 || response.data?.status === "success";
+          const hasLoginUrl = loginUrl && typeof loginUrl === "string" && loginUrl.trim().length > 0;
+          
+          console.log("Is success:", isSuccess);
+          console.log("Has loginUrl:", hasLoginUrl);
+          
+          if (isSuccess && hasLoginUrl) {
+            const currentSubdomain = getSubdomain();
+            console.log("Current subdomain:", currentSubdomain);
+            console.log("Response subdomain:", subdomain);
+
+            // Check if we need to redirect to a different subdomain
+            const needsRedirect = subdomain && subdomain !== currentSubdomain;
+            const isOnBaseDomain = !currentSubdomain && subdomain;
+
+            console.log("Needs redirect:", needsRedirect);
+            console.log("Is on base domain:", isOnBaseDomain);
+
+            if (needsRedirect || isOnBaseDomain) {
+              // Redirect to the tenant's subdomain
+              try {
+                console.log("Original loginUrl:", loginUrl);
+                // Normalize URL for localhost (fixes 127.0.0.1 subdomain issue)
+                const normalizedUrl = normalizeLocalhostUrl(loginUrl);
+                console.log("Normalized loginUrl:", normalizedUrl);
+                
+                // Validate URL before redirecting
+                if (normalizedUrl && (normalizedUrl.startsWith('http://') || normalizedUrl.startsWith('https://'))) {
+                  // Additional validation: try to create a URL object to ensure it's valid
+                  try {
+                    new URL(normalizedUrl);
+                    window.location.href = normalizedUrl;
+                    return;
+                  } catch (urlError) {
+                    console.error("Invalid URL format after normalization:", normalizedUrl, urlError);
+                    toast.error("Invalid redirect URL format. Please try again.");
+                    setLoading(false);
+                    return;
+                  }
+                } else {
+                  console.error("Invalid loginUrl format:", normalizedUrl);
+                  toast.error("Invalid redirect URL. Please try again.");
+                  setLoading(false);
+                  return;
+                }
+              } catch (redirectError) {
+                console.error("Error during redirect:", redirectError);
+                toast.error("Failed to redirect. Please try again.");
+                setLoading(false);
+                return;
+              }
+            }
+
+            // We're on the correct subdomain (or no subdomain needed), proceed to step 2
+            // Set user info with email (user details will be fetched after successful login)
             setUserInfo({
-              profile_image: '/images/profile/defaultprofile.jpg',
+              profile_image: '',
               first_name: '',
               last_name: '',
               email: values.email,
             });
 
-            // Try to fetch user info by email from the tenant
-            // This might not work if endpoint doesn't exist, but we'll try
-            const subdomain = response.data?.data?.subdomain;
-            if (subdomain) {
-              try {
-                // Try to get user info - this might need a new endpoint
-                // For now, we'll just use the email
-                const userResponse = await axiosInstance.get(`/user/find-by-email/${encodeURIComponent(values.email)}`, {
-                  headers: {
-                    'tenant': subdomain
-                  }
-                });
-                if (userResponse.status === 200 && userResponse.data?.data) {
-                  setUserInfo({
-                    profile_image: userResponse.data.data.profile_image || '/images/profile/defaultprofile.jpg',
-                    first_name: userResponse.data.data.first_name || '',
-                    last_name: userResponse.data.data.last_name || '',
-                    email: userResponse.data.data.email || values.email,
-                  });
-                }
-              } catch (userError) {
-                console.log("Could not fetch user details, using email only");
-                // Keep the default userInfo we set above
-              }
-            }
-
-            // Move to step 2 instead of redirecting
+            // Move to step 2 on current domain
             setStep(2);
             setLoading(false);
           } else {
+            // Log detailed error information
+            console.error("Failed to process subdomain response:", {
+              status: response.status,
+              statusCode: response.data?.statusCode,
+              responseStatus: response.data?.status,
+              data: response.data,
+              hasData: !!response.data,
+              hasDataData: !!response.data?.data,
+              loginUrl: loginUrl,
+              hasLoginUrl: hasLoginUrl,
+              isSuccess: isSuccess,
+            });
+            
+            // Provide more specific error message
+            if (!isSuccess) {
+              toast.error(response.data?.message || "Failed to fetch subdomain. Please try again.");
+            } else if (!hasLoginUrl) {
+              toast.error("Login URL not found in response. Please try again.");
+          } else {
             toast.error("Failed to fetch subdomain. Please try again.");
+            }
             setLoading(false);
           }
         } catch (error: any) {
@@ -544,39 +720,44 @@ const LoginPage: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("=== Login Page useEffect ===");
+    console.log("Current hostname:", typeof window !== "undefined" ? window.location.hostname : "");
+    console.log("Current URL:", typeof window !== "undefined" ? window.location.href : "");
+    
     fetchTenantData();
     const email = searchParams.get("email");
+    console.log("Email from URL params:", email);
+    
     if (email) {
       const decodedEmail = decodeURIComponent(email);
+      console.log("Decoded email:", decodedEmail);
       setEmailFromUrl(decodedEmail);
       setStep(2);
       formik.setFieldValue("email", decodedEmail);
       
-      // Try to fetch user info
-      const fetchUserByEmail = async () => {
-        try {
-          const userResponse = await axiosInstance.get(`/user/find-by-email/${encodeURIComponent(decodedEmail)}`);
-          if (userResponse.status === 200 && userResponse.data?.data) {
-            setUserInfo({
-              profile_image: userResponse.data.data.profile_image || '/images/profile/defaultprofile.jpg',
-              first_name: userResponse.data.data.first_name || '',
-              last_name: userResponse.data.data.last_name || '',
-              email: userResponse.data.data.email || decodedEmail,
-            });
-          } else {
-            setUserInfo({ email: decodedEmail });
-          }
-        } catch (error) {
-          console.log("Could not fetch user info");
-          setUserInfo({ email: decodedEmail });
-        }
-      };
-      fetchUserByEmail();
+      // Set user info with email (user details will be fetched after successful login)
+      // Note: The /user/find-by-email endpoint doesn't exist in the backend,
+      // so we just set the email and proceed. User details can be fetched after login.
+      setUserInfo({
+        profile_image: '',
+        first_name: '',
+        last_name: '',
+        email: decodedEmail,
+      });
+      console.log("User info set with email:", decodedEmail);
     }
   }, [searchParams]);
 
   // Re-extract colors when tenant details change
   useEffect(() => {
+    console.log("=== Tenant Details Changed ===");
+    console.log("Current tenantLogo:", tenantDetails.tenantLogo);
+    console.log("Current backgroundImage:", tenantDetails.backgroundImage);
+    
+    // Reset error states when tenant details change
+    setLogoError(false);
+    setBackgroundError(false);
+    
     if (tenantDetails.backgroundImage || tenantDetails.tenantLogo) {
       extractTenantColors();
     }
@@ -585,6 +766,13 @@ const LoginPage: React.FC = () => {
   const backgroundImage = tenantDetails.backgroundImage;
   const tenantLogo = tenantDetails.tenantLogo;
   const welcomeNote = tenantDetails.welcomeNote;
+  
+  // Debug: Log current image values on every render
+  console.log("=== Current Image Values (Render) ===");
+  console.log("tenantLogo:", tenantLogo);
+  console.log("backgroundImage:", backgroundImage);
+  console.log("logoError:", logoError);
+  console.log("backgroundError:", backgroundError);
 
   const handleAnimationComplete = () => {
     router.push("/");
@@ -605,7 +793,8 @@ const LoginPage: React.FC = () => {
       >
         <motion.div
           style={{
-            backgroundImage: `url(${backgroundImage})`,
+            backgroundImage: backgroundError ? 'none' : `url(${backgroundImage})`,
+            backgroundColor: backgroundError ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -688,10 +877,7 @@ const LoginPage: React.FC = () => {
           position: "relative",
           overflow: "hidden",
           width: "100vw",
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          backgroundColor: backgroundError ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
           padding: isMobile ? "20px 20px 180px 20px" : "40px 40px 200px 40px",
           "&::before": {
             content: '""',
@@ -702,7 +888,8 @@ const LoginPage: React.FC = () => {
             bottom: 0,
             backdropFilter: "blur(2px)",
             WebkitBackdropFilter: "blur(2px)",
-            zIndex: 0,
+            zIndex: 1,
+            pointerEvents: "none", // Allow clicks to pass through
           },
           "&::after": {
             content: '""',
@@ -712,10 +899,58 @@ const LoginPage: React.FC = () => {
             right: 0,
             bottom: 0,
             background: "rgba(0, 0, 0, 0.05)",
-            zIndex: 0,
+            zIndex: 1,
+            pointerEvents: "none", // Allow clicks to pass through
           },
         }}
       >
+        {/* Background image as absolute positioned img element for better CORS handling */}
+        {backgroundImage && (
+          <Box
+            component="img"
+            src={backgroundImage}
+            alt=""
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              zIndex: 0,
+              pointerEvents: "none", // Allow clicks to pass through
+              display: backgroundError ? "none" : "block", // Hide if error, but still try to load
+            }}
+            onError={(e) => {
+              console.error("❌ Background image failed to load:", backgroundImage);
+              console.error("Error details:", e);
+              console.error("Error type:", (e as any).type);
+              console.error("Error target:", (e as any).target);
+              // Fallback to default background if tenant background fails
+              if (currentBackgroundUrl && currentBackgroundUrl !== defaultTenantDetails.backgroundImage) {
+                console.log("Falling back to default background due to load error");
+                setTenantDetails(prev => ({
+                  ...prev,
+                  backgroundImage: defaultTenantDetails.backgroundImage
+                }));
+                setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
+                setBackgroundError(false); // Reset error to try default
+              } else {
+                setBackgroundError(true);
+              }
+            }}
+            onLoad={(e) => {
+              console.log("✅ Background image loaded successfully:", backgroundImage);
+              console.log("Image element:", (e as any).target);
+              if (backgroundError) {
+                setBackgroundError(false); // Reset error if it loads successfully
+              }
+            }}
+          />
+        )}
         {/* Time and Date Display */}
         <Box
           sx={{
@@ -724,7 +959,7 @@ const LoginPage: React.FC = () => {
             left: "50%",
             transform: "translateX(-50%)",
             textAlign: "center",
-            zIndex: 1,
+            zIndex: 2,
           }}
         >
           <Typography
@@ -751,19 +986,19 @@ const LoginPage: React.FC = () => {
         </Box>
 
         {/* Welcome Text and Tagline */}
-        <Box
-          sx={{
-            position: "absolute",
+            <Box
+              sx={{
+                position: "absolute",
             bottom: isMobile ? "20px" : "40px",
             left: "50%",
             transform: "translateX(-50%)",
             textAlign: "center",
-            zIndex: 1,
+            zIndex: 2,
             maxWidth: "90%",
           }}
         >
-          <Typography
-            sx={{
+              <Typography
+                sx={{
               fontSize: isMobile ? "1.25rem" : "1.75rem",
               fontWeight: 700,
               color: "#ffffff",
@@ -772,10 +1007,10 @@ const LoginPage: React.FC = () => {
             }}
           >
             {tenantDetails.welcomeNote || "Welcome"}
-          </Typography>
+              </Typography>
           {tenantDetails.tagline && (
-            <Typography
-              sx={{
+              <Typography
+                sx={{
                 fontSize: isMobile ? "0.875rem" : "1rem",
                 fontWeight: 400,
                 color: "rgba(255, 255, 255, 0.9)",
@@ -783,9 +1018,9 @@ const LoginPage: React.FC = () => {
               }}
             >
               {tenantDetails.tagline}
-            </Typography>
+              </Typography>
           )}
-        </Box>
+            </Box>
 
         {/* Step 1: Email Entry */}
         {step === 1 && (
@@ -800,8 +1035,9 @@ const LoginPage: React.FC = () => {
               padding: isMobile ? "40px 32px" : "48px 40px",
               boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
               position: "relative",
-              zIndex: 1,
+              zIndex: 2,
               mt: isMobile ? "80px" : "100px",
+              mb: isMobile ? "160px" : "180px",
               transition: "background 0.5s ease, box-shadow 0.5s ease",
             }}
           >
@@ -815,27 +1051,57 @@ const LoginPage: React.FC = () => {
                 minHeight: isMobile ? "100px" : "120px",
                 height: isMobile ? "100px" : "120px",
               }}>
-                <Image
-                  src={tenantLogo}
-                  alt="logo"
-                  height={isMobile ? 100 : 120}
-                  width={isMobile ? 200 : 240}
-                  priority
-                  unoptimized
-                  style={{ 
-                    objectFit: "contain",
-                    maxHeight: isMobile ? "100px" : "120px",
-                    maxWidth: isMobile ? "200px" : "240px",
-                    width: "auto",
-                    height: "auto"
-                  }}
-                  onError={() => console.log("Failed to load logo image")}
-                />
+                {!tenantLogo ? (
+                  <Box
+                    sx={{
+                      width: isMobile ? "200px" : "240px",
+                      height: isMobile ? "100px" : "120px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ color: "white", opacity: 0.7 }}>
+                      Logo
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box
+                    component="img"
+                    src={tenantLogo}
+                    alt="logo"
+                    sx={{
+                      objectFit: "contain",
+                      maxHeight: isMobile ? "100px" : "120px",
+                      maxWidth: isMobile ? "200px" : "240px",
+                      width: "auto",
+                      height: "auto",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      console.error("Failed to load logo image in step 1:", tenantLogo, e);
+                      // Fallback to default logo if tenant logo fails
+                      if (currentLogoUrl && currentLogoUrl !== defaultTenantDetails.tenantLogo) {
+                        console.log("Falling back to default logo due to load error");
+                        setTenantDetails(prev => ({
+                          ...prev,
+                          tenantLogo: defaultTenantDetails.tenantLogo
+                        }));
+                        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("✅ Logo image loaded successfully in step 1:", tenantLogo);
+                    }}
+                  />
+                )}
               </Box>
               <Box sx={{ mb: 4, textAlign: "center" }}>
-                <Typography
+              <Typography
                   variant="h4"
-                  sx={{
+                sx={{
                     fontSize: isMobile ? "2.25rem" : "2.75rem",
                     fontWeight: 700,
                     color: "#ffffff",
@@ -843,10 +1109,10 @@ const LoginPage: React.FC = () => {
                     letterSpacing: "-0.5px",
                     lineHeight: 1.2,
                     textShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-                  }}
-                >
-                  Login
-                </Typography>
+                }}
+              >
+                Login
+              </Typography>
               </Box>
               {/* Email Input and Next Button in Single Row */}
               <Box sx={{ 
@@ -860,15 +1126,15 @@ const LoginPage: React.FC = () => {
                   gap: 0,
                   position: "relative"
                 }}>
-                  <TextField
-                    fullWidth
-                    name="email"
-                    value={formik.values.email}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.email && Boolean(formik.errors.email)}
-                    helperText={formik.touched.email && formik.errors.email}
-                    variant="outlined"
+                <TextField
+                  fullWidth
+                  name="email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.email && Boolean(formik.errors.email)}
+                  helperText={formik.touched.email && formik.errors.email}
+                  variant="outlined"
                     placeholder="Enter your email"
                     sx={{
                       flex: 1,
@@ -942,7 +1208,7 @@ const LoginPage: React.FC = () => {
                   >
                     <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px" }} />
                   </IconButton>
-                </Box>
+              </Box>
               </Box>
             </CardContent>
           </Card>
@@ -968,19 +1234,63 @@ const LoginPage: React.FC = () => {
             }}
           >
             <CardContent sx={{ padding: 0 }}>
-              {/* Profile Picture */}
+              {/* Tenant Logo */}
+              {tenantLogo && (
+                <Box sx={{ 
+                  mb: 3, 
+                  display: "flex", 
+                  justifyContent: "center", 
+                  alignItems: "center",
+                  minHeight: isMobile ? "80px" : "100px",
+                }}>
+                  <Box
+                    component="img"
+                    src={tenantLogo}
+                    alt="logo"
+                    sx={{
+                      objectFit: "contain",
+                      maxHeight: isMobile ? "80px" : "100px",
+                      maxWidth: isMobile ? "160px" : "200px",
+                      width: "auto",
+                      height: "auto",
+                      display: "block",
+                    }}
+                    onError={(e) => {
+                      console.error("Failed to load tenant logo in step 2:", tenantLogo, e);
+                      // Fallback to default logo if tenant logo fails
+                      if (currentLogoUrl && currentLogoUrl !== defaultTenantDetails.tenantLogo) {
+                        console.log("Falling back to default logo due to load error");
+                        setTenantDetails(prev => ({
+                          ...prev,
+                          tenantLogo: defaultTenantDetails.tenantLogo
+                        }));
+                        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("✅ Tenant logo loaded successfully in step 2:", tenantLogo);
+                    }}
+                  />
+                </Box>
+              )}
+              
+              {/* Profile Picture - Only show if valid profile image exists */}
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 3 }}>
-                <Avatar
-                  src={userInfo.profile_image || '/images/profile/defaultprofile.jpg'}
-                  alt={userInfo.first_name || 'User'}
-                  sx={{
-                    width: isMobile ? 100 : 120,
-                    height: isMobile ? 100 : 120,
-                    border: "4px solid rgba(255, 255, 255, 0.3)",
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
-                    mb: 2,
-                  }}
-                />
+                {userInfo.profile_image && 
+                 userInfo.profile_image !== '/images/profile/defaultprofile.jpg' && 
+                 userInfo.profile_image.trim() !== '' && (
+                  <Avatar
+                    src={userInfo.profile_image}
+                    alt={userInfo.first_name || 'User'}
+                    sx={{
+                      width: isMobile ? 100 : 120,
+                      height: isMobile ? 100 : 120,
+                      border: "4px solid rgba(255, 255, 255, 0.3)",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+                      mb: 2,
+                    }}
+                  />
+                )}
                 
                 {/* User Name */}
                 <Typography
@@ -1027,20 +1337,20 @@ const LoginPage: React.FC = () => {
                     gap: 0, // Remove gap between password field and arrow button
                   }}
                 >
-                  <TextField
-                    fullWidth
-                    name="password"
-                    value={formik.values.password}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.password && Boolean(formik.errors.password)}
-                    helperText={formik.touched.password && formik.errors.password}
-                    variant="outlined"
-                    type={showPassword ? "text" : "password"}
+                    <TextField
+                      fullWidth
+                      name="password"
+                      value={formik.values.password}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched.password && Boolean(formik.errors.password)}
+                      helperText={formik.touched.password && formik.errors.password}
+                      variant="outlined"
+                      type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
                           <IconButton
                             aria-label="toggle password visibility"
                             onClick={handleTogglePassword}
@@ -1057,10 +1367,10 @@ const LoginPage: React.FC = () => {
                             ) : (
                               <Visibility sx={{ fontSize: isMobile ? "20px" : "22px" }} />
                             )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
                     sx={{
                       flex: 1,
                       pr: isMobile ? "72px" : "25px", // Add padding to prevent text overlap with arrow button
@@ -1113,9 +1423,9 @@ const LoginPage: React.FC = () => {
                   
                   {/* Circular Submit Button - Positioned at End */}
                   <IconButton
-                    type="submit"
+                      type="submit"
                     disabled={formik.isSubmitting || loading || !formik.values.password}
-                    sx={{
+                      sx={{
                       width: isMobile ? "56px" : "60px",
                       height: isMobile ? "56px" : "60px",
                       backgroundColor: "#ffffff",
@@ -1141,19 +1451,19 @@ const LoginPage: React.FC = () => {
                   >
                     <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px", fontWeight: 600 }} />
                   </IconButton>
-                </Box>
+                  </Box>
               </Box>
 
               {/* Forgot Password Link */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
                 <Link href={{ pathname: "/set-password", query: { email: formik.values.email } }}>
                   <Typography
-                    sx={{
+                  sx={{
                       fontSize: isMobile ? "0.875rem" : "0.938rem",
                       color: "#ffffff",
                       textDecoration: "none",
                       fontWeight: 400,
-                      "&:hover": { 
+                      "&:hover": {
                         textDecoration: "underline",
                       },
                     }}
@@ -1161,7 +1471,7 @@ const LoginPage: React.FC = () => {
                     Forget Password?
                   </Typography>
                 </Link>
-              </Box>
+                </Box>
             </CardContent>
           </Card>
         )}
