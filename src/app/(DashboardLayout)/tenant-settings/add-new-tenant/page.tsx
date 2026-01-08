@@ -1,6 +1,6 @@
 "use client";
 import ProtectedRoute from '@/configs/withAuth';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -56,7 +56,9 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
   const router = useRouter();
   const pathName = usePathname();
   const searchParams = useSearchParams();
-  const id = propTenantId || searchParams?.get("id");
+  // Extract value immediately to avoid enumeration warning
+  const searchParamsId = useMemo(() => searchParams?.get("id") || null, [searchParams]);
+  const id = propTenantId || searchParamsId;
   const isEditMode = id ? true : false;
   
   // Restrict non-SuperAdmin users to only edit their own tenant

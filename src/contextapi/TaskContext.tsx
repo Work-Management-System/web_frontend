@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppselector } from "@/redux/store";
 import createAxiosInstance from "@/app/axiosInstance";
@@ -94,9 +94,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [reports, setReports] = useState<Report[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const axiosInstance = createAxiosInstance();
+  
+  // useSearchParams() in client components returns synchronously
+  // Extract values immediately to avoid enumeration issues
   const searchParams = useSearchParams();
-  const projectId = searchParams.get("projectId");
-  const userId = searchParams.get("userId");
+  // Extract values directly without storing searchParams object to avoid enumeration warnings
+  const projectId = searchParams?.get("projectId") || null;
+  const userId = searchParams?.get("userId") || null;
   const authData = useAppselector((state) => state.auth.value);
   const currentUserRole = useAppselector((state) => state.role.value);
   const user = useAppselector((state) => state.user.user);
@@ -135,7 +139,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (currentUserRole?.priority === 1) {
         // Skip API call for SuperAdmin (priority 1)
         setTasksLoading(false);
-        setTasks([]);
+        setReports([]);
         return;
       }
       //  else if (currentUserRole?.priority && currentUserRole?.priority == 3) {

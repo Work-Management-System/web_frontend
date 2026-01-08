@@ -1054,7 +1054,8 @@ const ProjectDetailsPage = () => {
   const { reports, projects, handleDeleteTask, taskId, setTaskId } =
     useTaskContext();
   const params = useParams();
-  const id = params?.id as string | undefined;
+  // Extract value immediately to avoid enumeration warning
+  const id = useMemo(() => (params?.id as string) || undefined, [params]);
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);

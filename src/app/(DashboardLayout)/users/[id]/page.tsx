@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import createAxiosInstance from "@/app/axiosInstance";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useAppselector } from "@/redux/store";
@@ -102,7 +102,8 @@ export type TaskReport = {
 
 export default function UserProfilePage() {
   const params = useParams();
-  const id = params?.id as string | undefined;
+  // Extract value immediately to avoid enumeration warning
+  const id = useMemo(() => (params?.id as string) || undefined, [params]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<User | null>(null);

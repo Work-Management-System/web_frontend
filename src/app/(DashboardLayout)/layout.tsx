@@ -193,9 +193,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <PaletteChangeProvider>
       <TourProvider>
-        <MainWrapper className="mainwrapper">
-          <NextTopLoader />
-          <SubscriptionContext.Provider value={{ isSubscriptionActive, setIsSubscriptionActive }}>
+      <MainWrapper className="mainwrapper">
+        <NextTopLoader />
+        <SubscriptionContext.Provider value={{ isSubscriptionActive, setIsSubscriptionActive }}>
           {/* Sidebar */}
           {isSubscriptionActive && (
 

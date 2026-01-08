@@ -47,7 +47,9 @@ const CardsGrid = styled(Box)(({ theme }) => ({
   },
 }));
 
-const CategoryCard = styled(Box)<{ isClockInOut?: boolean; disabled?: boolean }>(({ theme, isClockInOut, disabled }) => ({
+const CategoryCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isClockInOut' && prop !== 'disabled',
+})<{ isClockInOut?: boolean; disabled?: boolean }>(({ theme, isClockInOut, disabled }) => ({
   backgroundColor: 'var(--card-bg-color)',
   borderRadius: '16px',
   padding: '24px',
@@ -83,7 +85,9 @@ const ClockButton = styled(Button)({
   },
 });
 
-const IconWrapper = styled(Box)<{ bgColor: string }>(({ bgColor }) => ({
+const IconWrapper = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'bgColor',
+})<{ bgColor: string }>(({ bgColor }) => ({
   width: '56px',
   height: '56px',
   borderRadius: '12px',

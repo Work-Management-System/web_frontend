@@ -11,6 +11,10 @@ import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import createAxiosInstance from '@/app/axiosInstance';
 import privilegeModules from '@/configs/Privileges';
+import { useAppselector } from '@/redux/store';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/redux/store';
+import { setRoleDetails } from '@/redux/features/roleSlice';
 
 type PermissionType = 'create' | 'read' | 'update' | 'delete';
 
@@ -59,6 +63,9 @@ const tags = [
 ];
 const AddRoleForm: React.FC<RoleFormProps> = ({ open, handleClose, mode, roleData }) => {
   const axiosInstance = createAxiosInstance();
+  const dispatch = useDispatch<AppDispatch>();
+  const currentUserRole = useAppselector((state) => state.role.value);
+  
   const formik = useFormik<RoleFormValues>({
     initialValues: roleData || initialValues,
     enableReinitialize: true,
@@ -67,9 +74,53 @@ const AddRoleForm: React.FC<RoleFormProps> = ({ open, handleClose, mode, roleDat
         let response;
         if (mode === 'edit') {
           response = await axiosInstance.patch(`/role-management/update/${roleData?.id}`, values);
+          
+          // Check if the updated role is the current user's role
+          if (roleData?.id && roleData.id === currentUserRole?.id) {
+            // Refetch the updated role and update Redux to sync menu automatically
+            try {
+              const updatedRoleResponse = await axiosInstance.get(`/role-management/get-one/${roleData.id}`);
+              if (updatedRoleResponse.data?.status && updatedRoleResponse.data?.data) {
+                const updatedRole = updatedRoleResponse.data.data;
+                
+                // Parse modules if it's a string (JSON)
+                let modules = updatedRole.modules;
+                if (typeof modules === 'string') {
+                  try {
+                    modules = JSON.parse(modules);
+                  } catch (e) {
+                    console.error('Failed to parse modules JSON:', e);
+                    modules = [];
+                  }
+                }
+                
+                // Update the role with parsed modules
+                const roleWithParsedModules = {
+                  ...updatedRole,
+                  modules: modules
+                };
+                
+                dispatch(setRoleDetails(roleWithParsedModules));
+                toast.success("Your role has been updated. Menu will refresh automatically.");
+                
+                // Force a small delay to ensure Redux state is updated before any navigation
+                setTimeout(() => {
+                  // Trigger a custom event to notify sidebar to refresh
+                  window.dispatchEvent(new CustomEvent('roleUpdated'));
+                }, 100);
+              }
+            } catch (refetchError) {
+              console.error("Failed to refetch updated role:", refetchError);
+              // Don't show error toast here, the main operation succeeded
+            }
+          }
         } else {
           delete values.id;
           response = await axiosInstance.post('/role-management/create', values);
+          
+          // If a new role was created and it matches the current user's role name,
+          // we might need to refetch, but typically new roles aren't assigned immediately
+          // So we'll skip auto-refetch for create operations
         }
 
         toast.success(response?.data?.message || "Operation successful");

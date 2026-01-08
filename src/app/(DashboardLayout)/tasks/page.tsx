@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -171,7 +171,8 @@ const KanbanBoard: React.FC = () => {
   const [viewOption, setViewOption] = useState<"my" | "all" | "department" | "team">("my");
   const axiosInstance = createAxiosInstance();
   const searchParams = useSearchParams();
-  const userId = searchParams.get("userId");
+  // Extract value immediately to avoid enumeration warning
+  const userId = useMemo(() => searchParams?.get("userId") || null, [searchParams]);
   const authData = useAppselector((state) => state.auth.value);
   const currentUserRole = useAppselector((state) => state.role.value);
   const taskEditMode = taskId ? true : false;

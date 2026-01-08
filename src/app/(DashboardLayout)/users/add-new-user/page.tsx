@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   Avatar, Box,
   Button,
@@ -78,7 +78,8 @@ function AddNewUser() {
   
 
   const searchParams = useSearchParams();
-  const id: any = searchParams.get("id");
+  // Extract value immediately to avoid enumeration warning
+  const id: any = useMemo(() => searchParams?.get("id") || null, [searchParams]);
   const isEditMode = id ? true : false;
   const pathName = usePathname();
   const router = useRouter();

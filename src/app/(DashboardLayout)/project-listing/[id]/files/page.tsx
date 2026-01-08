@@ -67,8 +67,9 @@ const ProjectFilesPage = () => {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const projectId = params?.id as string | undefined;
-  const initialFileId = searchParams?.get("file") || undefined;
+  // Extract values immediately to avoid enumeration warnings
+  const projectId = useMemo(() => (params?.id as string) || undefined, [params]);
+  const initialFileId = useMemo(() => searchParams?.get("file") || undefined, [searchParams]);
 
   const axiosInstance = useMemo(() => createAxiosInstance(), []);
 

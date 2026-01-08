@@ -1,6 +1,6 @@
 "use client";
 import ProtectedRoute from '@/configs/withAuth';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Autocomplete,
   Box,
@@ -61,7 +61,8 @@ function AddProject({ params }: any) {
   const router = useRouter();
   const pathName = usePathname();
   const searchParams = useSearchParams();
-  const id: any = searchParams.get('id');
+  // Extract value immediately to avoid enumeration warning
+  const id: any = useMemo(() => searchParams?.get('id') || null, [searchParams]);
   const isEditMode = id ? true : false;
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [project, setProject] = useState<Project>({});
