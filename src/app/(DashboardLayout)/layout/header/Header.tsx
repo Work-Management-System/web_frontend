@@ -148,7 +148,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const failedImagesRef = useRef<Set<string>>(new Set());
-  
+
   const router = useRouter();
   const axiosInstance = createAxiosInstance();
   let dateNow = dayjs();
@@ -307,14 +307,14 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
       return null;
     }
     try {
-      const res = await axiosInstance.get(`/role-management/get-one/${id}`);
+    const res = await axiosInstance.get(`/role-management/get-one/${id}`);
       if (!res.data?.status) {
         return null;
       }
-      const data: any = await res.data;
+    const data: any = await res.data;
       if (data?.data) {
         dispatch(setRoleDetails(data.data));
-        return data.data;
+    return data.data;
       }
       return null;
     } catch (error) {
@@ -398,7 +398,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   useEffect(() => {
     // Only fetch notifications if role is loaded and user is not SuperAdmin
     if (userRole && userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
-      fetchNotifications();
+    fetchNotifications();
     } else if (userPriority === 1 || userRole?.name === 'SuperAdmin' || userRole?.name === 'Developer') {
       // Set empty state for SuperAdmin
       setNotifications([]);

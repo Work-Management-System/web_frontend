@@ -82,8 +82,8 @@ const LoginPage: React.FC = () => {
   });
   const [logoError, setLogoError] = useState(false);
   const [backgroundError, setBackgroundError] = useState(false);
-  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
-  const [currentBackgroundUrl, setCurrentBackgroundUrl] = useState<string | null>(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(defaultTenantDetails.tenantLogo);
+  const [currentBackgroundUrl, setCurrentBackgroundUrl] = useState<string | null>(defaultTenantDetails.backgroundImage);
 
   const axiosInstance = createAxiosInstance();
 
@@ -327,10 +327,16 @@ const LoginPage: React.FC = () => {
         setCurrentBackgroundUrl(resolvedBackground);
       } else {
         setTenantDetails(defaultTenantDetails);
+        // Ensure default URLs are set
+        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+        setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
       }
     } catch (error: any) {
       console.error("Error fetching tenant data:", error);
       setTenantDetails(defaultTenantDetails);
+      // Ensure default URLs are set even on error
+      setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+      setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
     }
   };
 
@@ -364,18 +370,61 @@ const LoginPage: React.FC = () => {
           }
 
           const response = await axiosInstance.get(`/auth/tenant-subdomain?${params.toString()}`);
-
           // Check for successful response with loginUrl
           // Handle both possible response structures
           const responseData = response.data?.data || response.data;
           const loginUrl = responseData?.loginUrl || response.data?.loginUrl;
           const subdomain = responseData?.subdomain || response.data?.subdomain;
+          const responseMessage = (response.data?.message || responseData?.message || '').toLowerCase();
           
-          // Check if response is successful (handle both status 200 and statusCode 200)
-          const isSuccess = response.status === 200 || response.data?.statusCode === 200 || response.data?.status === "success";
+          // CRITICAL VALIDATION: The backend returns a fallback loginUrl even when user doesn't exist
+          // We need to check if the response indicates a real user or just a fallback
           const hasLoginUrl = loginUrl && typeof loginUrl === "string" && loginUrl.trim().length > 0;
+          const hasSubdomain = subdomain && typeof subdomain === "string" && subdomain.trim().length > 0;
+          const isFallbackResponse = responseMessage.includes('fallback');
+          const currentSubdomain = getSubdomain();
           
-          if (isSuccess && hasLoginUrl) {
+          // Debug logging
+          console.log('Email validation response:', {
+            hasLoginUrl,
+            hasSubdomain,
+            subdomain,
+            isFallbackResponse,
+            responseMessage,
+            currentSubdomain,
+            status: response.status
+          });
+          
+          // If no loginUrl at all, user doesn't exist
+          if (!hasLoginUrl) {
+            toast.error("No account found with this email address. Please check your email and try again.");
+            setLoading(false);
+            return;
+          }
+          
+          // CRITICAL: If response says "Fallback to base domain" with no subdomain, 
+          // it means the backend couldn't find the user in the database
+          // The backend only returns fallback when getTenantSubdomainByEmail returns null
+          if (isFallbackResponse && !hasSubdomain) {
+            console.log('Rejecting: Fallback response with no subdomain indicates user not found');
+            toast.error("No account found with this email address. Please check your email and try again.");
+            setLoading(false);
+            return;
+          }
+          
+          // Additional check: If response status is not 200, user doesn't exist
+          if (response.status !== 200) {
+            toast.error("No account found with this email address. Please check your email and try again.");
+            setLoading(false);
+            return;
+          }
+          
+          // If we have a subdomain from DB (not fallback), user exists - proceed
+          // If we're on a subdomain and got a valid response, user exists - proceed
+          // Only reject if it's a fallback with no subdomain
+          
+          // If we passed all validation checks, proceed with login
+          if (hasLoginUrl) {
             const currentSubdomain = getSubdomain();
 
             // Check if we need to redirect to a different subdomain
@@ -428,20 +477,20 @@ const LoginPage: React.FC = () => {
             setStep(2);
             setLoading(false);
           } else {
-            // Provide more specific error message
-            if (!isSuccess) {
-              toast.error(response.data?.message || "Failed to fetch subdomain. Please try again.");
-            } else if (!hasLoginUrl) {
-              toast.error("Login URL not found in response. Please try again.");
-            } else {
-              toast.error("Failed to fetch subdomain. Please try again.");
-            }
+            // This should not happen due to earlier checks, but handle it anyway
+            toast.error("No account found with this email address. Please check your email and try again.");
             setLoading(false);
           }
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Failed to fetch subdomain. Please try again.";
-          toast.error(errorMessage);
+          // Handle 404 and other errors
+          const statusCode = error?.response?.status;
+          const errorMessage = error?.response?.data?.message;
+          
+          if (statusCode === 404 || errorMessage?.toLowerCase().includes('not found') || errorMessage?.toLowerCase().includes('user')) {
+            toast.error("No account found with this email address. Please check your email and try again.");
+          } else {
+            toast.error(errorMessage || "Failed to verify email. Please try again.");
+          }
           setLoading(false);
         }
       } else {
@@ -456,9 +505,15 @@ const LoginPage: React.FC = () => {
 
           const response = await axiosInstance.post(`/auth/password-login`, payload);
           if (response.status === 200) {
-            // Check if password not set
-            if (response?.data?.data?.message === 'Password not set yet.') {
-              window.location.href = response?.data?.data?.url;
+            // Check if password not set - redirect to set-password page with OTP flow
+            if (response?.data?.data?.message === 'Password not set yet.' || 
+                response?.data?.message === 'Password not set yet.' ||
+                response?.data?.data?.url) {
+              const redirectUrl = response?.data?.data?.url || 
+                                 `/set-password?email=${encodeURIComponent(values.email)}`;
+              console.log("Password not set, redirecting to:", redirectUrl);
+              window.location.href = redirectUrl;
+              setLoading(false);
               return;
             }
 
@@ -658,16 +713,53 @@ const LoginPage: React.FC = () => {
     if (email) {
       const decodedEmail = decodeURIComponent(email);
       setEmailFromUrl(decodedEmail);
-      setStep(2);
       formik.setFieldValue("email", decodedEmail);
       
-      // Set user info with email (user details will be fetched after successful login)
-      setUserInfo({
-        profile_image: '',
-        first_name: '',
-        last_name: '',
-        email: decodedEmail,
-      });
+      // Validate email from URL before proceeding to step 2
+      const validateEmailFromUrl = async () => {
+        try {
+          setLoading(true);
+          const tenant = getSubdomain();
+          const params = new URLSearchParams({ email: decodedEmail });
+          if (tenant) {
+            params.append('sub_domain', tenant);
+          }
+
+          const response = await axiosInstance.get(`/auth/tenant-subdomain?${params.toString()}`);
+          
+          const responseData = response.data?.data || response.data;
+          const loginUrl = responseData?.loginUrl || response.data?.loginUrl;
+          const hasLoginUrl = loginUrl && typeof loginUrl === "string" && loginUrl.trim().length > 0;
+          
+          if (hasLoginUrl && response.status === 200) {
+            // Email is valid, proceed to step 2
+            setStep(2);
+            setUserInfo({
+              profile_image: '',
+              first_name: '',
+              last_name: '',
+              email: decodedEmail,
+            });
+          } else {
+            // Email doesn't exist, show error and stay on step 1
+            toast.error("No account found with this email address. Please check your email and try again.");
+            setStep(1);
+          }
+        } catch (error: any) {
+          // Handle errors - user doesn't exist
+          const statusCode = error?.response?.status;
+          if (statusCode === 404 || statusCode === 400) {
+            toast.error("No account found with this email address. Please check your email and try again.");
+          } else {
+            toast.error("Failed to verify email. Please try again.");
+          }
+          setStep(1);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      validateEmailFromUrl();
     }
   }, [searchParams]);
 
@@ -896,13 +988,15 @@ const LoginPage: React.FC = () => {
         {/* Welcome Text and Tagline */}
             <Box
               sx={{
-                position: "absolute",
+                position: "fixed",
             bottom: isMobile ? "20px" : "40px",
             left: "50%",
             transform: "translateX(-50%)",
             textAlign: "center",
             zIndex: 2,
             maxWidth: "90%",
+            width: "auto",
+            pointerEvents: "none", // Allow clicks to pass through
           }}
         >
               <Typography
@@ -947,6 +1041,7 @@ const LoginPage: React.FC = () => {
               mt: isMobile ? "80px" : "100px",
               mb: isMobile ? "160px" : "180px",
               transition: "background 0.5s ease, box-shadow 0.5s ease",
+              minHeight: isMobile ? "auto" : "400px", // Prevent card from shrinking too much
             }}
           >
             <CardContent sx={{ padding: 0 }}>
@@ -959,7 +1054,36 @@ const LoginPage: React.FC = () => {
                 minHeight: isMobile ? "100px" : "120px",
                 height: isMobile ? "100px" : "120px",
               }}>
-                {!tenantLogo ? (
+                {currentLogoUrl ? (
+                  <Box
+                    component="img"
+                    src={currentLogoUrl}
+                    alt="logo"
+                    crossOrigin="anonymous"
+                    sx={{
+                      objectFit: "contain",
+                      maxHeight: isMobile ? "100px" : "120px",
+                      maxWidth: isMobile ? "200px" : "240px",
+                      width: "auto",
+                      height: "auto",
+                      display: "block",
+                    }}
+                    onError={() => {
+                      if (!logoError && currentLogoUrl !== defaultTenantDetails.tenantLogo) {
+                        setLogoError(true);
+                        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+                        setLogoError(false); // Reset to try default
+                      } else {
+                        setLogoError(true);
+                      }
+                    }}
+                    onLoad={() => {
+                      if (logoError) {
+                        setLogoError(false);
+                      }
+                    }}
+                  />
+                ) : (
                   <Box
                     sx={{
                       width: isMobile ? "200px" : "240px",
@@ -975,37 +1099,6 @@ const LoginPage: React.FC = () => {
                       Logo
                     </Typography>
                   </Box>
-                ) : (
-                  currentLogoUrl && (
-                    <Box
-                      component="img"
-                      src={currentLogoUrl}
-                      alt="logo"
-                      crossOrigin="anonymous"
-                      sx={{
-                        objectFit: "contain",
-                        maxHeight: isMobile ? "100px" : "120px",
-                        maxWidth: isMobile ? "200px" : "240px",
-                        width: "auto",
-                        height: "auto",
-                        display: "block",
-                      }}
-                      onError={() => {
-                        if (!logoError && currentLogoUrl !== defaultTenantDetails.tenantLogo) {
-                          setLogoError(true);
-                          setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
-                          setLogoError(false); // Reset to try default
-                        } else {
-                          setLogoError(true);
-                        }
-                      }}
-                      onLoad={() => {
-                        if (logoError) {
-                          setLogoError(false);
-                        }
-                      }}
-                    />
-                  )
                 )}
               </Box>
               <Box sx={{ mb: 4, textAlign: "center" }}>
@@ -1141,6 +1234,7 @@ const LoginPage: React.FC = () => {
               mt: isMobile ? "80px" : "100px",
               mb: isMobile ? "160px" : "180px",
               transition: "background 0.5s ease, box-shadow 0.5s ease",
+              minHeight: isMobile ? "auto" : "400px", // Prevent card from shrinking too much
             }}
           >
             <CardContent sx={{ padding: 0 }}>
@@ -1266,9 +1360,9 @@ const LoginPage: React.FC = () => {
                             onClick={handleTogglePassword}
                             edge="end"
                             sx={{
-                              color: "#1e40af",
+                              color: "#6b7280",
                               "&:hover": {
-                                backgroundColor: "rgba(30, 64, 175, 0.1)",
+                                backgroundColor: "rgba(107, 114, 128, 0.1)",
                               },
                             }}
                           >
@@ -1285,39 +1379,37 @@ const LoginPage: React.FC = () => {
                       flex: 1,
                       pr: isMobile ? "72px" : "25px", // Add padding to prevent text overlap with arrow button
                       "& .MuiOutlinedInput-root": {
-                        borderRadius: "16px",
+                        borderRadius: "12px",
                         height: isMobile ? "56px" : "60px",
                         fontSize: isMobile ? "16px" : "17px",
-                        backgroundColor: "#bfdbfe",
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
                         "& fieldset": {
-                          border: "none",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderWidth: "1px",
                         },
                         "&:hover": {
-                          backgroundColor: "#93c5fd",
+                          backgroundColor: "#ffffff",
                           "& fieldset": {
-                            border: "none",
+                            borderColor: "rgba(255, 255, 255, 0.5)",
                           },
                         },
                         "&.Mui-focused": {
-                          backgroundColor: "#bfdbfe",
+                          backgroundColor: "#ffffff",
                           "& fieldset": {
-                            border: "none",
+                            borderColor: "rgba(255, 255, 255, 0.8)",
+                            borderWidth: "1px",
                           },
                         },
                         "&.Mui-error fieldset": {
-                          border: "none",
-                        },
-                        "&.Mui-error": {
-                          backgroundColor: "#fecaca",
+                          borderColor: "#ef4444",
                         },
                       },
                       "& .MuiInputBase-input": {
-                        color: "#1e40af",
-                        fontWeight: 500,
-                        fontSize: isMobile ? "16px" : "17px",
+                        padding: isMobile ? "18px 20px" : "20px 22px",
                         paddingRight: isMobile ? "50px" : "56px", // Space for eye icon
+                        color: "#1f2937",
                         "&::placeholder": {
-                          color: "rgba(30, 64, 175, 0.7)",
+                          color: "#6b7280",
                           opacity: 1,
                         },
                       },
@@ -1326,7 +1418,8 @@ const LoginPage: React.FC = () => {
                         top: "100%",
                         marginTop: "4px",
                         marginLeft: 0,
-                        color: "#ef4444",
+                        color: "#ffffff",
+                        textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
                       },
                     }}
                   />
@@ -1338,24 +1431,24 @@ const LoginPage: React.FC = () => {
                       sx={{
                       width: isMobile ? "56px" : "60px",
                       height: isMobile ? "56px" : "60px",
-                      backgroundColor: "#ffffff",
-                      color: "#3b82f6",
+                      backgroundColor: formik.values.password ? "#3b82f6" : "#e5e7eb",
+                      color: formik.values.password ? "#ffffff" : "#9ca3af",
                       borderRadius: "50%",
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                      boxShadow: formik.values.password ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "none",
                       flexShrink: 0,
                       zIndex: 2,
                       ml: "-16px", // Increased negative margin to remove gap
+                      transition: "all 0.3s ease",
                       "&:hover:not(:disabled)": {
-                        backgroundColor: "#ffffff",
+                        backgroundColor: formik.values.password ? "#2563eb" : "#d1d5db",
                         transform: "scale(1.05)",
-                        boxShadow: "0 6px 16px rgba(0, 0, 0, 0.25)",
                       },
                       "&:active:not(:disabled)": {
                         transform: "scale(0.98)",
                       },
                       "&:disabled": {
-                        backgroundColor: "rgba(255, 255, 255, 0.5)",
-                        color: "rgba(59, 130, 246, 0.5)",
+                        backgroundColor: "#f3f4f6",
+                        color: "#9ca3af",
                       },
                     }}
                   >
@@ -1364,24 +1457,26 @@ const LoginPage: React.FC = () => {
                   </Box>
               </Box>
 
-              {/* Forgot Password Link */}
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                <Link href={{ pathname: "/set-password", query: { email: formik.values.email } }}>
-                  <Typography
-                  sx={{
-                      fontSize: isMobile ? "0.875rem" : "0.938rem",
-                      color: "#ffffff",
-                      textDecoration: "none",
-                      fontWeight: 400,
-                      "&:hover": {
-                        textDecoration: "underline",
-                      },
-                    }}
-                  >
-                    Forget Password?
-                  </Typography>
-                </Link>
+              {/* Forgot Password Link - Only show on step 2 (password entry) */}
+              {step === 2 && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                  <Link href={{ pathname: "/set-password", query: { email: formik.values.email } }}>
+                    <Typography
+                    sx={{
+                        fontSize: isMobile ? "0.875rem" : "0.938rem",
+                        color: "#ffffff",
+                        textDecoration: "none",
+                        fontWeight: 400,
+                        "&:hover": {
+                          textDecoration: "underline",
+                        },
+                      }}
+                    >
+                      Forget Password?
+                    </Typography>
+                  </Link>
                 </Box>
+              )}
             </CardContent>
           </Card>
         )}

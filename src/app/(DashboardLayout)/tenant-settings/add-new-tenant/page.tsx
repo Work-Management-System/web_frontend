@@ -13,7 +13,14 @@ import {
   Typography,
   useMediaQuery,
   InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import toast, { Toaster } from 'react-hot-toast';
 import { setIn, useFormik } from 'formik';
@@ -51,6 +58,8 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
   const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [administratorEmail, setAdministratorEmail] = useState<string>("");
   const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
   const currentTenantId = useAppselector((state) => state.auth.value?.tenant?.id);
   const router = useRouter();
@@ -181,7 +190,8 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
           toast.success('Tenant updated successfully.');
         } else {
           response = await axiosInstance.post(`/tenants/add-tenant`, payload);
-          toast.success('Tenant added successfully.');
+          // Store administrator email for success modal
+          setAdministratorEmail(values.email);
         }
 
         if (response?.data?.data) {
@@ -227,10 +237,17 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
           }
           
           resetForm({ values: initialEmptyValues });
-          if (userPriority !== 2) {
-            router.push('/tenant-settings');
-          }else{
-            onClose();
+          
+          // Show success modal for new workspace creation
+          if (!isEditMode) {
+            setSuccessModalOpen(true);
+          } else {
+            // For edit mode, use existing flow
+            if (userPriority !== 2) {
+              router.push('/tenant-settings');
+            } else {
+              onClose();
+            }
           }
         }
       } catch (error: any) {
@@ -1063,6 +1080,100 @@ function AddTenant({ tenantId: propTenantId, onClose }: AddTenantProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Success Modal for Workspace Creation */}
+      <Dialog
+        open={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
+            color: '#fff',
+            padding: '20px 24px',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CheckCircleIcon sx={{ fontSize: 32, color: '#4caf50' }} />
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              Workspace Created Successfully!
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => setSuccessModalOpen(false)}
+            sx={{ color: '#fff' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ padding: '24px' }}>
+          <Box sx={{ textAlign: 'center', py: 2 }}>
+            <Typography variant="body1" sx={{ mb: 3, color: 'var(--text-color)' }}>
+              Your workspace has been created successfully. You can now log in using the administrator email.
+            </Typography>
+            <Box
+              sx={{
+                backgroundColor: 'var(--bg-color)',
+                borderRadius: '8px',
+                padding: '16px',
+                border: '1px solid var(--primary-color-2)',
+                mb: 3,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ color: 'var(--text-color)', mb: 1 }}>
+                Administrator Email:
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'var(--primary-color-2)',
+                  fontWeight: 600,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {administratorEmail}
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ color: 'var(--text-color)', fontStyle: 'italic' }}>
+              Please use this email to log in to your workspace.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ padding: '16px 24px', justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSuccessModalOpen(false);
+              // Redirect to login page
+              router.push('/login');
+            }}
+            sx={{
+              backgroundColor: 'var(--primary-color-2)',
+              color: '#fff',
+              borderRadius: '50px',
+              padding: '10px 32px',
+              fontWeight: 600,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: 'var(--primary-color-2-hover)',
+              },
+            }}
+          >
+            Go to Login
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

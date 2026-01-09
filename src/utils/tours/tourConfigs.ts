@@ -1,3 +1,4 @@
+import React from 'react';
 import { Step } from 'react-joyride';
 
 // Small helper to adjust intros by role
@@ -18,35 +19,91 @@ const roleLabel = (roleSegment?: string) => {
 export const dashboardTour = (roleSegment?: string): Step[] => [
   {
     target: 'body',
-    content: `Welcome to your Dashboard! This is your central hub where you can see an overview of work, projects, and reports.${roleLabel(
-      roleSegment,
-    )}`,
+    content: (
+      <div>
+        <div style={{ fontSize: '48px', marginBottom: '16px', textAlign: 'center' }}>🎯</div>
+        <h3 style={{ 
+          fontSize: '24px', 
+          fontWeight: 700, 
+          marginBottom: '12px',
+          background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          Welcome to your Dashboard!
+        </h3>
+        <p style={{ fontSize: '15px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          This is your central hub where you can see an overview of work, projects, and reports.{roleLabel(roleSegment)}
+        </p>
+      </div>
+    ) as any,
     placement: 'center',
     disableBeacon: true,
   },
   {
     target: '[data-tour="welcome-banner"]',
-    content: 'This is your welcome banner. It shows important announcements and updates.',
+    content: (
+      <div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>📢</div>
+        <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>Welcome Banner</h4>
+        <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          This is your welcome banner. It shows important announcements and updates.
+        </p>
+      </div>
+    ) as any,
     placement: 'bottom',
   },
   {
     target: '[data-tour="user-tasks"]',
-    content: 'Here you can see all your assigned tasks. Tasks are organized by status (Pending, In Progress, Completed, etc.).',
+    content: (
+      <div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+        <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>Your Tasks</h4>
+        <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          Here you can see all your assigned tasks. Tasks are organized by status (Pending, In Progress, Completed, etc.).
+        </p>
+      </div>
+    ) as any,
     placement: 'top',
   },
   {
     target: '[data-tour="project-overview"]',
-    content: 'This section shows an overview of all your projects. Click on any project to see more details.',
+    content: (
+      <div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>📁</div>
+        <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>Project Overview</h4>
+        <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          This section shows an overview of all your projects. Click on any project to see more details.
+        </p>
+      </div>
+    ) as any,
     placement: 'top',
   },
   {
     target: '[data-tour="analytics-charts"]',
-    content: 'These charts provide visual insights into your work progress, time tracking, and productivity metrics.',
+    content: (
+      <div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>📊</div>
+        <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>Analytics & Insights</h4>
+        <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          These charts provide visual insights into your work progress, time tracking, and productivity metrics.
+        </p>
+      </div>
+    ) as any,
     placement: 'top',
   },
   {
     target: '[data-tour="sidebar"]',
-    content: 'Use the sidebar to navigate between different sections like Tasks, Projects, Reports, Attendance, and more.',
+    content: (
+      <div>
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🧭</div>
+        <h4 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#1a1a1a' }}>Navigation Sidebar</h4>
+        <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#4a5568', margin: 0 }}>
+          Use the sidebar to navigate between different sections like Tasks, Projects, Reports, Attendance, and more.
+        </p>
+      </div>
+    ) as any,
     placement: 'right',
   },
 ];

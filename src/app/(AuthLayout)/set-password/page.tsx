@@ -12,17 +12,13 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowForward } from "@mui/icons-material";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import createAxiosInstance from "@/app/axiosInstance";
 import Cookies from "js-cookie";
-import { uploadFile } from '@/utils/UploadFile';
-import { useDispatch } from "react-redux";
-import { color } from "framer-motion";
 
 interface SetPasswordValues {
   email: string;
@@ -36,13 +32,13 @@ interface TenantDetails {
   backgroundImage?: string;
   tenantLogo?: string;
   tenantName?: string;
+  tagline?: string;
 }
 
 const SetPasswordPage: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // < 600px
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md")); // 600px - 900px
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md")); // >= 900px
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const searchParams = useSearchParams();
   const router = useRouter();
   const axiosInstance = createAxiosInstance();
@@ -52,6 +48,7 @@ const SetPasswordPage: React.FC = () => {
     backgroundImage: '/images/backgrounds/profileback.jpg',
     tenantLogo: '/images/logos/time-sheet-base-logo.png',
     tenantName: "Our Portal",
+    tagline: "Please set your password to continue.",
   };
 
   const [tenantDetails, setTenantDetails] = useState<TenantDetails>(defaultTenantDetails);
@@ -61,32 +58,136 @@ const SetPasswordPage: React.FC = () => {
   const [otpGenerated, setOtpGenerated] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
+  const [cardColors, setCardColors] = useState<{
+    primary: string;
+    secondary: string;
+  }>({
+    primary: "#3b82f6",
+    secondary: "#2563eb",
+  });
+  const [logoError, setLogoError] = useState(false);
+  const [backgroundError, setBackgroundError] = useState(false);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(defaultTenantDetails.tenantLogo);
+  const [currentBackgroundUrl, setCurrentBackgroundUrl] = useState<string | null>(defaultTenantDetails.backgroundImage);
 
   const handleTogglePassword = () => setShowPassword((prev) => !prev);
+
+  // Extract dominant colors from image
+  const extractColorsFromImage = (imageUrl: string): Promise<{ primary: string; secondary: string }> => {
+    return new Promise((resolve) => {
+      const img = document.createElement("img");
+      img.crossOrigin = "anonymous";
+      
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          
+          if (!ctx) {
+            resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+            return;
+          }
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = imageData.data;
+          
+          const colorMap = new Map<string, number>();
+          const sampleSize = 100;
+          
+          for (let i = 0; i < pixels.length; i += sampleSize * 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const a = pixels[i + 3];
+            
+            if (a < 128) continue;
+            
+            const hex = `#${[r, g, b].map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            }).join("")}`;
+            
+            colorMap.set(hex, (colorMap.get(hex) || 0) + 1);
+          }
+
+          const sortedColors = Array.from(colorMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+          if (sortedColors.length >= 2) {
+            resolve({
+              primary: sortedColors[0][0],
+              secondary: sortedColors[1][0],
+            });
+          } else if (sortedColors.length === 1) {
+            const primary = sortedColors[0][0];
+            const rgb = primary.match(/\w\w/g)?.map(x => parseInt(x, 16)) || [59, 130, 246];
+            const darker = rgb.map(c => Math.max(0, c - 30));
+            const secondary = `#${darker.map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            }).join("")}`;
+            resolve({ primary, secondary });
+          } else {
+            resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+          }
+        } catch (error) {
+          console.error("Error extracting colors:", error);
+          resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+        }
+      };
+
+      img.onerror = () => {
+        resolve({ primary: "#3b82f6", secondary: "#2563eb" });
+      };
+
+      img.src = imageUrl;
+    });
+  };
+
+  const extractTenantColors = async () => {
+    try {
+      if (tenantDetails.backgroundImage) {
+        const colors = await extractColorsFromImage(tenantDetails.backgroundImage);
+        setCardColors(colors);
+        return;
+      }
+      
+      if (tenantDetails.tenantLogo) {
+        const colors = await extractColorsFromImage(tenantDetails.tenantLogo);
+        setCardColors(colors);
+        return;
+      }
+    } catch (error) {
+      console.error("Error extracting tenant colors:", error);
+    }
+  };
 
   const getSubdomain = (): string => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
+      const ipAddressRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (ipAddressRegex.test(hostname)) {
+        return "";
+      }
+      
       const parts = hostname.split(".");
       
-      // Handle localhost (e.g., subdomain.localhost:3000)
       if (parts.length >= 2 && parts[1] === "localhost") {
         return parts[0];
       }
       
-      // Handle production domains
-      // For subdomain.example.com, parts.length will be 3
-      // For example.com, parts.length will be 2
-      // Only return subdomain if we have at least 3 parts (subdomain.domain.tld)
       if (parts.length >= 3) {
         const subdomain = parts[0];
-        // Exclude common prefixes that aren't subdomains
         if (subdomain && subdomain !== "www" && subdomain !== "localhost") {
           return subdomain;
         }
       }
       
-      // For 2-part domains (example.com) or other cases, return empty string
       return "";
     }
     return "";
@@ -94,51 +195,65 @@ const SetPasswordPage: React.FC = () => {
 
   const fetchTenantData = async () => {
     try {
-      // Priority: subdomain from URL > query param > cookie
       let tenant = getSubdomain();
       if (!tenant) {
         tenant = searchParams?.get("tenant") || Cookies.get("tenant") || "";
       }
       
       if (!tenant) {
-        // No tenant found, use defaults
         setTenantDetails(defaultTenantDetails);
+        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+        setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
         return;
       }
       
-      console.log("Fetching tenant data for:", tenant);
       const response = await axiosInstance.get(`/tenants/get-by-subdomain/${tenant}`);
-      console.log("API Response:", response.data);
       
       if (response.status === 200 && response.data?.data) {
         const logo = response?.data?.data?.logo;
-        const background_image = response?.data?.data?.background_image || response?.data?.data?.backgroud_image; // Handle typo in API
+        const background_image = response?.data?.data?.background_image || response?.data?.data?.backgroud_image;
         const welcome_note = response?.data?.data?.welcome_note;
         const tenant_name = response?.data?.data?.tenant_name;
         
-        // Fallback to generic assets when tenant images are missing/empty
-        const resolvedLogo =
-          logo && logo.trim() !== '' ? logo : defaultTenantDetails.tenantLogo;
-        const resolvedBackground =
-          background_image && background_image.trim() !== ''
-            ? background_image
-            : defaultTenantDetails.backgroundImage;
+        const isValidUrl = (url: string): boolean => {
+          try {
+            new URL(url);
+            return true;
+          } catch {
+            return false;
+          }
+        };
+        
+        const resolvedLogo = logo && logo.trim() !== '' && isValidUrl(logo) 
+          ? logo 
+          : defaultTenantDetails.tenantLogo;
+        const resolvedBackground = background_image && background_image.trim() !== '' && isValidUrl(background_image)
+          ? background_image
+          : defaultTenantDetails.backgroundImage;
         const welcomeNote = welcome_note || defaultTenantDetails.welcomeNote;
         const resolvedTenantName = tenant_name || defaultTenantDetails.tenantName;
+        const tagline = `Welcome to ${resolvedTenantName || 'our platform'}`;
 
         setTenantDetails({
           tenantLogo: resolvedLogo,
           backgroundImage: resolvedBackground,
           welcomeNote,
           tenantName: resolvedTenantName,
+          tagline,
         });
+        
+        setCurrentLogoUrl(resolvedLogo);
+        setCurrentBackgroundUrl(resolvedBackground);
       } else {
         setTenantDetails(defaultTenantDetails);
+        setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+        setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
       }
     } catch (error: any) {
       console.error("Error fetching tenant data:", error);
-      // Use defaults on error instead of showing error toast
       setTenantDetails(defaultTenantDetails);
+      setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+      setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
     }
   };
 
@@ -149,21 +264,26 @@ const SetPasswordPage: React.FC = () => {
     }
     setLoading(true);
     try {
+      const tenant = getSubdomain();
+      const tenantFromQuery = searchParams?.get("tenant");
+      const tenantFromCookie = Cookies.get("tenant");
+      const finalTenant = tenant || tenantFromQuery || tenantFromCookie;
+      
+      if (finalTenant) {
+        Cookies.set("tenant", finalTenant, { expires: 7 });
+      }
+      
       const response = await axiosInstance.post(`/auth/generate-otp`, {
         email: formik.values.email,
       });
-      if (response.status === 200 || response.status === 201) {
+      
+      if (response.status === 200) {
+        toast.success("OTP sent to your email");
         setOtpGenerated(true);
-        setResendCooldown(60); // 60 seconds cooldown
-        toast.success(response.data.message || "OTP sent successfully!");
-      } else {
-        toast.error(response.data.message || "Failed to generate OTP");
+        setResendCooldown(60);
       }
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong!";
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to generate OTP";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -171,36 +291,26 @@ const SetPasswordPage: React.FC = () => {
   };
 
   const resendOtp = async () => {
-    if (!formik.values.email) {
-      toast.error("Please enter a valid email");
-      return;
-    }
-    if (resendCooldown > 0) {
-      toast.error(`Please wait ${resendCooldown} seconds before resending OTP`);
-      return;
-    }
+    if (resendCooldown > 0 || resendLoading) return;
+    
     setResendLoading(true);
     try {
-      const response = await axiosInstance.post(`/auth/resend-otp`, {
+      const response = await axiosInstance.post(`/auth/generate-otp`, {
         email: formik.values.email,
       });
-      if (response.status === 200 || response.status === 201) {
-        setResendCooldown(60); // Reset cooldown to 60 seconds
-        toast.success(response.data.message || "OTP resent successfully!");
-      } else {
-        toast.error(response.data.message || "Failed to resend OTP");
+      
+      if (response.status === 200) {
+        toast.success("OTP resent to your email");
+        setResendCooldown(60);
       }
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong!";
-      toast.error(errorMessage);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to resend OTP";
+      const statusCode = error?.response?.status;
       
-      // If rate limited, set a longer cooldown
-      if (error?.response?.status === 429 || errorMessage.includes("Maximum resend attempts")) {
-        setResendCooldown(600); // 10 minutes
+      if (statusCode === 429 || errorMessage.includes("Maximum resend attempts")) {
+        setResendCooldown(600);
       }
+      toast.error(errorMessage);
     } finally {
       setResendLoading(false);
     }
@@ -211,13 +321,13 @@ const SetPasswordPage: React.FC = () => {
     if (!tenant || !/^[a-zA-Z0-9-]+$/.test(tenant)) {
       return path;
     }
-    const protocol = process.env.NODE_ENV === "production" ? "https" : "https";
-    const isLocalhost =  window?.location?.hostname.includes("localhost");
+    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+    const isLocalhost = window?.location?.hostname.includes("localhost");
     const baseDomain = isLocalhost
       ? "localhost:3000"
       : window?.location?.hostname.replace(/^[a-zA-Z0-9-]+\./, "");
     const port = isLocalhost ? `:${window?.location.port || "3000"}` : "";
-    return `${protocol}://${tenant}.${baseDomain}${path}`;
+    return `${protocol}://${tenant}.${baseDomain}${port}${path}`;
   };
 
   const validationSchema = Yup.object().shape({
@@ -244,7 +354,6 @@ const SetPasswordPage: React.FC = () => {
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
-        // Ensure tenant is set before making the request
         const tenantFromQuery = searchParams?.get("tenant");
         const tenantFromSubdomain = getSubdomain();
         const tenantFromCookie = Cookies.get("tenant");
@@ -252,17 +361,15 @@ const SetPasswordPage: React.FC = () => {
         
         if (tenant) {
           Cookies.set("tenant", tenant, { expires: 7 });
-          console.log("Tenant ensured before API call:", tenant);
-        } else {
-          console.warn("No tenant found - request may fail");
         }
         
         const response = await axiosInstance.post(`/auth/set-password`, values);
         if (response.status === 200) {
           toast.success(response.data.message || "Password set successfully!");
-          resetForm();          
-          const redirectUrl = getTenantUrl("/login");
-          console.log(`Redirecting to: ${redirectUrl}`);
+          resetForm();
+          // Redirect to login with email as query parameter
+          const baseLoginUrl = getTenantUrl("/login");
+          const redirectUrl = `${baseLoginUrl}${baseLoginUrl.includes('?') ? '&' : '?'}email=${encodeURIComponent(values.email)}`;
           router.push(redirectUrl);
         } else {
           toast.error(response.data.message || "Failed to set password");
@@ -279,9 +386,6 @@ const SetPasswordPage: React.FC = () => {
     },
   });
 
-
-
-  // Countdown timer for resend OTP
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (resendCooldown > 0) {
@@ -302,21 +406,15 @@ const SetPasswordPage: React.FC = () => {
   }, [resendCooldown]);
 
   useEffect(() => {
-    // Fetch tenant data first
     fetchTenantData();
     
-    // Priority: query param > subdomain from URL > cookie
     const tenantFromQuery = searchParams?.get("tenant");
     const tenantFromSubdomain = getSubdomain();
     const tenantFromCookie = Cookies.get("tenant");
-    
-    // Determine which tenant to use
     const tenant = tenantFromSubdomain || tenantFromQuery || tenantFromCookie;
     
-    // Always set tenant in cookie if we have one
     if (tenant) {
-      Cookies.set("tenant", tenant, { expires: 7 }); // Expires in 7 days
-      console.log("Tenant set in cookie:", tenant);
+      Cookies.set("tenant", tenant, { expires: 7 });
     }
     
     const email = searchParams?.get("email");
@@ -327,21 +425,33 @@ const SetPasswordPage: React.FC = () => {
     }
   }, [searchParams]);
 
-return (
-  <>
+  useEffect(() => {
+    setLogoError(false);
+    setBackgroundError(false);
+    
+    if (tenantDetails.backgroundImage || tenantDetails.tenantLogo) {
+      extractTenantColors();
+    }
+  }, [tenantDetails.backgroundImage, tenantDetails.tenantLogo]);
+
+  const backgroundImage = tenantDetails.backgroundImage;
+  const tenantLogo = tenantDetails.tenantLogo;
+  const welcomeNote = tenantDetails.welcomeNote;
+
+  return (
+    <>
       <Box
         sx={{
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          height: "100vh",
+          minHeight: "100vh",
           position: "relative",
           overflow: "hidden",
           width: "100vw",
-          backgroundImage: `url(${tenantDetails.backgroundImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          backgroundColor: backgroundError ? 'rgba(0, 0, 0, 0.3)' : 'transparent',
+          padding: isMobile ? "20px 20px 220px 20px" : "40px 40px 240px 40px",
           "&::before": {
             content: '""',
             position: "absolute",
@@ -349,222 +459,232 @@ return (
             left: 0,
             right: 0,
             bottom: 0,
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-            zIndex: 0,
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+            zIndex: 1,
+            pointerEvents: "none",
           },
-        }}
-      >
-        <Box
-          sx={{
+          "&::after": {
+            content: '""',
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(0, 0, 0, 0.15)",
-            zIndex: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          width: isMobile ? "95%" : isTablet ? "90%" : "70%",
-          maxWidth: "1100px",
-          height: isMobile ? "auto" : "80vh",
-          minHeight: isMobile ? "auto" : "500px",
-          borderRadius: isMobile ? "24px" : "32px",
-          overflow: "hidden",
-          zIndex: 1,
-          margin: isMobile ? "10px" : isTablet ? "15px" : "0",
-          flexDirection: isMobile ? "column" : "row",
-          boxShadow: "0 25px 80px rgba(0, 0, 0, 0.2)",
-          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-          position: "relative",
+            background: "rgba(0, 0, 0, 0.05)",
+            zIndex: 1,
+            pointerEvents: "none",
+          },
         }}
       >
-        {/* Left Info Panel */}
-        <Box
-          sx={{
-            flex: isMobile ? "none" : 1,
-            height: isMobile ? "250px" : "100%",
-            minHeight: isMobile ? "250px" : "500px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: isMobile ? "center" : "flex-start",
-            backgroundImage: `url(${tenantDetails.backgroundImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            position: "relative",
-            textAlign: isMobile ? "center" : "left",
-            overflow: "hidden",
-            padding: isMobile ? "32px" : isTablet ? "40px" : "56px",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backdropFilter: "blur(2px)",
-              WebkitBackdropFilter: "blur(2px)",
-              zIndex: 0,
-            },
-          }}
-        >
-          {/* Semi-transparent dark overlay */}
+        {/* Background image */}
+        {currentBackgroundUrl && (
           <Box
+            component="img"
+            src={currentBackgroundUrl}
+            alt=""
+            crossOrigin="anonymous"
             sx={{
               position: "absolute",
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              background: "rgba(0, 0, 0, 0.5)",
-              zIndex: 1,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+              zIndex: 0,
+              pointerEvents: "none",
+              display: backgroundError ? "none" : "block",
+            }}
+            onError={(e) => {
+              console.warn("Background image failed to load:", currentBackgroundUrl);
+              if (!backgroundError) {
+                setBackgroundError(true);
+                if (currentBackgroundUrl !== defaultTenantDetails.backgroundImage) {
+                  setCurrentBackgroundUrl(defaultTenantDetails.backgroundImage);
+                  setBackgroundError(false);
+                }
+              }
+            }}
+            onLoad={() => {
+              if (backgroundError) {
+                setBackgroundError(false);
+              }
             }}
           />
-          
-          {/* Content */}
-          <Box sx={{ 
-            position: "relative", 
-            zIndex: 2, 
-            width: "100%",
-          }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontSize: isMobile ? "1.5rem" : isTablet ? "1.75rem" : "2.25rem",
-                fontWeight: 700,
-                color: "#fff",
-                mb: isMobile ? 2 : 3,
-                textShadow: "0 4px 20px rgba(0, 0, 0, 0.4)",
-                letterSpacing: "2px",
-                lineHeight: 1.2,
-                textTransform: "uppercase",
-              }}
-            >
-              Welcome to {tenantDetails.tenantName}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: isMobile ? "0.875rem" : isTablet ? "0.95rem" : "1.05rem",
-                color: "rgba(255, 255, 255, 0.95)",
-                lineHeight: 1.8,
-                textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
-                fontWeight: 400,
-              }}
-            >
-              {tenantDetails.welcomeNote}
-            </Typography>
-          </Box>
+        )}
+        
+        {/* Time and Date Display */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: isMobile ? "20px" : "40px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            textAlign: "center",
+            zIndex: 2,
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: isMobile ? "1.5rem" : "2rem",
+              fontWeight: 600,
+              color: "#ffffff",
+              mb: 0.5,
+              textShadow: "0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} {new Date().toLocaleDateString('en-US', { weekday: 'short' })}
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: isMobile ? "0.875rem" : "1rem",
+              fontWeight: 400,
+              color: "rgba(255, 255, 255, 0.95)",
+              textShadow: "0 2px 6px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </Typography>
         </Box>
 
-        {/* Right Form Panel */}
+        {/* Welcome Text and Tagline */}
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: isMobile ? "30px" : "50px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            textAlign: "center",
+            zIndex: 3,
+            maxWidth: "90%",
+            width: "auto",
+            pointerEvents: "none",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: isMobile ? "1.25rem" : "1.75rem",
+              fontWeight: 700,
+              color: "#ffffff",
+              mb: 1,
+              textShadow: "0 2px 10px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            {tenantDetails.welcomeNote || "Welcome"}
+          </Typography>
+          {tenantDetails.tagline && (
+            <Typography
+              sx={{
+                fontSize: isMobile ? "0.875rem" : "1rem",
+                fontWeight: 400,
+                color: "rgba(255, 255, 255, 0.9)",
+                textShadow: "0 2px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3)",
+              }}
+            >
+              {tenantDetails.tagline}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Main Card */}
         <Card
           component="form"
           onSubmit={formik.handleSubmit}
-          autoComplete="off"
           sx={{
-            flex: isMobile ? "none" : 1,
-            height: isMobile ? "auto" : "100%",
-            background: "linear-gradient(135deg, #ffffff 0%, #fafafa 100%)",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08)",
-            padding: 0,
-            textAlign: "center",
-            width: "100%",
-            borderRadius: isMobile ? "24px" : "0 32px 32px 0",
-            border: "1px solid rgba(0, 0, 0, 0.04)",
+            width: isMobile ? "90%" : isTablet ? "420px" : "480px",
+            maxWidth: "480px",
+            background: `linear-gradient(135deg, ${cardColors.primary} 0%, ${cardColors.secondary} 100%)`,
+            borderRadius: "24px",
+            padding: isMobile ? "40px 32px" : "48px 40px",
+            boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
             position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "4px",
-              background: "linear-gradient(90deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)",
-              zIndex: 1,
-            },
+            zIndex: 2,
+            mt: isMobile ? "80px" : "100px",
+            mb: isMobile ? "200px" : "220px",
+            transition: "background 0.5s ease, box-shadow 0.5s ease",
+            minHeight: isMobile ? "auto" : "400px",
           }}
         >
-          <CardContent
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              height: "100%",
-              minHeight: isMobile ? "auto" : "500px",
-              padding: isMobile ? "48px 32px" : isTablet ? "64px 48px" : "80px 64px",
-              gap: 0,
-              position: "relative",
-              zIndex: 0,
-            }}
-          >
+          <CardContent sx={{ padding: 0 }}>
+            {/* Logo */}
             <Box sx={{ 
-              mb: isMobile ? 5 : 7, 
+              mb: 4, 
               display: "flex", 
-              justifyContent: "center",
+              justifyContent: "center", 
               alignItems: "center",
-              flexDirection: "column",
-              gap: 1.5,
+              minHeight: isMobile ? "100px" : "120px",
+              height: isMobile ? "100px" : "120px",
             }}>
-              <Box
-                sx={{
-                  padding: isMobile ? "16px" : "20px",
-                  borderRadius: "16px",
-                  background: "linear-gradient(135deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 200, 150, 0.05) 100%)",
-                  border: "1px solid rgba(0, 123, 255, 0.1)",
-                  display: "inline-flex",
-                  boxShadow: "0 4px 12px rgba(0, 123, 255, 0.08)",
-                }}
-              >
-                <Image
-                  src={tenantDetails.tenantLogo || defaultTenantDetails.tenantLogo}
+              {currentLogoUrl ? (
+                <Box
+                  component="img"
+                  src={currentLogoUrl}
                   alt="logo"
-                  height={isMobile ? 72 : isTablet ? 88 : 104}
-                  width={isMobile ? 72 : isTablet ? 88 : 104}
-                  priority
-                  unoptimized
-                  style={{ objectFit: "contain" }}
+                  crossOrigin="anonymous"
+                  sx={{
+                    objectFit: "contain",
+                    maxHeight: isMobile ? "100px" : "120px",
+                    maxWidth: isMobile ? "200px" : "240px",
+                    width: "auto",
+                    height: "auto",
+                    display: "block",
+                  }}
                   onError={() => {
-                    console.log("Failed to load logo image, using default");
-                    setTenantDetails(prev => ({ ...prev, tenantLogo: defaultTenantDetails.tenantLogo }));
+                    if (!logoError && currentLogoUrl !== defaultTenantDetails.tenantLogo) {
+                      setLogoError(true);
+                      setCurrentLogoUrl(defaultTenantDetails.tenantLogo);
+                      setLogoError(false);
+                    } else {
+                      setLogoError(true);
+                    }
+                  }}
+                  onLoad={() => {
+                    if (logoError) {
+                      setLogoError(false);
+                    }
                   }}
                 />
-              </Box>
+              ) : (
+                <Box
+                  sx={{
+                    width: isMobile ? "200px" : "240px",
+                    height: isMobile ? "100px" : "120px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: "white", opacity: 0.7 }}>
+                    Logo
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            
+            <Box sx={{ mb: 4, textAlign: "center" }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontSize: isMobile ? "2.25rem" : "2.75rem",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  mb: 4,
+                  letterSpacing: "-0.5px",
+                  lineHeight: 1.2,
+                  textShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+                }}
+              >
+                Set Your Password
+              </Typography>
             </Box>
 
-            <Typography
-              variant="h5"
-              sx={{
-                fontSize: isMobile ? "2rem" : isTablet ? "2.5rem" : "2.75rem",
-                fontWeight: 600,
-                color: "#0f172a",
-                mb: isMobile ? 5 : 6,
-                letterSpacing: "-0.5px",
-                lineHeight: 1.2,
-                textAlign: "center",
-                background: "linear-gradient(135deg, #0f172a 0%, #475569 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              Set Your Password
-            </Typography>
-
-            <Box sx={{ mb: isMobile ? 3.5 : 4.5 }}>
+            {/* Email Input */}
+            <Box sx={{ mb: 2 }}>
               <TextField
                 fullWidth
                 name="email"
@@ -579,54 +699,84 @@ return (
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
-                    height: isMobile ? "52px" : "56px",
-                    fontSize: isMobile ? "15px" : "16px",
-                    backgroundColor: "#ffffff",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                    height: isMobile ? "56px" : "60px",
+                    fontSize: isMobile ? "16px" : "17px",
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
                     "& fieldset": {
-                      borderColor: "#e2e8f0",
-                      borderWidth: "1.5px",
-                      transition: "all 0.2s ease",
+                      borderColor: "rgba(255, 255, 255, 0.3)",
+                      borderWidth: "1px",
                     },
-                    "&:hover fieldset": {
-                      borderColor: "#cbd5e1",
-                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                    "&:hover": {
+                      backgroundColor: "#ffffff",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.5)",
+                      },
                     },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "var(--primary-color-1)",
-                      borderWidth: "2px",
-                      boxShadow: "0 0 0 3px rgba(0, 123, 255, 0.1)",
+                    "&.Mui-focused": {
+                      backgroundColor: "#ffffff",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.8)",
+                        borderWidth: "1px",
+                      },
                     },
                     "&.Mui-error fieldset": {
                       borderColor: "#ef4444",
                     },
-                    "&.Mui-disabled": {
-                      backgroundColor: "#f8f9fa",
-                    },
                   },
                   "& .MuiInputBase-input": {
-                    padding: isMobile ? "16px 18px" : "18px 20px",
-                    color: "#1e293b",
-                    fontWeight: 400,
+                    padding: isMobile ? "18px 20px" : "20px 22px",
+                    color: "#1f2937",
                     "&::placeholder": {
-                      color: "#94a3b8",
+                      color: "#6b7280",
                       opacity: 1,
-                      fontWeight: 400,
                     },
                   },
                   "& .MuiFormHelperText-root": {
-                    marginLeft: "4px",
-                    marginTop: "6px",
-                    fontSize: "0.813rem",
-                    fontWeight: 400,
+                    position: "absolute",
+                    top: "100%",
+                    marginTop: "4px",
+                    marginLeft: 0,
+                    color: "#ffffff",
+                    textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
                   },
                 }}
               />
             </Box>
+
+            {/* Generate OTP Button */}
+            {!otpGenerated && (
+              <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                <IconButton
+                  onClick={generateOtp}
+                  disabled={loading || !formik.values.email}
+                  sx={{
+                    width: isMobile ? "56px" : "60px",
+                    height: isMobile ? "56px" : "60px",
+                    backgroundColor: formik.values.email ? "#3b82f6" : "#e5e7eb",
+                    color: formik.values.email ? "#ffffff" : "#9ca3af",
+                    borderRadius: "50%",
+                    boxShadow: formik.values.email ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "none",
+                    flexShrink: 0,
+                    transition: "all 0.3s ease",
+                    "&:hover:not(:disabled)": {
+                      backgroundColor: formik.values.email ? "#2563eb" : "#d1d5db",
+                      transform: "scale(1.05)",
+                    },
+                    "&:disabled": {
+                      backgroundColor: "#f3f4f6",
+                      color: "#9ca3af",
+                    },
+                  }}
+                >
+                  <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px", fontWeight: 600 }} />
+                </IconButton>
+              </Box>
+            )}
+
+            {/* Password Fields and OTP (shown after OTP is generated) */}
             {otpGenerated && (
               <>
-                <Box sx={{ mb: isMobile ? 3.5 : 4.5 }}>
+                <Box sx={{ mb: 2 }}>
                   <TextField
                     fullWidth
                     name="password"
@@ -641,73 +791,75 @@ return (
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
-                        height: isMobile ? "52px" : "56px",
-                        fontSize: isMobile ? "15px" : "16px",
-                        backgroundColor: "#ffffff",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                        height: isMobile ? "56px" : "60px",
+                        fontSize: isMobile ? "16px" : "17px",
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
                         "& fieldset": {
-                          borderColor: "#e2e8f0",
-                          borderWidth: "1.5px",
-                          transition: "all 0.2s ease",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderWidth: "1px",
                         },
-                        "&:hover fieldset": {
-                          borderColor: "#cbd5e1",
-                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                        "&:hover": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.5)",
+                          },
                         },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "var(--primary-color-1)",
-                          borderWidth: "2px",
-                          boxShadow: "0 0 0 3px rgba(0, 123, 255, 0.1)",
+                        "&.Mui-focused": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.8)",
+                            borderWidth: "1px",
+                          },
                         },
                         "&.Mui-error fieldset": {
                           borderColor: "#ef4444",
                         },
                       },
                       "& .MuiInputBase-input": {
-                        padding: isMobile ? "16px 18px" : "18px 20px",
-                        color: "#1e293b",
-                        fontWeight: 400,
+                        padding: isMobile ? "18px 20px" : "20px 22px",
+                        paddingRight: isMobile ? "50px" : "56px",
+                        color: "#1f2937",
                         "&::placeholder": {
-                          color: "#94a3b8",
+                          color: "#6b7280",
                           opacity: 1,
-                          fontWeight: 400,
                         },
                       },
                       "& .MuiFormHelperText-root": {
-                        marginLeft: "4px",
-                        marginTop: "6px",
-                        fontSize: "0.813rem",
-                        fontWeight: 400,
+                        position: "absolute",
+                        top: "100%",
+                        marginTop: "4px",
+                        marginLeft: 0,
+                        color: "#ffffff",
+                        textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
                       },
                     }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton 
-                            onClick={handleTogglePassword} 
-                            edge="end" 
-                            size="small"
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleTogglePassword}
+                            edge="end"
                             sx={{
-                              color: "#64748b",
-                              marginRight: "8px",
-                              padding: "8px",
-                              transition: "all 0.2s ease",
+                              color: "#6b7280",
                               "&:hover": {
-                                backgroundColor: "#f1f5f9",
-                                color: "var(--primary-color-1)",
-                                transform: "scale(1.05)",
+                                backgroundColor: "rgba(107, 114, 128, 0.1)",
                               },
                             }}
                           >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                            {showPassword ? (
+                              <VisibilityOff sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            ) : (
+                              <Visibility sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
                   />
                 </Box>
-                <Box sx={{ mb: isMobile ? 3.5 : 4.5 }}>
+
+                <Box sx={{ mb: 2 }}>
                   <TextField
                     fullWidth
                     name="confirmPassword"
@@ -722,66 +874,67 @@ return (
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
-                        height: isMobile ? "52px" : "56px",
-                        fontSize: isMobile ? "15px" : "16px",
-                        backgroundColor: "#ffffff",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                        height: isMobile ? "56px" : "60px",
+                        fontSize: isMobile ? "16px" : "17px",
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
                         "& fieldset": {
-                          borderColor: "#e2e8f0",
-                          borderWidth: "1.5px",
-                          transition: "all 0.2s ease",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderWidth: "1px",
                         },
-                        "&:hover fieldset": {
-                          borderColor: "#cbd5e1",
-                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                        "&:hover": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.5)",
+                          },
                         },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "var(--primary-color-1)",
-                          borderWidth: "2px",
-                          boxShadow: "0 0 0 3px rgba(0, 123, 255, 0.1)",
+                        "&.Mui-focused": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.8)",
+                            borderWidth: "1px",
+                          },
                         },
                         "&.Mui-error fieldset": {
                           borderColor: "#ef4444",
                         },
                       },
                       "& .MuiInputBase-input": {
-                        padding: isMobile ? "16px 18px" : "18px 20px",
-                        color: "#1e293b",
-                        fontWeight: 400,
+                        padding: isMobile ? "18px 20px" : "20px 22px",
+                        paddingRight: isMobile ? "50px" : "56px",
+                        color: "#1f2937",
                         "&::placeholder": {
-                          color: "#94a3b8",
+                          color: "#6b7280",
                           opacity: 1,
-                          fontWeight: 400,
                         },
                       },
                       "& .MuiFormHelperText-root": {
-                        marginLeft: "4px",
-                        marginTop: "6px",
-                        fontSize: "0.813rem",
-                        fontWeight: 400,
+                        position: "absolute",
+                        top: "100%",
+                        marginTop: "4px",
+                        marginLeft: 0,
+                        color: "#ffffff",
+                        textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
                       },
                     }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton 
-                            onClick={handleTogglePassword} 
-                            edge="end" 
-                            size="small"
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleTogglePassword}
+                            edge="end"
                             sx={{
-                              color: "#64748b",
-                              marginRight: "8px",
-                              padding: "8px",
-                              transition: "all 0.2s ease",
+                              color: "#6b7280",
                               "&:hover": {
-                                backgroundColor: "#f1f5f9",
-                                color: "var(--primary-color-1)",
-                                transform: "scale(1.05)",
+                                backgroundColor: "rgba(107, 114, 128, 0.1)",
                               },
                             }}
                           >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                            {showPassword ? (
+                              <VisibilityOff sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            ) : (
+                              <Visibility sx={{ fontSize: isMobile ? "20px" : "22px" }} />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),
@@ -789,7 +942,7 @@ return (
                   />
                 </Box>
 
-                <Box sx={{ mb: isMobile ? 3.5 : 4.5 }}>
+                <Box sx={{ mb: 2 }}>
                   <TextField
                     fullWidth
                     name="otp"
@@ -803,54 +956,55 @@ return (
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
-                        height: isMobile ? "52px" : "56px",
-                        fontSize: isMobile ? "15px" : "16px",
-                        backgroundColor: "#ffffff",
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+                        height: isMobile ? "56px" : "60px",
+                        fontSize: isMobile ? "16px" : "17px",
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
                         "& fieldset": {
-                          borderColor: "#e2e8f0",
-                          borderWidth: "1.5px",
-                          transition: "all 0.2s ease",
+                          borderColor: "rgba(255, 255, 255, 0.3)",
+                          borderWidth: "1px",
                         },
-                        "&:hover fieldset": {
-                          borderColor: "#cbd5e1",
-                          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                        "&:hover": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.5)",
+                          },
                         },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "var(--primary-color-1)",
-                          borderWidth: "2px",
-                          boxShadow: "0 0 0 3px rgba(0, 123, 255, 0.1)",
+                        "&.Mui-focused": {
+                          backgroundColor: "#ffffff",
+                          "& fieldset": {
+                            borderColor: "rgba(255, 255, 255, 0.8)",
+                            borderWidth: "1px",
+                          },
                         },
                         "&.Mui-error fieldset": {
                           borderColor: "#ef4444",
                         },
                       },
                       "& .MuiInputBase-input": {
-                        padding: isMobile ? "16px 18px" : "18px 20px",
-                        color: "#1e293b",
-                        fontWeight: 400,
+                        padding: isMobile ? "18px 20px" : "20px 22px",
+                        color: "#1f2937",
                         textAlign: "center",
                         letterSpacing: "0.5em",
                         "&::placeholder": {
-                          color: "#94a3b8",
+                          color: "#6b7280",
                           opacity: 1,
-                          fontWeight: 400,
                           letterSpacing: "normal",
                         },
                       },
                       "& .MuiFormHelperText-root": {
-                        marginLeft: "4px",
-                        marginTop: "6px",
-                        fontSize: "0.813rem",
-                        fontWeight: 400,
+                        position: "absolute",
+                        top: "100%",
+                        marginTop: "4px",
+                        marginLeft: 0,
+                        color: "#ffffff",
+                        textShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
                       },
                     }}
                   />
                   <Box sx={{ 
                     mt: 1, 
                     display: "flex", 
-                    justifyContent: isMobile ? "center" : "flex-end", 
+                    justifyContent: "flex-end", 
                     alignItems: "center", 
                     gap: 1 
                   }}>
@@ -859,17 +1013,19 @@ return (
                       onClick={resendOtp}
                       disabled={resendLoading || resendCooldown > 0}
                       sx={{
-                        color: resendCooldown > 0 ? "#999" : "var(--primary-color-1)",
+                        color: resendCooldown > 0 ? "#ffffff" : "#ffffff",
                         textTransform: "none",
                         fontSize: isMobile ? "0.75rem" : "0.875rem",
                         minWidth: "auto",
                         padding: isMobile ? "2px 4px" : "4px 8px",
+                        opacity: resendCooldown > 0 ? 0.6 : 1,
                         "&:hover": {
                           backgroundColor: "transparent",
                           textDecoration: "underline",
                         },
                         "&:disabled": {
-                          color: "#999",
+                          color: "#ffffff",
+                          opacity: 0.5,
                         },
                       }}
                     >
@@ -881,148 +1037,42 @@ return (
                     </Button>
                   </Box>
                 </Box>
-              </>
-            )}
 
-            <Box sx={{ 
-              display: "flex", 
-              justifyContent: isMobile ? "center" : "flex-end",
-              width: "100%",
-            }}>
-              {!otpGenerated ? (
-                <Button
-                  variant="contained"
-                  onClick={generateOtp}
-                  disabled={loading || formik.isSubmitting}
-                  fullWidth={isMobile}
-                  sx={{
-                    background: "linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)",
-                    color: "#ffffff",
-                    padding: isMobile ? "14px 32px" : "16px 40px",
-                    borderRadius: "12px",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    fontSize: isMobile ? "0.938rem" : "1rem",
-                    letterSpacing: "0.3px",
-                    boxShadow: "0 4px 12px rgba(0, 123, 255, 0.25), 0 2px 4px rgba(0, 123, 255, 0.15)",
-                    minWidth: isMobile ? "100%" : "auto",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    position: "relative",
-                    overflow: "hidden",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: "-100%",
-                      width: "100%",
-                      height: "100%",
-                      background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                      transition: "left 0.5s ease",
-                    },
-                    "&:hover:not(:disabled)": {
-                      boxShadow: "0 6px 20px rgba(0, 123, 255, 0.35), 0 4px 8px rgba(0, 123, 255, 0.2)",
-                      transform: "translateY(-2px)",
-                      "&::before": {
-                        left: "100%",
-                      },
-                    },
-                    "&:active:not(:disabled)": {
-                      transform: "translateY(0px)",
-                      boxShadow: "0 2px 8px rgba(0, 123, 255, 0.25)",
-                    },
-                    "&:disabled": {
-                      background: "#e2e8f0",
-                      color: "#94a3b8",
-                      boxShadow: "none",
-                      transform: "none",
-                    },
-                  }}
-                >
-                  {loading ? "Generating OTP..." : "Generate OTP"}
-                </Button>
-              ) : (
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column", 
-                    alignItems: "center",    
-                    gap: isMobile ? 1.5 : 2,  
-                    width: "100%",
-                    marginRight: isMobile ? 0 : "35px",          
-                  }}
-                >
-                  <Typography 
-                    textAlign="center"
-                    sx={{
-                      fontSize: isMobile ? "0.85rem" : "0.9rem",
-                      color: "var(--primary-color-1)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    OTP sent to your registered email
-                  </Typography>
-
-                  <Button
-                    variant="contained"
+                {/* Set Password Button */}
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                  <IconButton
                     type="submit"
-                    disabled={loading || formik.isSubmitting}
-                    fullWidth={isMobile}
+                    disabled={formik.isSubmitting || loading || !formik.values.password || !formik.values.otp}
                     sx={{
-                      background: "linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)",
-                      color: "#ffffff",
-                      padding: isMobile ? "14px 32px" : "16px 40px",
-                      borderRadius: "12px",
-                      fontWeight: 600,
-                      textTransform: "none",
-                      fontSize: isMobile ? "0.938rem" : "1rem",
-                      letterSpacing: "0.3px",
-                      boxShadow: "0 4px 12px rgba(0, 123, 255, 0.25), 0 2px 4px rgba(0, 123, 255, 0.15)",
-                      minWidth: isMobile ? "100%" : "auto",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      position: "relative",
-                      overflow: "hidden",
-                      "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        top: 0,
-                        left: "-100%",
-                        width: "100%",
-                        height: "100%",
-                        background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                        transition: "left 0.5s ease",
-                      },
+                      width: isMobile ? "56px" : "60px",
+                      height: isMobile ? "56px" : "60px",
+                      backgroundColor: (formik.values.password && formik.values.otp) ? "#3b82f6" : "#e5e7eb",
+                      color: (formik.values.password && formik.values.otp) ? "#ffffff" : "#9ca3af",
+                      borderRadius: "50%",
+                      boxShadow: (formik.values.password && formik.values.otp) ? "0 4px 12px rgba(59, 130, 246, 0.3)" : "none",
+                      flexShrink: 0,
+                      transition: "all 0.3s ease",
                       "&:hover:not(:disabled)": {
-                        boxShadow: "0 6px 20px rgba(0, 123, 255, 0.35), 0 4px 8px rgba(0, 123, 255, 0.2)",
-                        transform: "translateY(-2px)",
-                        "&::before": {
-                          left: "100%",
-                        },
-                      },
-                      "&:active:not(:disabled)": {
-                        transform: "translateY(0px)",
-                        boxShadow: "0 2px 8px rgba(0, 123, 255, 0.25)",
+                        backgroundColor: (formik.values.password && formik.values.otp) ? "#2563eb" : "#d1d5db",
+                        transform: "scale(1.05)",
                       },
                       "&:disabled": {
-                        background: "#e2e8f0",
-                        color: "#94a3b8",
-                        boxShadow: "none",
-                        transform: "none",
+                        backgroundColor: "#f3f4f6",
+                        color: "#9ca3af",
                       },
                     }}
                   >
-                    {loading ? "Setting Password..." : "Set Password"}
-                  </Button>
+                    <ArrowForward sx={{ fontSize: isMobile ? "24px" : "26px", fontWeight: 600 }} />
+                  </IconButton>
                 </Box>
-              )}
-            </Box>
+              </>
+            )}
           </CardContent>
         </Card>
       </Box>
-    </Box>
-    <Toaster position="top-right" toastOptions={{ className: "react-hot-toast" }} />
-  </>
-);
-
+      <Toaster position={"top-right"} toastOptions={{ className: "react-hot-toast" }} gutter={2} />
+    </>
+  );
 };
 
 export default SetPasswordPage;
