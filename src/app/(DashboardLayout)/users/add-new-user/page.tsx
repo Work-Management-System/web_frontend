@@ -126,7 +126,7 @@ function AddNewUser() {
     address: Yup.string().optional(),
     designation: Yup.string().optional(),
     department: Yup.string().optional(),
-    joiningDate: Yup.date().optional().nullable(),
+    joiningDate: Yup.string().optional().nullable(),
     employeeCode: Yup.string().optional(),
     role_id: Yup.string().required(),
     tenant_id: Yup.string().optional(),
@@ -134,6 +134,7 @@ function AddNewUser() {
     emergency_contact: Yup.string().optional(),
     blood_group: Yup.string().optional(),
     gender: Yup.string().optional(),
+    dob: Yup.string().optional().nullable(),
     reporting_manager: Yup.string().optional(),
   });
 
@@ -185,12 +186,12 @@ function AddNewUser() {
           ...(values.address && { address: values.address }),
           ...(values.designation && { designation: values.designation }),
           ...(values.department && { department: values.department }),
-          ...(values.joiningDate && { joiningDate: values.joiningDate }),
+          ...(values.joiningDate && /^\d{4}-\d{2}-\d{2}$/.test(values.joiningDate) && { joiningDate: values.joiningDate }),
           ...(values.employeeCode && { employeeCode: values.employeeCode }),
           ...(values.emergency_contact && { emergency_contact: values.emergency_contact.trim() }),
           ...(values.blood_group && { blood_group: values.blood_group }),
           ...(values.gender && { gender: values.gender }),
-          ...(values.dob && { dob: dayjs(values.dob).format('YYYY-MM-DD') }),
+          ...(values.dob && /^\d{4}-\d{2}-\d{2}$/.test(values.dob) && { dob: values.dob }),
           reporting_manager: values.reporting_manager ? values.reporting_manager : null,
           tenant_id: values.tenant_id,
           role_id: values.role_id

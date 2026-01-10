@@ -986,7 +986,7 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
     address: Yup.string().optional(),
     designation: Yup.string().optional(),
     department: Yup.string().optional(),
-    joiningDate: Yup.date().optional().nullable(),
+    joiningDate: Yup.string().optional().nullable(),
     employeeCode: Yup.string().optional(),
     role_id: Yup.string().required(),
     tenant_id: Yup.string().optional(),
@@ -994,9 +994,60 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
     emergency_contact: Yup.string().optional(),
     blood_group: Yup.string().optional(),
     gender: Yup.string().optional(),
-    dob: Yup.date().optional().nullable(),
+    dob: Yup.string().optional().nullable(),
     reporting_manager: Yup.string().optional(),
   });
+
+  // Helper function to format date to YYYY-MM-DD for HTML date input
+  const formatDateForInput = (dateValue: string | Date | null | undefined): string => {
+    if (!dateValue) return '';
+    
+    // If it's a Date object, format it directly
+    if (dateValue instanceof Date) {
+      const d = dateValue;
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // If it's already a string in YYYY-MM-DD format, return as is
+    if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    
+    // If it's an ISO string with time (e.g., "2000-01-10T00:00:00.000Z"), extract the date part
+    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      const datePart = dateValue.split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+        return datePart;
+      }
+    }
+    
+    // Try parsing with dayjs and format to YYYY-MM-DD
+    const parsed = dayjs(dateValue);
+    if (parsed.isValid()) {
+      return parsed.format('YYYY-MM-DD');
+    }
+    
+    // Try parsing DD/MM/YYYY format (common in some locales)
+    if (typeof dateValue === 'string') {
+      const ddmmyyyy = dateValue.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (ddmmyyyy) {
+        const [, day, month, year] = ddmmyyyy;
+        return `${year}-${month}-${day}`;
+      }
+      
+      // Try parsing MM/DD/YYYY format
+      const mmddyyyy = dateValue.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (mmddyyyy) {
+        const [, month, day, year] = mmddyyyy;
+        return `${year}-${month}-${day}`;
+      }
+    }
+    
+    return '';
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -1007,7 +1058,7 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
       address: user.address || '',
       designation: user.designation || '',
       department: user.department || '',
-      joiningDate: user.joiningDate || '',
+      joiningDate: formatDateForInput(user.joiningDate),
       employeeCode: user.employeeCode || '',
       role_id: user.role?.id || '',
       role_name: user.role?.name || '',
@@ -1016,7 +1067,7 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
       emergency_contact: user.emergency_contact || '',
       blood_group: user.blood_group || '',
       gender: user.gender || '',
-      dob: user.dob || '',
+      dob: formatDateForInput(user.dob),
       reporting_manager: user.reporting_manager || '',
     },
     validationSchema,
@@ -1054,7 +1105,7 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
           ...(values.address && { address: values.address }),
           ...(values.designation && { designation: values.designation }),
           ...(values.department && { department: values.department }),
-          ...(values.joiningDate && { joiningDate: values.joiningDate }),
+          ...(values.joiningDate && /^\d{4}-\d{2}-\d{2}$/.test(values.joiningDate) && { joiningDate: values.joiningDate }),
           ...(values.employeeCode && { employeeCode: values.employeeCode }),
           ...(values.role_id && { role_id: values.role_id }),
           tenant_id: values.tenant_id,
@@ -1062,7 +1113,7 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
           ...(values.emergency_contact && { emergency_contact: values.emergency_contact.trim() }),
           ...(values.blood_group && { blood_group: values.blood_group }),
           ...(values.gender && { gender: values.gender }),
-          ...(values.dob && { dob: dayjs(values.dob).format('YYYY-MM-DD') }),
+          ...(values.dob && /^\d{4}-\d{2}-\d{2}$/.test(values.dob) && { dob: values.dob }),
           ...(values.reporting_manager && { reporting_manager: values.reporting_manager }),
         };
 
@@ -1954,16 +2005,20 @@ export function EditUserDialog({ open, onClose, user, roles, onUpdate, profileEd
                 disabled={loading || !formik.dirty}
                 sx={{
                   backgroundColor: 'var(--primary-color-1)',
-                  color: 'var(--text-color)',
+                  color: '#fff',
                   '&:hover': {
                     backgroundColor: 'var(--primary-color-1-hover)',
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: 'var(--primary-color-1)',
+                    color: 'rgba(255, 255, 255, 0.5)',
                   },
                   borderRadius: '35px',
                   padding: '10px 50px',
                   margin: '0 auto',
                 }}
               >
-                {loading ? <CircularProgress size={24} /> : 'Update'}
+                {loading ? <CircularProgress size={24} sx={{ color: '#fff' }} /> : 'Update'}
               </Button>
             </Box>
           </form>

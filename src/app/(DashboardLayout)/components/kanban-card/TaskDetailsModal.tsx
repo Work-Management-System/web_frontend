@@ -854,28 +854,36 @@ const TaskDetailsModal: React.FC<{
         }
       }
 
-      const correspondencePayload = {
-        task_ticket_id: report.id,
-        sender_id: authData.user.id,
-        message: message.trim() || "",
-        attachment: fileUrl || undefined,
-      };
+      // Only create correspondence if there's a message OR an attachment
+      // If only attachment (no message), use a placeholder or skip correspondence
+      const hasMessage = message.trim().length > 0;
+      const hasAttachment = !!fileUrl;
 
-      try {
-        const response = await axiosInstance.post(
-          "/task-maangement/correspondence",
-          correspondencePayload
-        );
-        console.log("Correspondence posted successfully:", response.data);
-      } catch (correspondenceError: any) {
-        console.error(
-          "Correspondence error:",
-          correspondenceError.response?.data || correspondenceError.message
-        );
-        toast.error(
-          correspondenceError?.response?.data?.message || "Failed to send message."
-        );
-        throw correspondenceError;
+      if (hasMessage || hasAttachment) {
+        const correspondencePayload = {
+          task_ticket_id: report.id,
+          sender_id: authData.user.id,
+          // If no message but has attachment, send a placeholder to satisfy backend validation
+          message: hasMessage ? message.trim() : (hasAttachment ? "[Attachment]" : ""),
+          attachment: fileUrl || undefined,
+        };
+
+        try {
+          const response = await axiosInstance.post(
+            "/task-maangement/correspondence",
+            correspondencePayload
+          );
+          console.log("Correspondence posted successfully:", response.data);
+        } catch (correspondenceError: any) {
+          console.error(
+            "Correspondence error:",
+            correspondenceError.response?.data || correspondenceError.message
+          );
+          toast.error(
+            correspondenceError?.response?.data?.message || "Failed to send message."
+          );
+          throw correspondenceError;
+        }
       }
 
       // Step 4: Reset state and refresh data
@@ -1433,17 +1441,143 @@ const convertminutestohoursordays = (totalMinutes: number) => {
                         </Box>
                       ) : (
                           <Box
-                            display="flex"
-                            alignItems="center"
-                            gap={0.5}
+                            className="description-view"
                             width="100%"
                             sx={{
-                              padding: "15px 33px",
-                              borderRadius: 1,
+                              padding: "16px 20px",
+                              borderRadius: "6px",
                               backgroundColor: "#F9FAFB",
-                              "&:hover": { backgroundColor: "#E5E7EB" },
+                              border: "1px solid #E8ECEF",
+                              "&:hover": { backgroundColor: "#F3F4F6", borderColor: "#D1D5DB" },
                               cursor: "pointer",
                               mb: 1,
+                              maxHeight: "400px",
+                              overflowY: "auto",
+                              overflowX: "hidden",
+                              "&::-webkit-scrollbar": { width: "6px" },
+                              "&::-webkit-scrollbar-thumb": {
+                                background: "#D1D5DB",
+                                borderRadius: "4px",
+                              },
+                              /* Code block styles for view mode */
+                              "& pre": {
+                                background: "#1e1e1e",
+                                color: "#d4d4d4",
+                                padding: "16px",
+                                borderRadius: "8px",
+                                overflow: "auto",
+                                fontFamily: "'Fira Code', 'Consolas', monospace",
+                                fontSize: "14px",
+                                lineHeight: "1.6",
+                                margin: "12px 0",
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                              },
+                              "& code": {
+                                fontFamily: "'Fira Code', 'Consolas', monospace",
+                                fontSize: "0.9em",
+                              },
+                              /* Task list styles for view mode */
+                              "& ul[data-type='taskList']": {
+                                listStyle: "none",
+                                padding: 0,
+                                margin: "8px 0",
+                              },
+                              "& ul[data-type='taskList'] li": {
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "flex-start",
+                                gap: "10px",
+                                margin: "6px 0",
+                              },
+                              "& ul[data-type='taskList'] li label": {
+                                display: "flex",
+                                flexShrink: 0,
+                                paddingTop: "3px",
+                              },
+                              "& ul[data-type='taskList'] li label input": {
+                                width: "18px",
+                                height: "18px",
+                                accentColor: "#1976d2",
+                              },
+                              "& ul[data-type='taskList'] li div": {
+                                flex: 1,
+                              },
+                              "& ul[data-type='taskList'] li div p": {
+                                margin: 0,
+                                display: "inline",
+                              },
+                              /* Heading styles for view mode */
+                              "& h1": {
+                                fontSize: "2rem",
+                                fontWeight: 700,
+                                margin: "16px 0 8px 0",
+                                color: "#111827",
+                                lineHeight: 1.3,
+                              },
+                              "& h2": {
+                                fontSize: "1.5rem",
+                                fontWeight: 600,
+                                margin: "14px 0 6px 0",
+                                color: "#1f2937",
+                                lineHeight: 1.35,
+                              },
+                              "& h3": {
+                                fontSize: "1.25rem",
+                                fontWeight: 600,
+                                margin: "12px 0 4px 0",
+                                color: "#374151",
+                                lineHeight: 1.4,
+                              },
+                              /* Link styles */
+                              "& a": {
+                                color: "#2563eb",
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                              },
+                              /* Table styles */
+                              "& table": {
+                                borderCollapse: "collapse",
+                                width: "100%",
+                                margin: "12px 0",
+                              },
+                              "& th, & td": {
+                                border: "1px solid #d1d5db",
+                                padding: "8px 12px",
+                                textAlign: "left",
+                              },
+                              "& th": {
+                                backgroundColor: "#f3f4f6",
+                                fontWeight: 600,
+                              },
+                              /* Image styles */
+                              "& img": {
+                                maxWidth: "100%",
+                                height: "auto",
+                                borderRadius: "4px",
+                              },
+                              /* Blockquote styles */
+                              "& blockquote": {
+                                borderLeft: "4px solid #d1d5db",
+                                paddingLeft: "16px",
+                                margin: "12px 0",
+                                color: "#6b7280",
+                                fontStyle: "italic",
+                              },
+                              /* List styles */
+                              "& ul, & ol": {
+                                paddingLeft: "24px",
+                                margin: "8px 0",
+                              },
+                              "& li": {
+                                margin: "4px 0",
+                              },
+                              /* Paragraph styles */
+                              "& p": {
+                                margin: "8px 0",
+                                lineHeight: 1.6,
+                                wordBreak: "break-word",
+                              },
                             }}
                             onClick={(e) => {
                               const target = e.target as HTMLElement;
@@ -1459,15 +1593,15 @@ const convertminutestohoursordays = (totalMinutes: number) => {
                               handleDescriptionClick();
                             }}
                           >
-                            <Typography
-                              variant="body2"
+                            <Box
                               sx={{
                                 fontSize: "1rem",
                                 color: "#374151",
-                                flex: 1,
+                                wordBreak: "break-word",
+                                overflowWrap: "break-word",
                               }}
                               dangerouslySetInnerHTML={{
-                                __html: description || "No description provided",
+                                __html: description || "<p style='color: #9CA3AF; font-style: italic;'>Click to add description...</p>",
                               }}
                             />
                           </Box>

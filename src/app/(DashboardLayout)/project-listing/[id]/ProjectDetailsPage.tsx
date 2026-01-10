@@ -46,6 +46,9 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DownloadIcon from "@mui/icons-material/Download";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import ArticleIcon from "@mui/icons-material/Article";
+import LockIcon from "@mui/icons-material/Lock";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import createAxiosInstance from "@/app/axiosInstance";
@@ -74,6 +77,13 @@ import {
 } from "@/contextapi/TaskContext";
 import dynamic from "next/dynamic";
 import { formatDistanceToNow } from "date-fns";
+import {
+  getProjectDocuments,
+  createDocument,
+  deleteDocument as deleteDocumentAPI,
+  ProjectDocument,
+} from "@/services/documentService";
+import CreateDocumentModal from "./documents/CreateDocumentModal";
 
 interface Project {
   id: string;
@@ -1119,6 +1129,11 @@ const ProjectDetailsPage = () => {
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Document states
+  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(true);
+  const [createDocModalOpen, setCreateDocModalOpen] = useState(false);
+
   const axiosInstance = useMemo(() => createAxiosInstance(), []);
 
   const formatFileSize = (bytes?: number) => {
@@ -1196,6 +1211,47 @@ const ProjectDetailsPage = () => {
     } finally {
       setUploadingAttachment(false);
       event.target.value = "";
+    }
+  };
+
+  // Document functions
+  const fetchDocuments = async () => {
+    if (!id) {
+      setDocuments([]);
+      setDocumentsLoading(false);
+      return;
+    }
+    setDocumentsLoading(true);
+    try {
+      const docs = await getProjectDocuments(id);
+      setDocuments(docs);
+    } catch (error) {
+      console.error("Failed to fetch project documents:", error);
+      setDocuments([]);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  const handleCreateDocument = async (title: string, templateType: string) => {
+    if (!id) return;
+    const doc = await createDocument(id, title, templateType);
+    toast.success("Document created");
+    router.push(`/project-listing/${id}/documents/${doc.id}`);
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    const confirmDelete = window.confirm(
+      "Delete this document? This cannot be undone."
+    );
+    if (!confirmDelete) return;
+    try {
+      await deleteDocumentAPI(id as string, documentId);
+      toast.success("Document deleted");
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+      toast.error("Failed to delete document");
     }
   };
 
@@ -1305,6 +1361,7 @@ const ProjectDetailsPage = () => {
     fetchProject();
     fetchTeam();
     fetchAttachments();
+    fetchDocuments();
   }, [id]);
 
   useEffect(() => {
@@ -1938,13 +1995,14 @@ const ProjectDetailsPage = () => {
                     variant="h6"
                     sx={{ color: "var(--primary-color-1)" }}
                   >
-                    Project Files
+                    Project Files & Documents
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Upload shared documents so the whole team stays in sync.
+                    Upload files or create collaborative documents for your
+                    team.
                   </Typography>
                 </Box>
-                <Box>
+                <Stack direction="row" spacing={1}>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1954,21 +2012,195 @@ const ProjectDetailsPage = () => {
                     onChange={handleAttachmentUpload}
                   />
                   <Button
-                    variant="contained"
-                    color="primary"
+                    variant="outlined"
                     startIcon={<CloudUploadIcon />}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAttachment}
+                    sx={{
+                      borderColor: "var(--primary-color-1)",
+                      color: "var(--primary-color-1)",
+                      "&:hover": {
+                        borderColor: "var(--primary-color-2)",
+                        bgcolor: "rgba(30, 58, 138, 0.05)",
+                      },
+                    }}
+                  >
+                    {uploadingAttachment ? "Uploading..." : "Upload File"}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<NoteAddIcon />}
+                    onClick={() => setCreateDocModalOpen(true)}
                     sx={{
                       bgcolor: "var(--primary-color-1)",
                       "&:hover": { bgcolor: "var(--primary-color-2)" },
                     }}
                   >
-                    {uploadingAttachment ? "Uploading..." : "Upload file"}
+                    Create Document
                   </Button>
-                </Box>
+                </Stack>
               </Box>
 
+              {/* Documents Section */}
+              {documentsLoading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : (
+                documents.length > 0 && (
+                  <>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 1.5, color: "text.secondary", fontWeight: 600 }}
+                    >
+                      📝 Documents ({documents.length})
+                    </Typography>
+                    <Stack spacing={2} sx={{ mb: 3 }}>
+                      {documents.map((doc) => {
+                        const updatedAt = doc.updated_at
+                          ? new Date(doc.updated_at)
+                          : null;
+                        const relativeTime =
+                          updatedAt && !Number.isNaN(updatedAt.getTime())
+                            ? formatDistanceToNow(updatedAt, {
+                                addSuffix: true,
+                              })
+                            : "";
+                        const creatorName = doc.created_by
+                          ? `${doc.created_by.first_name || ""} ${
+                              doc.created_by.last_name || ""
+                            }`.trim()
+                          : "";
+
+                        return (
+                          <Stack
+                            key={doc.id}
+                            direction={{ xs: "column", md: "row" }}
+                            spacing={2}
+                            alignItems={{ xs: "flex-start", md: "center" }}
+                            sx={{
+                              p: 2.5,
+                              borderRadius: "16px",
+                              border: "1px solid rgba(16, 185, 129, 0.2)",
+                              bgcolor: "rgba(16, 185, 129, 0.03)",
+                              boxShadow: "0 6px 14px rgba(15, 23, 42, 0.05)",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                              "&:hover": {
+                                borderColor: "rgba(16, 185, 129, 0.4)",
+                                bgcolor: "rgba(16, 185, 129, 0.06)",
+                              },
+                            }}
+                            onClick={() =>
+                              router.push(
+                                `/project-listing/${id}/documents/${doc.id}`
+                              )
+                            }
+                          >
+                            <Box
+                              sx={{
+                                width: 52,
+                                height: 52,
+                                borderRadius: "14px",
+                                bgcolor: "rgba(16, 185, 129, 0.12)",
+                                color: "#10B981",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                position: "relative",
+                              }}
+                            >
+                              <ArticleIcon />
+                              {doc.is_locked && (
+                                <LockIcon
+                                  sx={{
+                                    position: "absolute",
+                                    bottom: -4,
+                                    right: -4,
+                                    fontSize: 16,
+                                    color: "warning.main",
+                                    bgcolor: "white",
+                                    borderRadius: "50%",
+                                    p: 0.25,
+                                  }}
+                                />
+                              )}
+                            </Box>
+                            <Box sx={{ flexGrow: 1, width: "100%" }}>
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  fontWeight: 600,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                {doc.title}
+                                {doc.is_locked && (
+                                  <Chip
+                                    label="Locked"
+                                    size="small"
+                                    color="warning"
+                                    sx={{ height: 20, fontSize: 10 }}
+                                  />
+                                )}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Document • Updated {relativeTime}
+                                {creatorName && ` • Created by ${creatorName}`}
+                              </Typography>
+                            </Box>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<EditIcon fontSize="small" />}
+                                onClick={() =>
+                                  router.push(
+                                    `/project-listing/${id}/documents/${doc.id}`
+                                  )
+                                }
+                                sx={{
+                                  borderColor: "#10B981",
+                                  color: "#10B981",
+                                  "&:hover": {
+                                    borderColor: "#059669",
+                                    bgcolor: "rgba(16, 185, 129, 0.05)",
+                                  },
+                                }}
+                              >
+                                Open
+                              </Button>
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                sx={{
+                                  bgcolor: "rgba(254, 226, 226, 0.6)",
+                                  "&:hover": {
+                                    bgcolor: "rgba(248, 113, 113, 0.2)",
+                                  },
+                                }}
+                              >
+                                <DeleteOutlineIcon />
+                              </IconButton>
+                            </Stack>
+                          </Stack>
+                        );
+                      })}
+                    </Stack>
+                  </>
+                )
+              )}
+
+              {/* Uploaded Files Section */}
               {attachmentsLoading ? (
                 <Box
                   sx={{
@@ -1980,7 +2212,7 @@ const ProjectDetailsPage = () => {
                 >
                   <CircularProgress size={28} />
                 </Box>
-              ) : attachments.length === 0 ? (
+              ) : attachments.length === 0 && documents.length === 0 ? (
                 <Box
                   sx={{
                     textAlign: "center",
@@ -1994,118 +2226,136 @@ const ProjectDetailsPage = () => {
                     sx={{ fontSize: 56, color: "text.disabled", mb: 1 }}
                   />
                   <Typography variant="subtitle1" color="text.secondary">
-                    No project files yet
+                    No files or documents yet
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Upload meeting notes, requirements, and other key documents
-                    here.
+                    Upload files or create collaborative documents for your
+                    team.
                   </Typography>
                 </Box>
-              ) : (
-                <Stack spacing={2}>
-                  {attachments.map((file) => {
-                    const uploadedAt = file.uploaded_at
-                      ? new Date(file.uploaded_at)
-                      : null;
-                    const hasValidDate =
-                      uploadedAt && !Number.isNaN(uploadedAt.getTime());
-                    const relativeTime = hasValidDate
-                      ? formatDistanceToNow(uploadedAt!, { addSuffix: true })
-                      : "";
-                    const extension = file.file_name?.includes(".")
-                      ? file.file_name.split(".").pop()?.toUpperCase()
-                      : undefined;
-                    const uploaderName = file.uploaded_by
-                      ? `${file.uploaded_by.first_name || ""} ${
-                          file.uploaded_by.last_name || ""
-                        }`.trim()
-                      : "";
+              ) : attachments.length === 0 ? null : (
+                <>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1.5, color: "text.secondary", fontWeight: 600 }}
+                  >
+                    📎 Uploaded Files ({attachments.length})
+                  </Typography>
+                  <Stack spacing={2}>
+                    {attachments.map((file) => {
+                      const uploadedAt = file.uploaded_at
+                        ? new Date(file.uploaded_at)
+                        : null;
+                      const hasValidDate =
+                        uploadedAt && !Number.isNaN(uploadedAt.getTime());
+                      const relativeTime = hasValidDate
+                        ? formatDistanceToNow(uploadedAt!, { addSuffix: true })
+                        : "";
+                      const extension = file.file_name?.includes(".")
+                        ? file.file_name.split(".").pop()?.toUpperCase()
+                        : undefined;
+                      const uploaderName = file.uploaded_by
+                        ? `${file.uploaded_by.first_name || ""} ${
+                            file.uploaded_by.last_name || ""
+                          }`.trim()
+                        : "";
 
-                    return (
-                      <Stack
-                        key={file.id}
-                        direction={{ xs: "column", md: "row" }}
-                        spacing={2}
-                        alignItems={{ xs: "flex-start", md: "center" }}
-                        sx={{
-                          p: 2.5,
-                          borderRadius: "16px",
-                          border: "1px solid rgba(148, 163, 184, 0.18)",
-                          bgcolor: "rgba(249, 250, 251, 0.8)",
-                          boxShadow: "0 6px 14px rgba(15, 23, 42, 0.05)",
-                        }}
-                      >
-                        <Box
+                      return (
+                        <Stack
+                          key={file.id}
+                          direction={{ xs: "column", md: "row" }}
+                          spacing={2}
+                          alignItems={{ xs: "flex-start", md: "center" }}
                           sx={{
-                            width: 52,
-                            height: 52,
-                            borderRadius: "14px",
-                            bgcolor: "rgba(30, 58, 138, 0.12)",
-                            color: "var(--primary-color-1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            p: 2.5,
+                            borderRadius: "16px",
+                            border: "1px solid rgba(148, 163, 184, 0.18)",
+                            bgcolor: "rgba(249, 250, 251, 0.8)",
+                            boxShadow: "0 6px 14px rgba(15, 23, 42, 0.05)",
                           }}
                         >
-                          <DescriptionIcon />
-                        </Box>
-                        <Box sx={{ flexGrow: 1, width: "100%" }}>
-                          <Typography
-                            variant="subtitle2"
-                            sx={{ fontWeight: 600 }}
-                          >
-                            {file.file_name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {extension ? `${extension} • ` : ""}
-                            {formatFileSize(file.file_size)}{" "}
-                            {relativeTime && `• Uploaded ${relativeTime}`}
-                            {uploaderName && ` by ${uploaderName}`}
-                          </Typography>
-                        </Box>
-                        <Stack direction="row" spacing={1}>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<VisibilityIcon fontSize="small" />}
-                            onClick={() =>
-                              id &&
-                              router.push(
-                                `/project-listing/${id}/files?file=${file.id}`
-                              )
-                            }
-                          >
-                            View
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={file.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            startIcon={<DownloadIcon fontSize="small" />}
-                          >
-                            Download
-                          </Button>
-                          <IconButton
-                            color="error"
-                            onClick={() => handleDeleteAttachment(file.id)}
+                          <Box
                             sx={{
-                              bgcolor: "rgba(254, 226, 226, 0.6)",
-                              "&:hover": {
-                                bgcolor: "rgba(248, 113, 113, 0.2)",
-                              },
+                              width: 52,
+                              height: 52,
+                              borderRadius: "14px",
+                              bgcolor: "rgba(30, 58, 138, 0.12)",
+                              color: "var(--primary-color-1)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
-                            <DeleteOutlineIcon />
-                          </IconButton>
+                            <DescriptionIcon />
+                          </Box>
+                          <Box sx={{ flexGrow: 1, width: "100%" }}>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {file.file_name}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {extension ? `${extension} • ` : ""}
+                              {formatFileSize(file.file_size)}{" "}
+                              {relativeTime && `• Uploaded ${relativeTime}`}
+                              {uploaderName && ` by ${uploaderName}`}
+                            </Typography>
+                          </Box>
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              startIcon={<VisibilityIcon fontSize="small" />}
+                              onClick={() =>
+                                id &&
+                                router.push(
+                                  `/project-listing/${id}/files?file=${file.id}`
+                                )
+                              }
+                            >
+                              View
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              component="a"
+                              href={file.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              startIcon={<DownloadIcon fontSize="small" />}
+                            >
+                              Download
+                            </Button>
+                            <IconButton
+                              color="error"
+                              onClick={() => handleDeleteAttachment(file.id)}
+                              sx={{
+                                bgcolor: "rgba(254, 226, 226, 0.6)",
+                                "&:hover": {
+                                  bgcolor: "rgba(248, 113, 113, 0.2)",
+                                },
+                              }}
+                            >
+                              <DeleteOutlineIcon />
+                            </IconButton>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    );
-                  })}
-                </Stack>
+                      );
+                    })}
+                  </Stack>
+                </>
               )}
+
+              {/* Create Document Modal */}
+              <CreateDocumentModal
+                open={createDocModalOpen}
+                onClose={() => setCreateDocModalOpen(false)}
+                onSubmit={handleCreateDocument}
+              />
             </CardContent>
           </Card>
         </motion.div>

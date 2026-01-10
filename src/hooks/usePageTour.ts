@@ -1,17 +1,30 @@
 "use client";
+// =============================================================================
+// TOUR FEATURE DISABLED - This hook is now a no-op
+// To re-enable, uncomment the original code below
+// =============================================================================
+
+/**
+ * Hook to automatically trigger tour when user visits a page for the first time.
+ * 
+ * DISABLED: Tour feature has been commented out due to issues.
+ * This is now a no-op function that does nothing.
+ *
+ * Usage: Add `usePageTour()` at the top of your page component.
+ */
+export const usePageTour = () => {
+  // DISABLED: Tour feature is commented out - do nothing
+  return;
+};
+
+// --- ORIGINAL CODE (DISABLED) ---
+/*
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTour, isTourCompleted } from '@/contextapi/TourContext';
 import { getTourByRoute } from '@/utils/tours/tourConfigs';
 import { useAppselector } from '@/redux/store';
 
-/**
- * Hook to automatically trigger tour when user visits a page for the first time.
- * It is role-aware: Administrator, Manager and Employee each get their own tour key
- * so tours can be tailored and tracked independently.
- *
- * Usage: Add `usePageTour()` at the top of your page component.
- */
 export const usePageTour = () => {
   const pathname = usePathname();
   const { runTour } = useTour();
@@ -47,4 +60,5 @@ export const usePageTour = () => {
     return () => clearTimeout(timer);
   }, [pathname, roleSegment, runTour]);
 };
+*/
 

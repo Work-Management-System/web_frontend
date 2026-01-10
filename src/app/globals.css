@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tippy.js styles for slash commands */
+.tippy-box {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.tippy-content {
+  padding: 0;
+}
+
+.tippy-arrow {
+  display: none;
+}

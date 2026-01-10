@@ -30,6 +30,8 @@ const protectedRoutes = [
   "/logout",
   "/profile",
   "/settings",
+  "/project-listing/[id]/documents",
+  "/project-listing/[id]/documents/[id]",
 ];
 
 const dynamicRoutePatterns = [
@@ -37,6 +39,8 @@ const dynamicRoutePatterns = [
   /^\/users\/[a-zA-Z0-9-]+$/,
   /^\/project-listing\/[a-zA-Z0-9-]+$/,
   /^\/project-listing\/[a-zA-Z0-9-]+\/files$/,
+  /^\/project-listing\/[a-zA-Z0-9-]+\/documents$/,
+  /^\/project-listing\/[a-zA-Z0-9-]+\/documents\/[a-zA-Z0-9-]+$/,
 ];
 
 function normalizePath(pathname: string): string {
@@ -64,9 +68,9 @@ export default async function middleware(req: NextRequest) {
 
   // Block broken image URLs immediately to prevent 404 loops
   if (
-    pathname.includes('profilePlaceholder') ||
-    pathname.includes('a6143582309785dca610') ||
-    pathname.includes('/static/media/profilePlaceholder')
+    pathname.includes("profilePlaceholder") ||
+    pathname.includes("a6143582309785dca610") ||
+    pathname.includes("/static/media/profilePlaceholder")
   ) {
     return new NextResponse(null, { status: 404 });
   }

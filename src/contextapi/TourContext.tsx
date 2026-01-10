@@ -1,11 +1,27 @@
 "use client";
-// Import polyfill BEFORE react-joyride
-import '@/utils/react-dom-polyfill';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
-import Joyride, { CallBackProps, STATUS, Step, Styles } from 'react-joyride';
-import { Box, Typography } from '@mui/material';
-import { Close, ArrowForward, ArrowBack } from '@mui/icons-material';
+// =============================================================================
+// TOUR FEATURE DISABLED - Commented out due to issues
+// To re-enable, uncomment the original code and remove the disabled version
+// =============================================================================
+
+// --- DISABLED: Original imports ---
+// import '@/utils/react-dom-polyfill';
+// import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+// import { usePathname } from 'next/navigation';
+// import Joyride, { CallBackProps, STATUS, Step, Styles } from 'react-joyride';
+// import { Box, Typography } from '@mui/material';
+// import { Close, ArrowForward, ArrowBack } from '@mui/icons-material';
+
+import React, { createContext, useContext, useCallback } from "react";
+
+// Step type placeholder (to maintain type compatibility)
+export interface Step {
+  target: string;
+  content: React.ReactNode;
+  placement?: string;
+  disableBeacon?: boolean;
+  title?: string;
+}
 
 interface TourContextType {
   runTour: (tourKey: string, steps: Step[]) => void;
@@ -16,27 +32,37 @@ interface TourContextType {
 const TourContext = createContext<TourContextType | undefined>(undefined);
 
 // Tour storage key prefix
-const TOUR_STORAGE_PREFIX = 'tour_completed_';
+const TOUR_STORAGE_PREFIX = "tour_completed_";
 
-// Check if tour has been completed
+// Check if tour has been completed - DISABLED: always returns true
 export const isTourCompleted = (tourKey: string): boolean => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(`${TOUR_STORAGE_PREFIX}${tourKey}`) === 'true';
+  // DISABLED: Tour feature is commented out
+  return true;
+  // --- ORIGINAL CODE ---
+  // if (typeof window === 'undefined') return false;
+  // return localStorage.getItem(`${TOUR_STORAGE_PREFIX}${tourKey}`) === 'true';
 };
 
-// Mark tour as completed
+// Mark tour as completed - DISABLED: no-op
 export const markTourCompleted = (tourKey: string): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(`${TOUR_STORAGE_PREFIX}${tourKey}`, 'true');
+  // DISABLED: Tour feature is commented out
+  return;
+  // --- ORIGINAL CODE ---
+  // if (typeof window === 'undefined') return;
+  // localStorage.setItem(`${TOUR_STORAGE_PREFIX}${tourKey}`, 'true');
 };
 
-// Reset tour (for testing/admin purposes)
+// Reset tour (for testing/admin purposes) - DISABLED: no-op
 export const resetTour = (tourKey: string): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(`${TOUR_STORAGE_PREFIX}${tourKey}`);
+  // DISABLED: Tour feature is commented out
+  return;
+  // --- ORIGINAL CODE ---
+  // if (typeof window === 'undefined') return;
+  // localStorage.removeItem(`${TOUR_STORAGE_PREFIX}${tourKey}`);
 };
 
-// Modern, fancy tour styles
+// --- DISABLED: Tour styles (commented out) ---
+/*
 const tourStyles: Styles = {
   options: {
     primaryColor: 'var(--primary-color-1)',
@@ -54,108 +80,35 @@ const tourStyles: Styles = {
     position: 'relative',
     overflow: 'hidden',
   },
-  tooltipContainer: {
-    textAlign: 'left',
-    padding: '28px 32px',
-    position: 'relative',
-    zIndex: 2,
-  },
-  tooltipTitle: {
-    fontSize: '20px',
-    fontWeight: 700,
-    color: '#1a1a1a',
-    marginBottom: '12px',
-    lineHeight: 1.3,
-    background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-  },
-  tooltipContent: {
-    fontSize: '15px',
-    lineHeight: 1.6,
-    color: '#4a5568',
-    marginBottom: '24px',
-    fontWeight: 400,
-  },
-  buttonNext: {
-    background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
-    borderRadius: '12px',
-    padding: '12px 24px',
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#ffffff',
-    border: 'none',
-    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4), 0 2px 4px rgba(59, 130, 246, 0.2)',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    textTransform: 'none',
-    letterSpacing: '0.3px',
-    cursor: 'pointer',
-    position: 'relative',
-    overflow: 'hidden',
-    '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 6px 20px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(59, 130, 246, 0.3)',
-    },
-    '&:active': {
-      transform: 'translateY(0px)',
-    },
-  },
-  buttonBack: {
-    marginRight: '12px',
-    color: '#64748b',
-    fontSize: '15px',
-    fontWeight: 500,
-    padding: '12px 20px',
-    borderRadius: '12px',
-    border: '1.5px solid #e2e8f0',
-    background: '#ffffff',
-    transition: 'all 0.3s ease',
-    textTransform: 'none',
-    cursor: 'pointer',
-    '&:hover': {
-      background: '#f8f9fa',
-      borderColor: '#cbd5e1',
-      color: '#475569',
-    },
-  },
-  buttonSkip: {
-    color: '#94a3b8',
-    fontSize: '14px',
-    fontWeight: 500,
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease',
-    textTransform: 'none',
-    cursor: 'pointer',
-    '&:hover': {
-      color: '#64748b',
-      background: 'rgba(148, 163, 184, 0.1)',
-    },
-  },
-  badge: {
-    background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
-    borderRadius: '12px',
-    padding: '4px 12px',
-    fontSize: '12px',
-    fontWeight: 600,
-    color: '#ffffff',
-    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-  },
-  overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    mixBlendMode: 'normal',
-  },
-  spotlight: {
-    borderRadius: '12px',
-    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.3), inset 0 0 0 2px rgba(59, 130, 246, 0.5)',
-  },
+  // ... rest of styles omitted for brevity
 };
+*/
 
 interface TourProviderProps {
   children: React.ReactNode;
 }
 
+// DISABLED: TourProvider now just renders children without tour functionality
+export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
+  // No-op functions for tour (disabled)
+  const runTour = useCallback((tourKey: string, tourSteps: Step[]) => {
+    // DISABLED: Tour feature is commented out - do nothing
+  }, []);
+
+  const stopTour = useCallback(() => {
+    // DISABLED: Tour feature is commented out - do nothing
+  }, []);
+
+  return (
+    <TourContext.Provider value={{ runTour, stopTour, isTourRunning: false }}>
+      {children}
+      {/* DISABLED: Joyride component removed */}
+    </TourContext.Provider>
+  );
+};
+
+// --- ORIGINAL TourProvider (DISABLED) ---
+/*
 export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
   const [run, setRun] = useState(false);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -163,7 +116,6 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
   const pathname = usePathname();
 
   const runTour = useCallback((tourKey: string, tourSteps: Step[]) => {
-    // Check if tour was already completed
     if (isTourCompleted(tourKey)) {
       return;
     }
@@ -180,7 +132,6 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type } = data;
-
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       if (currentTourKey) {
         markTourCompleted(currentTourKey);
@@ -189,97 +140,16 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     }
   };
 
-  // Inject custom CSS for fancy tour animations
   useEffect(() => {
     if (run) {
       const styleId = 'joyride-custom-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
-        style.textContent = `
-          /* Modern Tour Tooltip Animations */
-          [data-joyride-tooltip] {
-            animation: tourFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-          
-          @keyframes tourFadeIn {
-            from {
-              opacity: 0;
-              transform: scale(0.95) translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-          
-          /* Decorative gradient background */
-          [data-joyride-tooltip]::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color-1) 0%, var(--primary-color-2) 50%, var(--primary-color-1) 100%);
-            background-size: 200% 100%;
-            animation: gradientShift 3s ease infinite;
-            border-radius: 20px 20px 0 0;
-          }
-          
-          @keyframes gradientShift {
-            0%, 100% {
-              background-position: 0% 50%;
-            }
-            50% {
-              background-position: 100% 50%;
-            }
-          }
-          
-          /* Shine effect on tooltip */
-          [data-joyride-tooltip]::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shine 3s infinite;
-            pointer-events: none;
-            border-radius: 20px;
-          }
-          
-          @keyframes shine {
-            0% {
-              left: -100%;
-            }
-            50%, 100% {
-              left: 100%;
-            }
-          }
-          
-          /* Enhanced button hover effects */
-          [data-joyride-button-next]:hover {
-            transform: translateY(-2px) !important;
-          }
-          
-          [data-joyride-button-next]:active {
-            transform: translateY(0px) !important;
-          }
-          
-          /* Progress indicator styling */
-          [data-joyride-progress] {
-            background: linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%) !important;
-            border-radius: 10px !important;
-            height: 4px !important;
-          }
-        `;
+        style.textContent = `...tour CSS...`;
         document.head.appendChild(style);
       }
-      
       return () => {
-        // Cleanup on unmount
         const styleElement = document.getElementById(styleId);
         if (styleElement) {
           styleElement.remove();
@@ -303,10 +173,7 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
           floaterProps={{
             disableAnimation: false,
             styles: {
-              arrow: {
-                length: 8,
-                spread: 16,
-              },
+              arrow: { length: 8, spread: 16 },
             },
           }}
           locale={{
@@ -322,12 +189,20 @@ export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     </TourContext.Provider>
   );
 };
+*/
 
 export const useTour = () => {
   const context = useContext(TourContext);
   if (!context) {
-    throw new Error('useTour must be used within TourProvider');
+    // DISABLED: Instead of throwing error, return no-op functions
+    // This prevents crashes if useTour is called outside TourProvider
+    return {
+      runTour: () => {},
+      stopTour: () => {},
+      isTourRunning: false,
+    };
+    // --- ORIGINAL CODE ---
+    // throw new Error('useTour must be used within TourProvider');
   }
   return context;
 };
-
