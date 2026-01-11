@@ -1010,7 +1010,7 @@ const LoginPage: React.FC = () => {
           >
             {tenantDetails.welcomeNote || "Welcome"}
               </Typography>
-          {tenantDetails.tagline && (
+          {/* {tenantDetails.tagline && (
               <Typography
                 sx={{
                 fontSize: isMobile ? "0.875rem" : "1rem",
@@ -1021,7 +1021,7 @@ const LoginPage: React.FC = () => {
             >
               {tenantDetails.tagline}
               </Typography>
-          )}
+          )} */}
             </Box>
 
         {/* Step 1: Email Entry */}
