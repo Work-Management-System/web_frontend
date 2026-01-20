@@ -405,12 +405,12 @@ const LoginPage: React.FC = () => {
           // CRITICAL: If response says "Fallback to base domain" with no subdomain, 
           // it means the backend couldn't find the user in the database
           // The backend only returns fallback when getTenantSubdomainByEmail returns null
-          if (isFallbackResponse && !hasSubdomain) {
-            console.log('Rejecting: Fallback response with no subdomain indicates user not found');
-            toast.error("No account found with this email address. Please check your email and try again.");
-            setLoading(false);
-            return;
-          }
+          // if (isFallbackResponse && !hasSubdomain) {
+          //   console.log('Rejecting: Fallback response with no subdomain indicates user not found');
+          //   toast.error("No account found with this email address. Please check your email and try again.");
+          //   setLoading(false);
+          //   return;
+          // }
           
           // Additional check: If response status is not 200, user doesn't exist
           if (response.status !== 200) {

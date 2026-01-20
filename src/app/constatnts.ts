@@ -32,8 +32,6 @@ export enum AnnouncementStatus {
 }
 
 export enum RoleNames {
-    Alumni = 'Alumni',
-    Student = 'Student',
     Administrator = 'Administrator',
     All = 'All'
 }
