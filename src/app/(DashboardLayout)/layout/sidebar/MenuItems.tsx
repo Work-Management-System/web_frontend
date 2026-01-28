@@ -12,6 +12,7 @@ import SummarizeIcon from "@mui/icons-material/Summarize";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import BeachAccessIcon from "@mui/icons-material/BeachAccess";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
+import ChatIcon from "@mui/icons-material/Chat";
 
 const MenuItems = [
   {
@@ -133,6 +134,14 @@ const MenuItems = [
     icon: SubscriptionsIcon,
     href: "/subscriptions-listing",
     group: "Subscriptions",
+  },
+  {
+    id: uniqueId(),
+    title: "Chat",
+    key: "chat",
+    icon: ChatIcon,
+    href: "/chat",
+    group: "Communication",
   },
 ];
 

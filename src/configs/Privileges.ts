@@ -104,6 +104,13 @@ const privilegeModules: PrivilegeModule[] = [
     key: "subscriptions-listing",
     permissions: ["create", "read", "update", "delete"],
   },
+  
+  // Chat
+  {
+    label: "Chat",
+    key: "chat",
+    permissions: ["create", "read", "update", "delete"],
+  },
 ];
 
 export default privilegeModules;

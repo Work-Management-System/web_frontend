@@ -4,6 +4,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from 'redux-persist/lib/storage';
 import authReducer from '@/redux/features/authSlice';
 import chatReducer from '@/redux/features/chatListSlice';
+import spacesReducer from '@/redux/features/spacesSlice';
 import roleReducer from '@/redux/features/roleSlice';
 import userReducer from '@/redux/features/userSlice';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
@@ -37,6 +38,7 @@ const appReducer = combineReducers({
   role: roleReducer,
   user: userReducer,
   chat: chatReducer,
+  spaces: spacesReducer,
 });
 
 const rootReducer = (state: any, action: any) => {
