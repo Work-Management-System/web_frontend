@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   List,
@@ -17,20 +17,20 @@ import {
   Divider,
   InputAdornment,
   Chip,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import TagIcon from '@mui/icons-material/Tag';
-import GroupsIcon from '@mui/icons-material/Groups';
-import WorkspacesIcon from '@mui/icons-material/Workspaces';
-import { Space, SpaceType } from '@/redux/features/spacesSlice';
-import { useAppselector } from '@/redux/store';
-import createAxiosInstance from '@/app/axiosInstance';
-import CreateSpaceDialog from './CreateSpaceDialog';
-import CreateDMDialog from './CreateDMDialog';
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import TagIcon from "@mui/icons-material/Tag";
+import GroupsIcon from "@mui/icons-material/Groups";
+import WorkspacesIcon from "@mui/icons-material/Workspaces";
+import { Space, SpaceType } from "@/redux/features/spacesSlice";
+import { useAppselector } from "@/redux/store";
+import createAxiosInstance from "@/app/axiosInstance";
+import CreateSpaceDialog from "./CreateSpaceDialog";
+import CreateDMDialog from "./CreateDMDialog";
 
 interface SpacesSidebarProps {
   spaces: Space[];
@@ -59,7 +59,7 @@ export default function SpacesSidebar({
   onSpaceSelect,
   onSpaceCreated,
 }: SpacesSidebarProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [friendsExpanded, setFriendsExpanded] = useState(true);
   const [spacesExpanded, setSpacesExpanded] = useState(true);
   const [openCreateSpace, setOpenCreateSpace] = useState(false);
@@ -70,11 +70,13 @@ export default function SpacesSidebar({
 
   // Debug: Log unread counts
   useEffect(() => {
-    console.log('Unread counts updated:', unreadCounts);
-    spaces.forEach(space => {
+    console.log("Unread counts updated:", unreadCounts);
+    spaces.forEach((space) => {
       const count = unreadCounts[space.id] || 0;
       if (count > 0) {
-        console.log(`Space ${space.id} (${space.name || 'DM'}) has ${count} unread messages`);
+        console.log(
+          `Space ${space.id} (${space.name || "DM"}) has ${count} unread messages`,
+        );
       }
     });
   }, [unreadCounts, spaces]);
@@ -95,22 +97,23 @@ export default function SpacesSidebar({
   });
 
   const filteredSpaces = groupSpaces.filter((space) =>
-    space.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    space.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const getSpaceDisplayName = (space: Space): string => {
     if (space.type === SpaceType.DM) {
       if ((space as any).otherMember) {
         const other = (space as any).otherMember;
-        const name = `${other.first_name || ''} ${other.last_name || ''}`.trim();
+        const name =
+          `${other.first_name || ""} ${other.last_name || ""}`.trim();
         if (name) return name;
       }
-      if (space.name && space.name.trim() && space.name !== 'Unnamed Space') {
+      if (space.name && space.name.trim() && space.name !== "Unnamed Space") {
         return space.name;
       }
-      return 'Loading...';
+      return "Loading...";
     }
-    return space.name || 'Unnamed Space';
+    return space.name || "Unnamed Space";
   };
 
   const getSpaceAvatar = (space: Space): string => {
@@ -118,9 +121,9 @@ export default function SpacesSidebar({
       return space.otherMember.profile_image;
     }
     if (space.type === SpaceType.DM && space.otherMember) {
-      return `${space.otherMember.first_name?.[0] || ''}${space.otherMember.last_name?.[0] || ''}`;
+      return `${space.otherMember.first_name?.[0] || ""}${space.otherMember.last_name?.[0] || ""}`;
     }
-    return space.name?.[0] || '?';
+    return space.name?.[0] || "?";
   };
 
   const getSpaceIcon = (type: SpaceType) => {
@@ -139,7 +142,7 @@ export default function SpacesSidebar({
   };
 
   const formatLastMessageTime = (date: string) => {
-    if (!date) return '';
+    if (!date) return "";
     const messageDate = new Date(date);
     const now = new Date();
     const diffMs = now.getTime() - messageDate.getTime();
@@ -147,28 +150,46 @@ export default function SpacesSidebar({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Now';
+    if (diffMins < 1) return "Now";
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays === 1) return 'Yesterday';
+    if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d`;
-    return messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return messageDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // Generate consistent colors for avatars
   const getAvatarColor = (name: string) => {
     const colors = [
-      '#5682a3', '#e17076', '#7bc862', '#faa05a', '#6ec9cb',
-      '#ee7aae', '#a695e7', '#65aadd', '#ee7aae', '#ffc764',
+      "#5682a3",
+      "#e17076",
+      "#7bc862",
+      "#faa05a",
+      "#6ec9cb",
+      "#ee7aae",
+      "#a695e7",
+      "#65aadd",
+      "#ee7aae",
+      "#ffc764",
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fff' }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        bgcolor: "#fff",
+      }}
+    >
       {/* Search Header */}
-      <Box sx={{ p: 2, borderBottom: '1px solid #e8e8e8' }}>
+      <Box sx={{ p: 2, borderBottom: "1px solid #e8e8e8" }}>
         <TextField
           fullWidth
           size="small"
@@ -178,34 +199,34 @@ export default function SpacesSidebar({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#999', fontSize: 20 }} />
+                <SearchIcon sx={{ color: "#999", fontSize: 20 }} />
               </InputAdornment>
             ),
           }}
           sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
-              bgcolor: '#f4f4f4',
-              '& fieldset': {
-                border: 'none',
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
+              bgcolor: "#f4f4f4",
+              "& fieldset": {
+                border: "none",
               },
-              '&:hover fieldset': {
-                border: 'none',
+              "&:hover fieldset": {
+                border: "none",
               },
-              '&.Mui-focused fieldset': {
-                border: '1px solid #1a73e8',
+              "&.Mui-focused fieldset": {
+                border: "1px solid #1a73e8",
               },
             },
-            '& .MuiInputBase-input': {
+            "& .MuiInputBase-input": {
               py: 1,
-              fontSize: '0.875rem',
+              fontSize: "0.875rem",
             },
           }}
         />
       </Box>
 
       {/* Scrollable Content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ flex: 1, overflow: "auto" }}>
         {/* Friends Section */}
         <Box>
           <ListItemButton
@@ -213,7 +234,7 @@ export default function SpacesSidebar({
             sx={{
               py: 1.5,
               px: 2,
-              '&:hover': { bgcolor: '#f8f9fa' },
+              "&:hover": { bgcolor: "#f8f9fa" },
             }}
           >
             <Typography
@@ -221,17 +242,17 @@ export default function SpacesSidebar({
               sx={{
                 flex: 1,
                 fontWeight: 600,
-                color: '#8e8e8e',
-                letterSpacing: '0.5px',
-                fontSize: '0.7rem',
+                color: "#8e8e8e",
+                letterSpacing: "0.5px",
+                fontSize: "0.7rem",
               }}
             >
               FRIENDS
             </Typography>
             {friendsExpanded ? (
-              <ExpandLessIcon sx={{ color: '#8e8e8e', fontSize: 20 }} />
+              <ExpandLessIcon sx={{ color: "#8e8e8e", fontSize: 20 }} />
             ) : (
-              <ExpandMoreIcon sx={{ color: '#8e8e8e', fontSize: 20 }} />
+              <ExpandMoreIcon sx={{ color: "#8e8e8e", fontSize: 20 }} />
             )}
           </ListItemButton>
           <Collapse in={friendsExpanded}>
@@ -248,10 +269,12 @@ export default function SpacesSidebar({
                   const unreadCount = unreadCounts[space.id] || 0;
                   const hasUnread = unreadCount > 0;
                   const isSelected = activeSpaceId === space.id;
-                  
+
                   // Debug logging for badge rendering
                   if (unreadCount > 0) {
-                    console.log(`[SpacesSidebar] Rendering badge for ${displayName}: ${unreadCount} unread`);
+                    console.log(
+                      `[SpacesSidebar] Rendering badge for ${displayName}: ${unreadCount} unread`,
+                    );
                   }
 
                   return (
@@ -262,42 +285,45 @@ export default function SpacesSidebar({
                         sx={{
                           py: 1.5,
                           px: 2,
-                          '&.Mui-selected': {
-                            bgcolor: '#e7f3ff',
-                            borderLeft: '3px solid #1a73e8',
-                            '&:hover': { bgcolor: '#e7f3ff' },
+                          "&.Mui-selected": {
+                            bgcolor: "#e7f3ff",
+                            borderLeft: "3px solid #1a73e8",
+                            "&:hover": { bgcolor: "#e7f3ff" },
                           },
-                          '&:hover': {
-                            bgcolor: '#f5f5f5',
+                          "&:hover": {
+                            bgcolor: "#f5f5f5",
                           },
                         }}
                       >
                         <Badge
                           overlap="circular"
-                          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                          anchorOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
+                          }}
                           badgeContent={unreadCount}
                           invisible={!hasUnread}
                           sx={{
-                            '& .MuiBadge-badge': {
-                              bgcolor: '#25D366',
-                              color: '#fff',
+                            "& .MuiBadge-badge": {
+                              bgcolor: "#25D366",
+                              color: "#fff",
                               fontWeight: 700,
-                              fontSize: '0.7rem',
+                              fontSize: "0.7rem",
                               minWidth: 20,
                               height: 20,
-                              borderRadius: '10px',
-                              border: '2px solid #fff',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                              borderRadius: "10px",
+                              border: "2px solid #fff",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                             },
                           }}
                         >
                           <Avatar
-                            src={space.otherMember?.profile_image || undefined}
+                            src={space.otherMember?.profile_image || ""}
                             sx={{
                               width: 48,
                               height: 48,
                               bgcolor: getAvatarColor(displayName),
-                              fontSize: '1rem',
+                              fontSize: "1rem",
                               fontWeight: 500,
                             }}
                           >
@@ -305,16 +331,22 @@ export default function SpacesSidebar({
                           </Avatar>
                         </Badge>
                         <Box sx={{ flex: 1, minWidth: 0, ml: 1.5 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: hasUnread ? 600 : 500,
-                                color: '#333',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                fontSize: '0.9rem',
+                                color: "#333",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                fontSize: "0.9rem",
                               }}
                             >
                               {displayName}
@@ -323,38 +355,48 @@ export default function SpacesSidebar({
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  color: hasUnread ? '#1a73e8' : '#8e8e8e',
+                                  color: hasUnread ? "#1a73e8" : "#8e8e8e",
                                   fontWeight: hasUnread ? 600 : 400,
-                                  fontSize: '0.75rem',
+                                  fontSize: "0.75rem",
                                   ml: 1,
                                   flexShrink: 0,
                                 }}
                               >
-                                {formatLastMessageTime(space.lastMessage.created_at)}
+                                {formatLastMessageTime(
+                                  space.lastMessage.created_at,
+                                )}
                               </Typography>
                             )}
                           </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              mt: 0.5,
+                            }}
+                          >
                             <Typography
                               variant="caption"
                               sx={{
-                                color: hasUnread ? '#333' : '#8e8e8e',
+                                color: hasUnread ? "#333" : "#8e8e8e",
                                 fontWeight: hasUnread ? 500 : 400,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                display: 'block',
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                display: "block",
                                 flex: 1,
-                                fontSize: '0.8rem',
+                                fontSize: "0.8rem",
                               }}
                             >
-                              {space.lastMessage?.content || 'Start a conversation'}
+                              {space.lastMessage?.content ||
+                                "Start a conversation"}
                             </Typography>
                             {/* Unread badge is now on the avatar */}
                           </Box>
                           {/* Tags */}
                           {space.tags && space.tags.length > 0 && (
-                            <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                            <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
                               {space.tags.map((tag: string, idx: number) => (
                                 <Chip
                                   key={idx}
@@ -362,9 +404,13 @@ export default function SpacesSidebar({
                                   size="small"
                                   sx={{
                                     height: 18,
-                                    fontSize: '0.65rem',
-                                    bgcolor: tag === 'High Priority' ? '#ff5722' : '#e0e0e0',
-                                    color: tag === 'High Priority' ? '#fff' : '#666',
+                                    fontSize: "0.65rem",
+                                    bgcolor:
+                                      tag === "High Priority"
+                                        ? "#ff5722"
+                                        : "#e0e0e0",
+                                    color:
+                                      tag === "High Priority" ? "#fff" : "#666",
                                   }}
                                 />
                               ))}
@@ -387,14 +433,14 @@ export default function SpacesSidebar({
             startIcon={<PersonAddIcon />}
             onClick={() => setOpenCreateDM(true)}
             sx={{
-              justifyContent: 'flex-start',
-              textTransform: 'none',
-              color: '#666',
+              justifyContent: "flex-start",
+              textTransform: "none",
+              color: "#666",
               fontWeight: 500,
               py: 1,
-              borderRadius: '8px',
-              '&:hover': {
-                bgcolor: '#f5f5f5',
+              borderRadius: "8px",
+              "&:hover": {
+                bgcolor: "#f5f5f5",
               },
             }}
           >
@@ -411,7 +457,7 @@ export default function SpacesSidebar({
             sx={{
               py: 1.5,
               px: 2,
-              '&:hover': { bgcolor: '#f8f9fa' },
+              "&:hover": { bgcolor: "#f8f9fa" },
             }}
           >
             <Typography
@@ -419,9 +465,9 @@ export default function SpacesSidebar({
               sx={{
                 flex: 1,
                 fontWeight: 600,
-                color: '#8e8e8e',
-                letterSpacing: '0.5px',
-                fontSize: '0.7rem',
+                color: "#8e8e8e",
+                letterSpacing: "0.5px",
+                fontSize: "0.7rem",
               }}
             >
               SPACES
@@ -435,15 +481,15 @@ export default function SpacesSidebar({
               sx={{
                 p: 0.5,
                 mr: 0.5,
-                '&:hover': { bgcolor: '#e8e8e8' },
+                "&:hover": { bgcolor: "#e8e8e8" },
               }}
             >
-              <AddIcon sx={{ fontSize: 18, color: '#8e8e8e' }} />
+              <AddIcon sx={{ fontSize: 18, color: "#8e8e8e" }} />
             </IconButton>
             {spacesExpanded ? (
-              <ExpandLessIcon sx={{ color: '#8e8e8e', fontSize: 20 }} />
+              <ExpandLessIcon sx={{ color: "#8e8e8e", fontSize: 20 }} />
             ) : (
-              <ExpandMoreIcon sx={{ color: '#8e8e8e', fontSize: 20 }} />
+              <ExpandMoreIcon sx={{ color: "#8e8e8e", fontSize: 20 }} />
             )}
           </ListItemButton>
           <Collapse in={spacesExpanded}>
@@ -461,19 +507,25 @@ export default function SpacesSidebar({
                   const hasUnread = unreadCount > 0;
                   const isSelected = activeSpaceId === space.id;
                   const spaceIcon = getSpaceIcon(space.type);
-                  
+
                   // Debug logging for badge rendering
                   if (unreadCount > 0) {
-                    console.log(`[SpacesSidebar] Rendering badge for space ${displayName}: ${unreadCount} unread`);
+                    console.log(
+                      `[SpacesSidebar] Rendering badge for space ${displayName}: ${unreadCount} unread`,
+                    );
                   }
 
                   // Space emoji/icon
                   const getSpaceEmoji = (name: string) => {
-                    if (name.toLowerCase().includes('crypto')) return '🪙';
-                    if (name.toLowerCase().includes('3d') || name.toLowerCase().includes('artist')) return '🎨';
-                    if (name.toLowerCase().includes('marketing')) return '📈';
-                    if (name.toLowerCase().includes('tech')) return '💻';
-                    return '💬';
+                    if (name.toLowerCase().includes("crypto")) return "🪙";
+                    if (
+                      name.toLowerCase().includes("3d") ||
+                      name.toLowerCase().includes("artist")
+                    )
+                      return "🎨";
+                    if (name.toLowerCase().includes("marketing")) return "📈";
+                    if (name.toLowerCase().includes("tech")) return "💻";
+                    return "💬";
                   };
 
                   return (
@@ -484,32 +536,35 @@ export default function SpacesSidebar({
                         sx={{
                           py: 1.5,
                           px: 2,
-                          '&.Mui-selected': {
-                            bgcolor: '#e7f3ff',
-                            borderLeft: '3px solid #1a73e8',
-                            '&:hover': { bgcolor: '#e7f3ff' },
+                          "&.Mui-selected": {
+                            bgcolor: "#e7f3ff",
+                            borderLeft: "3px solid #1a73e8",
+                            "&:hover": { bgcolor: "#e7f3ff" },
                           },
-                          '&:hover': {
-                            bgcolor: '#f5f5f5',
+                          "&:hover": {
+                            bgcolor: "#f5f5f5",
                           },
                         }}
                       >
                         <Badge
                           overlap="circular"
-                          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                          anchorOrigin={{
+                            vertical: "top",
+                            horizontal: "right",
+                          }}
                           badgeContent={unreadCount}
                           invisible={!hasUnread}
                           sx={{
-                            '& .MuiBadge-badge': {
-                              bgcolor: '#25D366',
-                              color: '#fff',
+                            "& .MuiBadge-badge": {
+                              bgcolor: "#25D366",
+                              color: "#fff",
                               fontWeight: 700,
-                              fontSize: '0.65rem',
+                              fontSize: "0.65rem",
                               minWidth: 18,
                               height: 18,
-                              borderRadius: '9px',
-                              border: '2px solid #fff',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                              borderRadius: "9px",
+                              border: "2px solid #fff",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                             },
                           }}
                         >
@@ -518,23 +573,29 @@ export default function SpacesSidebar({
                               width: 40,
                               height: 40,
                               bgcolor: getAvatarColor(displayName),
-                              fontSize: '1.25rem',
+                              fontSize: "1.25rem",
                             }}
                           >
                             {getSpaceEmoji(displayName)}
                           </Avatar>
                         </Badge>
                         <Box sx={{ flex: 1, minWidth: 0, ml: 1.5 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: hasUnread ? 600 : 500,
-                                color: '#333',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                fontSize: '0.9rem',
+                                color: "#333",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                fontSize: "0.9rem",
                               }}
                             >
                               {displayName}
@@ -543,14 +604,14 @@ export default function SpacesSidebar({
                             {false && hasUnread && (
                               <Box
                                 sx={{
-                                  bgcolor: '#1a73e8',
-                                  color: 'white',
-                                  borderRadius: '10px',
+                                  bgcolor: "#1a73e8",
+                                  color: "white",
+                                  borderRadius: "10px",
                                   px: 0.8,
                                   py: 0.2,
                                   minWidth: 20,
-                                  textAlign: 'center',
-                                  fontSize: '0.7rem',
+                                  textAlign: "center",
+                                  fontSize: "0.7rem",
                                   fontWeight: 600,
                                   ml: 1,
                                 }}
@@ -563,8 +624,8 @@ export default function SpacesSidebar({
                             <Typography
                               variant="caption"
                               sx={{
-                                color: '#8e8e8e',
-                                fontSize: '0.8rem',
+                                color: "#8e8e8e",
+                                fontSize: "0.8rem",
                               }}
                             >
                               {space.memberCount} members

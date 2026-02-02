@@ -129,7 +129,7 @@ const taskSchema = Yup.object({
   current_user_id: Yup.string().test(
     "is-uuid",
     "User ID must be a valid UUID",
-    (value) => (value ? isUUID(value) : true)
+    (value) => (value ? isUUID(value) : true),
   ),
   deadline_days: Yup.number()
     .min(0, "Days cannot be negative")
@@ -225,7 +225,7 @@ const KanbanBoard: React.FC = () => {
   // Extract value immediately to avoid enumeration warning
   const userId = useMemo(
     () => searchParams?.get("userId") || null,
-    [searchParams]
+    [searchParams],
   );
   const authData = useAppselector((state) => state.auth.value);
   const currentUserRole = useAppselector((state) => state.role.value);
@@ -249,7 +249,7 @@ const KanbanBoard: React.FC = () => {
 
     if (!isUnique) {
       throw new Error(
-        "Unable to generate a unique ticket number after maximum attempts"
+        "Unable to generate a unique ticket number after maximum attempts",
       );
     }
 
@@ -278,32 +278,32 @@ const KanbanBoard: React.FC = () => {
       filtered = filtered.filter(
         (report) =>
           report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          report.ticket_no.toLowerCase().includes(searchTerm.toLowerCase())
+          report.ticket_no.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     if (selectedUser) {
       filtered = filtered.filter(
-        (report) => report.current_user.id === selectedUser
+        (report) => report.current_user.id === selectedUser,
       );
     }
 
     if (selectedPriority) {
       filtered = filtered.filter(
-        (report) => report.priority === selectedPriority
+        (report) => report.priority === selectedPriority,
       );
     }
 
     if (selectedProject && selectedProject !== "") {
       filtered = filtered.filter(
-        (report) => report.project_id === selectedProject
+        (report) => report.project_id === selectedProject,
       );
     }
 
     // Department filter
     if (selectedDepartment && selectedDepartment !== "") {
       filtered = filtered.filter(
-        (report) => report.current_user.department === selectedDepartment
+        (report) => report.current_user.department === selectedDepartment,
       );
     }
 
@@ -331,10 +331,10 @@ const KanbanBoard: React.FC = () => {
       console.error(
         "Error fetching departments:",
         error.response?.data,
-        error.message
+        error.message,
       );
       toast.error(
-        error?.response?.data?.message || "Failed to fetch departments"
+        error?.response?.data?.message || "Failed to fetch departments",
       );
     } finally {
       setLoading(false);
@@ -342,12 +342,15 @@ const KanbanBoard: React.FC = () => {
   };
 
   const updateColumnTasks = (updatedReports: Report[]) => {
-    const tasksByColumn = columns.reduce((acc, column) => {
-      acc[column.id] = updatedReports.filter(
-        (report) => report.status === column.id
-      );
-      return acc;
-    }, {} as { [key: string]: Report[] });
+    const tasksByColumn = columns.reduce(
+      (acc, column) => {
+        acc[column.id] = updatedReports.filter(
+          (report) => report.status === column.id,
+        );
+        return acc;
+      },
+      {} as { [key: string]: Report[] },
+    );
     setColumnTasks(tasksByColumn);
   };
 
@@ -389,7 +392,7 @@ const KanbanBoard: React.FC = () => {
         try {
           const response = await axiosInstance.post(
             "/task-maangement",
-            payload
+            payload,
           );
           isUnique = true;
 
@@ -404,7 +407,7 @@ const KanbanBoard: React.FC = () => {
                 ...file,
                 uploaded_by: authData?.user?.id,
                 uploaded_at: new Date().toISOString(),
-              }
+              },
             );
           }
           setPendingAttachments([]);
@@ -413,7 +416,7 @@ const KanbanBoard: React.FC = () => {
           await fetchTasks();
 
           const selectedUser = modalUsers.find(
-            (user) => user?.id === values?.current_user_id
+            (user) => user?.id === values?.current_user_id,
           );
           const createdTask = {
             id: taskId,
@@ -441,7 +444,7 @@ const KanbanBoard: React.FC = () => {
         } catch (error) {
           if (
             error.response?.data?.message?.includes(
-              "Ticket number already exists"
+              "Ticket number already exists",
             )
           ) {
             attempts++;
@@ -453,7 +456,7 @@ const KanbanBoard: React.FC = () => {
 
       if (!isUnique) {
         throw new Error(
-          "Unable to create task: Could not generate a unique ticket number"
+          "Unable to create task: Could not generate a unique ticket number",
         );
       }
     } catch (error) {
@@ -462,11 +465,11 @@ const KanbanBoard: React.FC = () => {
         toast.error(
           `Failed to create task: ${
             error.response.data.message || "Unknown error"
-          } `
+          } `,
         );
       } else {
         toast.error(
-          `Failed to create task: ${error.message || "Network error"} `
+          `Failed to create task: ${error.message || "Network error"} `,
         );
       }
     } finally {
@@ -488,7 +491,7 @@ const KanbanBoard: React.FC = () => {
       await axiosInstance.patch(`/task-maangement/${taskToEdit.id}`, payload);
 
       const selectedUser = modalUsers.find(
-        (user) => user.id === values.current_user_id
+        (user) => user.id === values.current_user_id,
       );
 
       const updatedTask: Report = {
@@ -502,7 +505,7 @@ const KanbanBoard: React.FC = () => {
       };
 
       const updatedReports = reports.map((r) =>
-        r.id === taskToEdit.id ? updatedTask : r
+        r.id === taskToEdit.id ? updatedTask : r,
       );
       setFilteredReports(updatedReports);
       updateColumnTasks(updatedReports);
@@ -517,11 +520,11 @@ const KanbanBoard: React.FC = () => {
         toast.error(
           `Failed to update task: ${
             error.response.data.message || "Unknown error"
-          }`
+          }`,
         );
       } else {
         toast.error(
-          `Failed to update task: ${error.message || "Network error"}`
+          `Failed to update task: ${error.message || "Network error"}`,
         );
       }
     } finally {
@@ -593,7 +596,7 @@ const KanbanBoard: React.FC = () => {
   const usersWithTasks = React.useMemo(() => {
     return allUsers
       .filter((user) =>
-        reports.some((report) => report.current_user.id === user.id)
+        reports.some((report) => report.current_user.id === user.id),
       )
       .sort((a, b) => {
         const nameA = `${a.first_name} ${a.last_name || ""}`
@@ -1441,7 +1444,7 @@ const KanbanBoard: React.FC = () => {
                             if (projectId) {
                               try {
                                 const response = await axiosInstance.get(
-                                  `/project-management/project-team/${projectId}`
+                                  `/project-management/project-team/${projectId}`,
                                 );
                                 const teamMembers = response.data.data || [];
                                 const mappedUsers = teamMembers.map(
@@ -1450,13 +1453,13 @@ const KanbanBoard: React.FC = () => {
                                     first_name: member.user.first_name,
                                     last_name: member.user.last_name,
                                     profile_image: member.user.profile_image,
-                                  })
+                                  }),
                                 );
                                 setModalUsers(mappedUsers);
                               } catch (error) {
                                 console.error(
                                   "Failed to fetch project team members:",
-                                  error
+                                  error,
                                 );
                                 setModalUsers([]);
                               }
@@ -1538,7 +1541,7 @@ const KanbanBoard: React.FC = () => {
                         <FormControl
                           fullWidth
                           error={Boolean(
-                            touched.current_user_id && errors?.current_user_id
+                            touched.current_user_id && errors?.current_user_id,
                           )}
                           size="small"
                           sx={{ flex: 1 }}
@@ -1550,13 +1553,13 @@ const KanbanBoard: React.FC = () => {
                             }
                             value={
                               modalUsers.find(
-                                (u) => u.id === values.current_user_id
+                                (u) => u.id === values.current_user_id,
                               ) || null
                             }
                             onChange={(_, selectedUser) => {
                               setFieldValue(
                                 "current_user_id",
-                                selectedUser?.id || ""
+                                selectedUser?.id || "",
                               );
                             }}
                             disabled={!values.project_id}
@@ -1568,7 +1571,7 @@ const KanbanBoard: React.FC = () => {
                             }
                             renderInput={(params) => {
                               const selectedUser = modalUsers.find(
-                                (u) => u.id === values.current_user_id
+                                (u) => u.id === values.current_user_id,
                               );
 
                               return (
@@ -1578,7 +1581,7 @@ const KanbanBoard: React.FC = () => {
                                   size="small"
                                   error={Boolean(
                                     touched.current_user_id &&
-                                      errors?.current_user_id
+                                    errors?.current_user_id,
                                   )}
                                   helperText={
                                     touched.current_user_id &&
@@ -1591,7 +1594,10 @@ const KanbanBoard: React.FC = () => {
                                     startAdornment: selectedUser ? (
                                       <>
                                         <Avatar
-                                          src={selectedUser.profile_image}
+                                          src={
+                                            selectedUser.profile_image ||
+                                            "/images/profile/defaultprofile.jpg"
+                                          }
                                           sx={{
                                             width: 22,
                                             height: 22,
@@ -1635,7 +1641,10 @@ const KanbanBoard: React.FC = () => {
                                   }}
                                 >
                                   <Avatar
-                                    src={option.profile_image}
+                                    src={
+                                      option.profile_image ||
+                                      "/images/profile/defaultprofile.jpg"
+                                    }
                                     sx={{
                                       width: 24,
                                       height: 24,
@@ -1837,7 +1846,7 @@ const KanbanBoard: React.FC = () => {
                                 (parseFloat(values.deadline_hours) || 0) * 60;
                               setFieldValue(
                                 "deadline_total_minutes",
-                                Math.round(totalMinutes).toString()
+                                Math.round(totalMinutes).toString(),
                               );
                             }}
                           />
@@ -1873,7 +1882,7 @@ const KanbanBoard: React.FC = () => {
                                 (parseFloat(hours) || 0) * 60;
                               setFieldValue(
                                 "deadline_total_minutes",
-                                Math.round(totalMinutes).toString()
+                                Math.round(totalMinutes).toString(),
                               );
                             }}
                           />
@@ -1903,7 +1912,7 @@ const KanbanBoard: React.FC = () => {
                         fontSize="0.75rem"
                       >
                         {Math.floor(
-                          parseFloat(values.deadline_total_minutes || "0") / 60
+                          parseFloat(values.deadline_total_minutes || "0") / 60,
                         )}
                         h{" "}
                         {parseFloat(values.deadline_total_minutes || "0") % 60}m
@@ -1980,8 +1989,8 @@ const KanbanBoard: React.FC = () => {
                         {isSubmitting
                           ? "Processing..."
                           : taskEditMode
-                          ? "Update Task"
-                          : "Create Task"}
+                            ? "Update Task"
+                            : "Create Task"}
                       </Button>
                     </Box>
                   </Box>

@@ -206,7 +206,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `/attendance/team-attendance?date=${today}`
+        `/attendance/team-attendance?date=${today}`,
       );
       const attendanceData = response.data?.data || [];
 
@@ -215,7 +215,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
         (attendance: any) =>
           !attendance.clock_in_time ||
           attendance.status === "CLOCKED_OUT" ||
-          attendance.status === "OUT"
+          attendance.status === "OUT",
       );
 
       setNotClockedInUsers(
@@ -225,7 +225,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
           last_name: attendance.user?.last_name || "",
           email: attendance.user?.email || "",
           profile_image: attendance.user?.profile_image,
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error fetching not clocked in users:", error);
@@ -240,7 +240,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
       const response = await axiosInstance.get(
         `/leave-management/requests?scope=${
           userPriority === 1 ? "all" : "team"
-        }&from=${today}&to=${today}&status=approved`
+        }&from=${today}&to=${today}&status=approved`,
       );
       const leaveRequests = response.data?.data || [];
 
@@ -290,7 +290,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
                     onClick={() => onUserClick?.(user.id)}
                   >
                     <Avatar
-                      src={user.profile_image}
+                      src={
+                        user.profile_image ||
+                        "/images/profile/defaultprofile.jpg"
+                      }
                       sx={{ width: 48, height: 48, mb: 0.5 }}
                     >
                       {user.first_name?.[0] || ""}
@@ -344,7 +347,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ onUserClick }) => {
                 key={user.id}
                 onClick={() => onUserClick?.(user.id)}
               >
-                <Avatar src={user.profile_image} sx={{ width: 48, height: 48 }}>
+                <Avatar
+                  src={
+                    user.profile_image || "/images/profile/defaultprofile.jpg"
+                  }
+                  sx={{ width: 48, height: 48 }}
+                >
                   {user.first_name?.[0] || ""}
                   {user.last_name?.[0] || ""}
                 </Avatar>

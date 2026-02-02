@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -50,7 +56,10 @@ import createAxiosInstance from "@/app/axiosInstance";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from "date-fns";
 import dynamic from "next/dynamic";
-import { useDocumentCollaboration, CollaboratorPresence } from "@/hooks/useDocumentCollaboration";
+import {
+  useDocumentCollaboration,
+  CollaboratorPresence,
+} from "@/hooks/useDocumentCollaboration";
 import {
   getDocument,
   updateDocument,
@@ -64,29 +73,33 @@ import { useAppselector } from "@/redux/store";
 import { EditorSettings } from "./DocumentEditor";
 
 // Dynamically import Tiptap to avoid SSR issues
-const DocumentEditor = dynamic(
-  () => import("./DocumentEditor"),
-  { ssr: false, loading: () => <CircularProgress /> }
-);
+const DocumentEditor = dynamic(() => import("./DocumentEditor"), {
+  ssr: false,
+  loading: () => <CircularProgress />,
+});
 
-const VersionHistoryPanel = dynamic(
-  () => import("./VersionHistoryPanel"),
-  { ssr: false }
-);
+const VersionHistoryPanel = dynamic(() => import("./VersionHistoryPanel"), {
+  ssr: false,
+});
 
-const PermissionsModal = dynamic(
-  () => import("./PermissionsModal"),
-  { ssr: false }
-);
+const PermissionsModal = dynamic(() => import("./PermissionsModal"), {
+  ssr: false,
+});
 
 // Status indicator component
-const StatusIndicator: React.FC<{ status: "viewing" | "editing" | "commenting" }> = ({
-  status,
-}) => {
+const StatusIndicator: React.FC<{
+  status: "viewing" | "editing" | "commenting";
+}> = ({ status }) => {
   const statusConfig = {
-    viewing: { color: "#10B981", icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
+    viewing: {
+      color: "#10B981",
+      icon: <VisibilityIcon sx={{ fontSize: 12 }} />,
+    },
     editing: { color: "#F59E0B", icon: <EditIcon sx={{ fontSize: 12 }} /> },
-    commenting: { color: "#6366F1", icon: <CommentIcon sx={{ fontSize: 12 }} /> },
+    commenting: {
+      color: "#6366F1",
+      icon: <CommentIcon sx={{ fontSize: 12 }} />,
+    },
   };
 
   const config = statusConfig[status];
@@ -117,17 +130,20 @@ const CollaboratorAvatars: React.FC<{
   // Get status label
   const getStatusLabel = (status: "viewing" | "editing" | "commenting") => {
     switch (status) {
-      case "editing": return "Editing";
-      case "commenting": return "Commenting";
-      default: return "Viewing";
+      case "editing":
+        return "Editing";
+      case "commenting":
+        return "Commenting";
+      default:
+        return "Viewing";
     }
   };
 
   // Create a list of all users including current user if not already in collaborators
   const allUsers = useMemo(() => {
-    const existingIds = new Set(collaborators.map(c => c.id));
+    const existingIds = new Set(collaborators.map((c) => c.id));
     const users = [...collaborators];
-    
+
     // Add current user if not in list
     if (currentUserId && !existingIds.has(currentUserId)) {
       users.unshift({
@@ -138,7 +154,7 @@ const CollaboratorAvatars: React.FC<{
         profileImage: currentUserImage,
       });
     }
-    
+
     // Sort to put current user first
     return users.sort((a, b) => {
       if (a.id === currentUserId) return -1;
@@ -153,14 +169,16 @@ const CollaboratorAvatars: React.FC<{
     <Stack direction="row" spacing={0.5} alignItems="center">
       {allUsers.map((collaborator) => {
         const isCurrentUser = collaborator.id === currentUserId;
-        
+
         return (
           <Tooltip
             key={collaborator.id}
             title={
               <Box sx={{ textAlign: "center", py: 0.5 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {isCurrentUser ? `${collaborator.name} (You)` : collaborator.name}
+                  {isCurrentUser
+                    ? `${collaborator.name} (You)`
+                    : collaborator.name}
                 </Typography>
                 <Typography variant="caption" sx={{ opacity: 0.8 }}>
                   {getStatusLabel(collaborator.status)}
@@ -183,15 +201,18 @@ const CollaboratorAvatars: React.FC<{
               }}
             >
               <Avatar
-                src={collaborator.profileImage}
+                src={
+                  collaborator.profileImage ||
+                  "/images/profile/defaultprofile.jpg"
+                }
                 sx={{
                   width: 32,
                   height: 32,
                   fontSize: 14,
                   border: `2px solid ${collaborator.color}`,
                   bgcolor: collaborator.color,
-                  boxShadow: isCurrentUser 
-                    ? "0 0 0 2px #fff, 0 2px 8px rgba(76, 175, 80, 0.4)" 
+                  boxShadow: isCurrentUser
+                    ? "0 0 0 2px #fff, 0 2px 8px rgba(76, 175, 80, 0.4)"
                     : "0 2px 4px rgba(0,0,0,0.1)",
                 }}
               >
@@ -233,7 +254,7 @@ const EditorSettingsPopover: React.FC<{
       <Typography variant="subtitle2" fontWeight={600} gutterBottom>
         Editor Settings
       </Typography>
-      
+
       <FormControl fullWidth size="small" sx={{ mt: 2 }}>
         <InputLabel>Page Width</InputLabel>
         <Select
@@ -254,7 +275,14 @@ const EditorSettingsPopover: React.FC<{
       </FormControl>
 
       {/* Show Rulers Toggle */}
-      <Box sx={{ mt: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <Box
+        sx={{
+          mt: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <Typography variant="body2" color="text.secondary">
           Show Rulers
         </Typography>
@@ -359,7 +387,12 @@ const EditorSettingsPopover: React.FC<{
 
       {/* Quick Presets */}
       <Box sx={{ mt: 2 }}>
-        <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          gutterBottom
+          display="block"
+        >
           Quick Presets
         </Typography>
         <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
@@ -375,8 +408,8 @@ const EditorSettingsPopover: React.FC<{
                 marginBottom: 0,
               })
             }
-            sx={{ 
-              fontSize: 11, 
+            sx={{
+              fontSize: 11,
               textTransform: "none",
               borderColor: "#e0e0e0",
               color: "text.secondary",
@@ -397,8 +430,8 @@ const EditorSettingsPopover: React.FC<{
                 marginBottom: 20,
               })
             }
-            sx={{ 
-              fontSize: 11, 
+            sx={{
+              fontSize: 11,
               textTransform: "none",
               borderColor: "#e0e0e0",
               color: "text.secondary",
@@ -419,8 +452,8 @@ const EditorSettingsPopover: React.FC<{
                 marginBottom: 40,
               })
             }
-            sx={{ 
-              fontSize: 11, 
+            sx={{
+              fontSize: 11,
               textTransform: "none",
               borderColor: "#e0e0e0",
               color: "text.secondary",
@@ -460,7 +493,9 @@ const DocumentEditorPage: React.FC = () => {
     marginBottom: 20,
     showRulers: true,
   });
-  const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(null);
+  const [settingsAnchor, setSettingsAnchor] = useState<HTMLElement | null>(
+    null,
+  );
 
   // Panels
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -479,18 +514,21 @@ const DocumentEditorPage: React.FC = () => {
   const [remoteContent, setRemoteContent] = useState<any>(null);
 
   // Handle incoming content updates from other users
-  const handleRemoteContentUpdate = useCallback((content: any, from: string) => {
-    // Avoid applying our own updates
-    const currentUserId = authData?.user?.id?.toString();
-    if (from !== currentUserId) {
-      isRemoteUpdateRef.current = true;
-      setRemoteContent(content);
-      // Reset flag after a short delay
-      setTimeout(() => {
-        isRemoteUpdateRef.current = false;
-      }, 100);
-    }
-  }, [authData?.user?.id]);
+  const handleRemoteContentUpdate = useCallback(
+    (content: any, from: string) => {
+      // Avoid applying our own updates
+      const currentUserId = authData?.user?.id?.toString();
+      if (from !== currentUserId) {
+        isRemoteUpdateRef.current = true;
+        setRemoteContent(content);
+        // Reset flag after a short delay
+        setTimeout(() => {
+          isRemoteUpdateRef.current = false;
+        }, 100);
+      }
+    },
+    [authData?.user?.id],
+  );
 
   // Collaboration hook
   const {
@@ -517,7 +555,7 @@ const DocumentEditorPage: React.FC = () => {
       // Also broadcast selection change separately for immediate cursor updates
       sendSelectionChange(selection.from, selection.to);
     },
-    [sendSelectionChange]
+    [sendSelectionChange],
   );
 
   // Get cursor data for other collaborators (excluding current user)
@@ -581,7 +619,7 @@ const DocumentEditorPage: React.FC = () => {
         }
       }, 5000);
     },
-    [userPermission, saveContent, broadcastContentUpdate]
+    [userPermission, saveContent, broadcastContentUpdate],
   );
 
   // Manual save
@@ -589,7 +627,9 @@ const DocumentEditorPage: React.FC = () => {
     if (!document || !contentRef.current) return;
     setSaving(true);
     try {
-      await updateDocument(projectId, documentId, { content: contentRef.current });
+      await updateDocument(projectId, documentId, {
+        content: contentRef.current,
+      });
       await createVersion(projectId, documentId, "Manual save");
       toast.success("Document saved");
     } catch (error: any) {
@@ -625,10 +665,12 @@ const DocumentEditorPage: React.FC = () => {
       const updated = await lockDocument(
         projectId,
         documentId,
-        !document.is_locked
+        !document.is_locked,
       );
       setDocument(updated);
-      toast.success(updated.is_locked ? "Document locked" : "Document unlocked");
+      toast.success(
+        updated.is_locked ? "Document locked" : "Document unlocked",
+      );
     } catch (error: any) {
       toast.error("Failed to update lock status");
     }
@@ -650,11 +692,11 @@ const DocumentEditorPage: React.FC = () => {
   // Export document as DOCX (Microsoft Word / Google Docs compatible)
   const handleExportDocx = async () => {
     setMenuAnchor(null);
-    
+
     try {
       // Get the current content HTML
       const content = contentRef.current || document.content;
-      
+
       // Create a styled HTML document
       const htmlContent = `
         <!DOCTYPE html>
@@ -710,27 +752,29 @@ const DocumentEditorPage: React.FC = () => {
         </head>
         <body>
           <h1>${document.title}</h1>
-          ${typeof content === 'string' ? content : JSON.stringify(content)}
+          ${typeof content === "string" ? content : JSON.stringify(content)}
         </body>
         </html>
       `;
 
       // Convert HTML to Blob with .doc MIME type (Word will open it)
-      const blob = new Blob([htmlContent], { 
-        type: 'application/msword' 
+      const blob = new Blob([htmlContent], {
+        type: "application/msword",
       });
-      
+
       // Create download link
       const url = URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
+      const a = window.document.createElement("a");
       a.href = url;
-      a.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}.doc`;
+      a.download = `${document.title.replace(/[^a-z0-9]/gi, "_")}.doc`;
       window.document.body.appendChild(a);
       a.click();
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
-      toast.success("Document exported as .doc (compatible with MS Word & Google Docs)");
+
+      toast.success(
+        "Document exported as .doc (compatible with MS Word & Google Docs)",
+      );
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Failed to export document");
@@ -740,10 +784,10 @@ const DocumentEditorPage: React.FC = () => {
   // Export as HTML
   const handleExportHtml = async () => {
     setMenuAnchor(null);
-    
+
     try {
       const content = contentRef.current || document.content;
-      
+
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -786,21 +830,21 @@ const DocumentEditorPage: React.FC = () => {
         </head>
         <body>
           <h1>${document.title}</h1>
-          ${typeof content === 'string' ? content : JSON.stringify(content)}
+          ${typeof content === "string" ? content : JSON.stringify(content)}
         </body>
         </html>
       `;
 
-      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const blob = new Blob([htmlContent], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
+      const a = window.document.createElement("a");
       a.href = url;
-      a.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}.html`;
+      a.download = `${document.title.replace(/[^a-z0-9]/gi, "_")}.html`;
       window.document.body.appendChild(a);
       a.click();
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast.success("Document exported as HTML");
     } catch (error) {
       console.error("Export error:", error);
@@ -811,12 +855,12 @@ const DocumentEditorPage: React.FC = () => {
   // Export as PDF (print dialog)
   const handleExportPdf = () => {
     setMenuAnchor(null);
-    
+
     const content = contentRef.current || document.content;
-    const htmlContent = typeof content === 'string' ? content : '';
-    
+    const htmlContent = typeof content === "string" ? content : "";
+
     // Open print dialog in new window
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -854,7 +898,7 @@ const DocumentEditorPage: React.FC = () => {
         printWindow.print();
       };
     }
-    
+
     toast.success("Print dialog opened - Save as PDF from print options");
   };
 
@@ -866,7 +910,8 @@ const DocumentEditorPage: React.FC = () => {
   // Check if user can edit
   const canEdit = userPermission === "edit" && !document?.is_locked;
   // Check if user is admin or manager (priority 1 = Super Admin, 2 = Admin, 3 = Manager)
-  const isAdminOrManager = authData?.role?.priority && authData.role.priority <= 3;
+  const isAdminOrManager =
+    authData?.role?.priority && authData.role.priority <= 3;
 
   if (loading) {
     return (
@@ -897,10 +942,10 @@ const DocumentEditorPage: React.FC = () => {
   }
 
   return (
-    <Box 
-      sx={{ 
-        height: "100vh", 
-        display: "flex", 
+    <Box
+      sx={{
+        height: "100vh",
+        display: "flex",
         flexDirection: "column",
         bgcolor: "white",
         overflow: "hidden",
@@ -985,13 +1030,21 @@ const DocumentEditorPage: React.FC = () => {
             <CollaboratorAvatars
               collaborators={collaborators}
               currentUserId={authData?.user?.id?.toString() || ""}
-              currentUserName={authData?.user?.first_name ? `${authData.user.first_name} ${authData.user.last_name || ""}`.trim() : "You"}
+              currentUserName={
+                authData?.user?.first_name
+                  ? `${authData.user.first_name} ${authData.user.last_name || ""}`.trim()
+                  : "You"
+              }
               currentUserImage={authData?.user?.profile_image}
             />
 
             {/* Auto-save status */}
             {lastSaved && (
-              <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mr: 1 }}
+              >
                 Saved {formatDistanceToNow(lastSaved, { addSuffix: true })}
                 {savedBy && ` by ${savedBy}`}
               </Typography>
@@ -1004,7 +1057,9 @@ const DocumentEditorPage: React.FC = () => {
               <Button
                 variant="contained"
                 size="small"
-                startIcon={saving ? <CircularProgress size={14} /> : <SaveIcon />}
+                startIcon={
+                  saving ? <CircularProgress size={14} /> : <SaveIcon />
+                }
                 onClick={handleSave}
                 disabled={saving}
                 sx={{
@@ -1025,11 +1080,15 @@ const DocumentEditorPage: React.FC = () => {
 
             {/* Lock/Unlock for admins - Direct button */}
             {isAdminOrManager && (
-              <Tooltip title={document.is_locked ? "Unlock Document" : "Lock Document"}>
+              <Tooltip
+                title={document.is_locked ? "Unlock Document" : "Lock Document"}
+              >
                 <IconButton
                   onClick={handleToggleLock}
                   sx={{
-                    color: document.is_locked ? "warning.main" : "text.secondary",
+                    color: document.is_locked
+                      ? "warning.main"
+                      : "text.secondary",
                   }}
                 >
                   {document.is_locked ? <LockIcon /> : <LockOpenIcon />}
@@ -1062,9 +1121,9 @@ const DocumentEditorPage: React.FC = () => {
       </Paper>
 
       {/* Editor Container - DocumentEditor handles its own scrolling */}
-      <Box 
-        sx={{ 
-          flex: 1, 
+      <Box
+        sx={{
+          flex: 1,
           overflow: "hidden",
           py: 2,
           px: 3,
@@ -1123,14 +1182,14 @@ const DocumentEditorPage: React.FC = () => {
           </MenuItem>
         )}
         <Divider />
-        
+
         {/* Export Options */}
         <MenuItem onClick={handleExportDocx}>
           <ListItemIcon>
             <DescriptionIcon sx={{ color: "#2b579a" }} />
           </ListItemIcon>
-          <ListItemText 
-            primary="Export as Word (.doc)" 
+          <ListItemText
+            primary="Export as Word (.doc)"
             secondary="Compatible with MS Word & Google Docs"
           />
         </MenuItem>
@@ -1138,21 +1197,15 @@ const DocumentEditorPage: React.FC = () => {
           <ListItemIcon>
             <DownloadIcon sx={{ color: "#e44d26" }} />
           </ListItemIcon>
-          <ListItemText 
-            primary="Export as HTML" 
-            secondary="Web format"
-          />
+          <ListItemText primary="Export as HTML" secondary="Web format" />
         </MenuItem>
         <MenuItem onClick={handleExportPdf}>
           <ListItemIcon>
             <DownloadIcon sx={{ color: "#ff0000" }} />
           </ListItemIcon>
-          <ListItemText 
-            primary="Export as PDF" 
-            secondary="Print to PDF"
-          />
+          <ListItemText primary="Export as PDF" secondary="Print to PDF" />
         </MenuItem>
-        
+
         <Divider />
         <MenuItem
           onClick={() => {
@@ -1191,18 +1244,23 @@ const DocumentEditorPage: React.FC = () => {
           documentId={documentId}
           document={document}
           onLockChange={(isLocked) => {
-            setDocument((prev) => (prev ? { ...prev, is_locked: isLocked } : prev));
+            setDocument((prev) =>
+              prev ? { ...prev, is_locked: isLocked } : prev,
+            );
           }}
         />
       )}
 
       {/* Delete Confirmation */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Delete Document?</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{document.title}"? This action cannot
-            be undone.
+            Are you sure you want to delete "{document.title}"? This action
+            cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>

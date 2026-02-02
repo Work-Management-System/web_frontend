@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -17,12 +17,12 @@ import {
   ListItemAvatar,
   ListItemText,
   Avatar,
-} from '@mui/material';
-import createAxiosInstance from '@/app/axiosInstance';
-import { SpaceType } from '@/redux/features/spacesSlice';
-import { useAppselector } from '@/redux/store';
-import { useDispatch } from 'react-redux';
-import { fetchSpaces } from '@/redux/features/spacesSlice';
+} from "@mui/material";
+import createAxiosInstance from "@/app/axiosInstance";
+import { SpaceType } from "@/redux/features/spacesSlice";
+import { useAppselector } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { fetchSpaces } from "@/redux/features/spacesSlice";
 
 interface CreateSpaceDialogProps {
   open: boolean;
@@ -36,8 +36,8 @@ export default function CreateSpaceDialog({
   onCreated,
 }: CreateSpaceDialogProps) {
   const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.GROUP);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,35 +53,35 @@ export default function CreateSpaceDialog({
 
   const fetchUsers = async () => {
     if (!currentUser?.id) {
-      console.warn('Current user not available');
+      console.warn("Current user not available");
       return;
     }
 
     try {
-      const response = await axiosInstance.get('/user/list');
-      
+      const response = await axiosInstance.get("/user/list");
+
       // Check if response has data
       if (response.data?.status && response.data?.data) {
         // Filter out current user
         const users = (response.data.data || []).filter(
-          (u: any) => u.id !== currentUser.id
+          (u: any) => u.id !== currentUser.id,
         );
         setAvailableUsers(users);
       } else if (response.data?.data) {
         // Some APIs return data directly without status
-        const users = (Array.isArray(response.data.data) ? response.data.data : []).filter(
-          (u: any) => u.id !== currentUser.id
-        );
+        const users = (
+          Array.isArray(response.data.data) ? response.data.data : []
+        ).filter((u: any) => u.id !== currentUser.id);
         setAvailableUsers(users);
       } else {
-        console.warn('No users found in response:', response.data);
+        console.warn("No users found in response:", response.data);
         setAvailableUsers([]);
       }
     } catch (error: any) {
-      console.error('Failed to fetch users:', error);
+      console.error("Failed to fetch users:", error);
       setAvailableUsers([]);
       if (error.response?.data?.message) {
-        console.error('Error message:', error.response.data.message);
+        console.error("Error message:", error.response.data.message);
       }
     }
   };
@@ -102,7 +102,7 @@ export default function CreateSpaceDialog({
       if (spaceType === SpaceType.DM) {
         // For DM, selectedUsers should have exactly one user
         if (selectedUsers.length !== 1) {
-          alert('Please select exactly one user for direct message');
+          alert("Please select exactly one user for direct message");
           setLoading(false);
           return;
         }
@@ -111,16 +111,16 @@ export default function CreateSpaceDialog({
         payload.memberIds = selectedUsers.map((u) => u.id);
       }
 
-      await axiosInstance.post('/chat/spaces', payload);
+      await axiosInstance.post("/chat/spaces", payload);
       dispatch(fetchSpaces());
       onCreated();
       // Reset form
-      setName('');
-      setDescription('');
+      setName("");
+      setDescription("");
       setSelectedUsers([]);
     } catch (error: any) {
-      console.error('Failed to create space:', error);
-      alert(error.response?.data?.message || 'Failed to create space');
+      console.error("Failed to create space:", error);
+      alert(error.response?.data?.message || "Failed to create space");
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ export default function CreateSpaceDialog({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Create New Space</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
             label="Space Type"
             select
@@ -179,8 +179,8 @@ export default function CreateSpaceDialog({
                 {...params}
                 label={
                   spaceType === SpaceType.DM
-                    ? 'Select User'
-                    : 'Add Members (Optional)'
+                    ? "Select User"
+                    : "Add Members (Optional)"
                 }
                 placeholder="Search users..."
               />
@@ -188,7 +188,7 @@ export default function CreateSpaceDialog({
             renderOption={(props, option) => (
               <ListItem {...props} key={option.id}>
                 <ListItemAvatar>
-                  <Avatar src={option.profile_image}>
+                  <Avatar src={option.profile_image || ""}>
                     {option.first_name?.[0]}
                     {option.last_name?.[0]}
                   </Avatar>
@@ -205,7 +205,11 @@ export default function CreateSpaceDialog({
                   {...getTagProps({ index })}
                   key={option.id}
                   label={`${option.first_name} ${option.last_name}`}
-                  avatar={<Avatar src={option.profile_image}>{option.first_name?.[0]}</Avatar>}
+                  avatar={
+                    <Avatar src={option.profile_image || ""}>
+                      {option.first_name?.[0]}
+                    </Avatar>
+                  }
                 />
               ))
             }
@@ -217,9 +221,13 @@ export default function CreateSpaceDialog({
         <Button
           onClick={handleCreate}
           variant="contained"
-          disabled={loading || (!name.trim() && spaceType !== SpaceType.DM) || (spaceType === SpaceType.DM && selectedUsers.length !== 1)}
+          disabled={
+            loading ||
+            (!name.trim() && spaceType !== SpaceType.DM) ||
+            (spaceType === SpaceType.DM && selectedUsers.length !== 1)
+          }
         >
-          {loading ? 'Creating...' : 'Create'}
+          {loading ? "Creating..." : "Create"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -254,7 +254,7 @@ export default function UserProfilePage() {
         `/project-management/user-projects/${userId}`,
         {
           signal: controller.signal,
-        }
+        },
       );
       clearTimeout(timeoutId);
       return res.data;
@@ -299,8 +299,7 @@ export default function UserProfilePage() {
           joiningDate: "2022-05-01",
           employeeCode: "EMP12345",
           role: "User",
-          profile_image:
-            "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250",
+          profile_image: "/images/profile/defaultprofile.jpg",
           emergency_contact: "911123456789",
           blood_group: "O+",
           gender: "Male",
@@ -322,7 +321,7 @@ export default function UserProfilePage() {
       setFilteredProjects(projects);
     } else {
       const filtered = projects.filter((project) =>
-        project?.title.toLowerCase().includes(query.toLowerCase())
+        project?.title.toLowerCase().includes(query.toLowerCase()),
       );
       setFilteredProjects(filtered);
     }
@@ -340,8 +339,7 @@ export default function UserProfilePage() {
     );
   }
 
-  const defaultProfilePicture =
-    "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250";
+  const defaultProfilePicture = "/images/profile/defaultprofile.jpg";
 
   const isSuperAdmin =
     currentUserRole === "SuperAdmin" ||
@@ -516,7 +514,7 @@ export default function UserProfilePage() {
                 </div>
               </div>
 
-              { (
+              {
                 <div className="mt-6 grid grid-cols-1 gap-3">
                   <Button
                     sx={{
@@ -562,7 +560,7 @@ export default function UserProfilePage() {
                     View tasks
                   </Button>
                 </div>
-              )}
+              }
             </div>
 
             {/* Right column */}
@@ -665,7 +663,7 @@ export default function UserProfilePage() {
                           </span>
                           <span className="text-[var(--text-color)]">
                             {new Date(
-                              filteredProjects[selectedProject].start_date
+                              filteredProjects[selectedProject].start_date,
                             ).toLocaleDateString()}
                           </span>
                         </div>
@@ -675,7 +673,7 @@ export default function UserProfilePage() {
                           </span>
                           <span className="text-[var(--text-color)]">
                             {new Date(
-                              filteredProjects[selectedProject].end_date
+                              filteredProjects[selectedProject].end_date,
                             ).toLocaleDateString()}
                           </span>
                         </div>
@@ -695,7 +693,7 @@ export default function UserProfilePage() {
                       <div className="space-y-2 max-h-[18rem] overflow-y-auto pr-1">
                         {filteredProjects[selectedProject].teams
                           ?.filter(
-                            (team) => team?.user && team.user?.first_name
+                            (team) => team?.user && team.user?.first_name,
                           )
                           .map((team, idx) => (
                             <div
@@ -750,8 +748,8 @@ export default function UserProfilePage() {
                                         report?.status === "completed"
                                           ? "bg-green-50 text-green-700"
                                           : report?.status === "in_progress"
-                                          ? "bg-yellow-50 text-yellow-700"
-                                          : "bg-red-50 text-red-700"
+                                            ? "bg-yellow-50 text-yellow-700"
+                                            : "bg-red-50 text-red-700"
                                       }`}
                                     >
                                       {report?.status}
@@ -774,7 +772,7 @@ export default function UserProfilePage() {
                                         Start:
                                       </span>{" "}
                                       {new Date(
-                                        report?.start_time
+                                        report?.start_time,
                                       ).toLocaleString()}
                                     </p>
                                     <p>
@@ -782,7 +780,7 @@ export default function UserProfilePage() {
                                         End:
                                       </span>{" "}
                                       {new Date(
-                                        report?.end_time
+                                        report?.end_time,
                                       ).toLocaleString()}
                                     </p>
                                     <p>
@@ -793,7 +791,7 @@ export default function UserProfilePage() {
                                     </p>
                                   </div>
                                 </div>
-                              )
+                              ),
                             )}
                           </div>
                         </>

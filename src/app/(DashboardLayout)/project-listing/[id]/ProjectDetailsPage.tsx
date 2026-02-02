@@ -144,8 +144,8 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: "'Manrope', sans-serif",
-    h5: { fontWeight: 800, fontSize: "1.75rem" },
-    h6: { fontWeight: 700, fontSize: "1.25rem" },
+    h5: { fontWeight: 700, fontSize: "1.75rem" },
+    h6: { fontWeight: 600, fontSize: "1.25rem" },
     body1: { fontWeight: 400, fontSize: "0.95rem" },
     body2: { fontWeight: 400, fontSize: "0.85rem" },
   },
@@ -153,15 +153,10 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: "20px",
-          backdropFilter: "blur(12px)",
-          background: "rgba(255, 255, 255, 0.9)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          transition: "transform 0.4s, box-shadow 0.4s",
-          "&:hover": {
-            transform: "translateY(-6px)",
-            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.15)",
-          },
+          borderRadius: "8px",
+          background: "#ffffff",
+          border: "1px solid #E5E7EB",
+          boxShadow: "none",
         },
       },
     },
@@ -176,25 +171,26 @@ const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+          borderBottom: "1px solid #E5E7EB",
           padding: "12px",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
         },
         head: {
-          fontWeight: 700,
+          fontWeight: 600,
           color: "#1F2937",
-          background: "rgba(247, 248, 250, 0.9)",
+          background: "#F9FAFB",
           padding: "12px",
           width: "20%",
+          borderBottom: "1px solid #E5E7EB",
         },
       },
     },
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          padding: "0 16px",
+          padding: "0",
         },
       },
     },
@@ -202,8 +198,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-            background: "rgba(255, 255, 255, 0.9)",
+            borderRadius: "8px",
+            background: "#ffffff",
           },
         },
       },
@@ -211,24 +207,23 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: "12px",
+          borderRadius: "6px",
           textTransform: "none",
-          fontWeight: 600,
+          fontWeight: 500,
           padding: "8px 16px",
-          transition: "all 0.3s",
+          boxShadow: "none",
           "&:hover": {
-            transform: "scale(1.05)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            boxShadow: "none",
           },
         },
       },
     },
     MuiDialog: {
       styleOverrides: {
-        root: {
-          borderRadius: "16px",
-          backdropFilter: "blur(12px)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+        paper: {
+          borderRadius: "8px",
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
         },
       },
     },
@@ -239,32 +234,32 @@ const getTeamStatusChipStyle = (status: string) => {
   switch (status.toUpperCase()) {
     case "WORKING":
       return {
-        background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)",
+        background: "#DBEAFE",
         color: "#1E40AF",
       };
     case "NOT_WORKING":
       return {
-        background: "linear-gradient(135deg, #FEE2E2, #FECACA)",
+        background: "#FEE2E2",
         color: "#B91C1C",
       };
     case "MAINTAINING":
       return {
-        background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)",
+        background: "#F3E8FF",
         color: "#6B21A8",
       };
     case "SUPERVISE":
       return {
-        background: "linear-gradient(135deg, #DCFCE7, #BBF7D0)",
+        background: "#DCFCE7",
         color: "#15803D",
       };
     case "ON_HOLD":
       return {
-        background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+        background: "#FEF3C7",
         color: "#B45309",
       };
     default:
       return {
-        background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+        background: "#F3F4F6",
         color: "#374151",
       };
   }
@@ -273,29 +268,29 @@ const getTeamStatusChipStyle = (status: string) => {
 const getDesignationChipStyle = (designation: string | null | undefined) => {
   if (!designation) {
     return {
-      background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+      background: "#F3F4F6",
       color: "#374151",
     };
   }
   switch (designation.toLowerCase()) {
     case "software engineer":
       return {
-        background: "linear-gradient(135deg, #DBEAFE, #BFDBFE)",
+        background: "#DBEAFE",
         color: "#1E40AF",
       };
     case "project manager":
       return {
-        background: "linear-gradient(135deg, #F3E8FF, #EDE9FE)",
+        background: "#F3E8FF",
         color: "#6B21A8",
       };
     case "designer":
       return {
-        background: "linear-gradient(135deg, #FEF3C7, #FDE68A)",
+        background: "#FEF3C7",
         color: "#B45309",
       };
     default:
       return {
-        background: "linear-gradient(135deg, #E5E7EB, #D1D5DB)",
+        background: "#F3F4F6",
         color: "#374151",
       };
   }
@@ -306,12 +301,12 @@ const getEmailChipStyle = (email: string) => {
   switch (domain) {
     case "yopmail.com":
       return {
-        background: "linear-gradient(135deg, #FFEDD5, #FED7AA)",
+        background: "#FFEDD5",
         color: "#C2410C",
       };
     case "privi.com":
       return {
-        background: "linear-gradient(135deg, #CCFBF1, #99F6E4)",
+        background: "#CCFBF1",
         color: "#0F766E",
       };
     default:
@@ -320,19 +315,19 @@ const getEmailChipStyle = (email: string) => {
         .reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const colors = [
         {
-          background: "linear-gradient(135deg, #FBCFE8, #F9A8D4)",
+          background: "#FCE7F3",
           color: "#BE185D",
         },
         {
-          background: "linear-gradient(135deg, #D1FAE5, #A7F3D0)",
+          background: "#D1FAE5",
           color: "#047857",
         },
         {
-          background: "linear-gradient(135deg, #EDE9FE, #DDD6FE)",
+          background: "#EDE9FE",
           color: "#7C3AED",
         },
         {
-          background: "linear-gradient(135deg, #FEE2E2, #FECACA)",
+          background: "#FEE2E2",
           color: "#B91C1C",
         },
       ];
@@ -376,44 +371,34 @@ const formatStatusForDisplay = (status: string) => {
 // Styled components for the Tasks Box
 const TasksContainer = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(6),
-  padding: theme.spacing(2),
-  // background: "linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.9))",
-  background: "rgba(255, 255, 255, 0.95)",
-  borderRadius: "24px",
-  backdropFilter: "blur(10px)",
-  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
-  transition: "all 0.3s ease",
+  padding: theme.spacing(3),
+  background: "#ffffff",
+  borderRadius: "8px",
+  border: "1px solid #E5E7EB",
 }));
 
 const SectionHeader = styled(Box)(({ theme }) => ({
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: theme.spacing(1, 1),
-  background:
-    "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-1))",
+  padding: theme.spacing(1.5, 2),
+  background: "var(--primary-color-1)",
   color: "white",
-  borderRadius: "10px",
+  borderRadius: "6px",
   cursor: "pointer",
-  transition: "all 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-2px)",
-  },
 }));
 
 const TaskCard = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
   gap: theme.spacing(1.5),
-  padding: theme.spacing(2),
-  margin: theme.spacing(1, 0),
-  background: "rgba(255, 255, 255, 0.9)",
-  borderRadius: "16px",
-  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
-  transition: "all 0.3s ease",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+  padding: theme.spacing(1.5, 2),
+  margin: theme.spacing(0.5, 0),
+  background: "#ffffff",
+  borderRadius: "0",
+  borderBottom: "1px solid #E5E7EB",
+  "&:last-child": {
+    borderBottom: "none",
   },
   [theme.breakpoints.up("md")]: {
     flexDirection: "row",
@@ -422,37 +407,48 @@ const TaskCard = styled(Box)(({ theme }) => ({
   },
 }));
 
-const StatusBadge = styled(Chip)(({ theme, status }: any) => ({
+interface StatusBadgeProps {
+  status?: string;
+}
+
+const StatusBadge = styled(Chip, {
+  shouldForwardProp: (prop) => prop !== "status",
+})<StatusBadgeProps>(({ status }) => ({
   background:
     status === "completed" || status === "testable"
-      ? "linear-gradient(135deg, #10B981, #34D399)"
+      ? "#DCFCE7"
       : status === "in_progress"
-      ? "linear-gradient(135deg, #3B82F6, #60A5FA)"
-      : "linear-gradient(135deg, #F59E0B, #FBBF24)",
-  color: "white",
-  fontWeight: 600,
+        ? "#DBEAFE"
+        : "#FEF3C7",
+  color:
+    status === "completed" || status === "testable"
+      ? "#166534"
+      : status === "in_progress"
+        ? "#1E40AF"
+        : "#B45309",
+  fontWeight: 500,
   fontSize: "0.75rem",
   height: "24px",
-  borderRadius: "12px",
+  borderRadius: "4px",
   "& .MuiChip-label": {
-    padding: "0 10px",
+    padding: "0 8px",
   },
 }));
 
 const SearchField = styled(TextField)(({ theme }) => ({
   "& .MuiOutlinedInput-root": {
-    borderRadius: "16px",
-    background: "rgba(255, 255, 255, 0.9)",
-    transition: "all 0.3s ease",
+    borderRadius: "6px",
+    background: "#ffffff",
+    border: "1px solid #E5E7EB",
     "&:hover": {
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      borderColor: "#D1D5DB",
     },
     "&.Mui-focused": {
-      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+      borderColor: "var(--primary-color-1)",
     },
   },
   "& .MuiInputLabel-root": {
-    fontSize: "0.9rem",
+    fontSize: "0.875rem",
     color: theme.palette.text.secondary,
   },
 }));
@@ -470,12 +466,11 @@ const TeamMemberRow = memo(
     <TableRow
       sx={{
         "&:last-child td": { borderBottom: "none" },
-        "&:hover": { transform: "scale(1.01)" },
-        transition: "background-color 0.3s, transform 0.2s",
+        "&:nth-of-type(odd)": { bgcolor: "#F9FAFB" },
         display: { xs: "flex", md: "table-row" },
         flexDirection: { xs: "column", md: "row" },
         alignItems: { xs: "flex-start", md: "center" },
-        borderBottom: { xs: "1px solid rgba(0, 0, 0, 0.05)", md: "none" },
+        borderBottom: { xs: "1px solid #E5E7EB", md: "none" },
         p: { xs: 2, md: 0 },
         gap: { xs: 1, md: 0 },
       }}
@@ -489,18 +484,15 @@ const TeamMemberRow = memo(
         }}
       >
         <Avatar
-          src={member.user.profile_image}
+          src={
+            member.user.profile_image || "/images/profile/defaultprofile.jpg"
+          }
           sx={{
-            width: 36,
-            height: 36,
-            bgcolor: member.user.profile_image
-              ? "transparent"
-              : "linear-gradient(135deg, #1E3A8A, #3B82F6)",
-            transition: "transform 0.3s",
-            "&:hover": { transform: "scale(1.15)" },
-            objectFit: "cover",
-            border: "2px solid rgba(255, 255, 255, 1)",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            width: 32,
+            height: 32,
+            bgcolor: member.user.profile_image ? "transparent" : "#1E3A8A",
+            fontSize: "0.875rem",
+            fontWeight: 500,
             mr: { xs: 2, md: 0 },
           }}
           imgProps={{ loading: "lazy" }}
@@ -522,8 +514,8 @@ const TeamMemberRow = memo(
             textOverflow: "ellipsis",
             cursor: "pointer",
             color: "primary.main",
+            fontWeight: 500,
             "&:hover": { textDecoration: "underline" },
-            font: "menu",
           }}
           onClick={() => onNameClick(member)}
         >
@@ -535,28 +527,22 @@ const TeamMemberRow = memo(
           <Box
             sx={{
               ...getEmailChipStyle(member.user.email),
-              borderRadius: "12px",
-              px: 1.5,
-              py: 0.5,
+              borderRadius: "4px",
+              px: 1,
+              py: 0.25,
               display: "inline-flex",
               alignItems: "center",
               fontSize: "0.75rem",
               fontWeight: 500,
               textOverflow: "ellipsis",
               whiteSpace: { xs: "nowrap", md: "normal" },
-              transition: "transform 0.3s, box-shadow 0.3s",
-              "&:hover": {
-                transform: "scale(1.05)",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-              },
             }}
           >
             <MailOutlineIcon
               sx={{
-                fontSize: 16,
-                mr: 0.75,
+                fontSize: 14,
+                mr: 0.5,
                 color: getEmailChipStyle(member.user.email).color,
-                opacity: 1,
               }}
             />
             <Typography
@@ -564,7 +550,7 @@ const TeamMemberRow = memo(
               sx={{
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                font: "menu",
+                fontSize: "0.75rem",
               }}
             >
               {member.user.email}
@@ -576,20 +562,15 @@ const TeamMemberRow = memo(
         <Box
           sx={{
             ...getDesignationChipStyle(member.user.designation),
-            borderRadius: "12px",
-            px: 1.5,
-            py: 0.5,
+            borderRadius: "4px",
+            px: 1,
+            py: 0.25,
             display: "inline-flex",
             alignItems: "center",
             fontSize: "0.75rem",
             fontWeight: 500,
             textOverflow: "ellipsis",
             whiteSpace: { xs: "nowrap", md: "normal" },
-            transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": {
-              transform: "scale(1.05)",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            },
           }}
         >
           <span
@@ -605,7 +586,11 @@ const TeamMemberRow = memo(
           />
           <Typography
             variant="body2"
-            sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              fontSize: "0.75rem",
+            }}
           >
             {member.user.designation || "—"}
           </Typography>
@@ -615,20 +600,15 @@ const TeamMemberRow = memo(
         <Box
           sx={{
             ...getTeamStatusChipStyle(member.status),
-            borderRadius: "12px",
-            px: 1.5,
-            py: 0.5,
+            borderRadius: "4px",
+            px: 1,
+            py: 0.25,
             display: "inline-flex",
             alignItems: "center",
             fontSize: "0.75rem",
             fontWeight: 500,
             textOverflow: "ellipsis",
             whiteSpace: { xs: "nowrap", md: "normal" },
-            transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": {
-              transform: "scale(1.05)",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            },
           }}
         >
           <span
@@ -643,41 +623,31 @@ const TeamMemberRow = memo(
           />
           <Typography
             variant="body2"
-            sx={{ overflow: "hidden", textOverflow: "ellipsis", font: "menu" }}
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              fontSize: "0.75rem",
+            }}
           >
             {formatStatusForDisplay(member.status)}
           </Typography>
         </Box>
       </TableCell>
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "25%" } }}>
-        <Box
+        <Typography
+          variant="body2"
           sx={{
-            borderRadius: "12px",
-            px: 1.5,
-            py: 0.5,
-            display: "inline-flex",
-            alignItems: "center",
-            fontSize: "0.75rem",
-            fontWeight: 500,
+            overflow: "hidden",
             textOverflow: "ellipsis",
-            whiteSpace: { xs: "nowrap", md: "normal" },
-            transition: "transform 0.3s, box-shadow 0.3s",
-            "&:hover": {
-              transform: "scale(1.05)",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            },
+            color: "text.secondary",
+            fontSize: "0.875rem",
           }}
         >
-          <Typography
-            variant="body2"
-            sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
-          >
-            {formatMinutesToHours(member.time_spent)}
-          </Typography>
-        </Box>
+          {formatMinutesToHours(member.time_spent)}
+        </Typography>
       </TableCell>
     </TableRow>
-  )
+  ),
 );
 
 const ClientRow = memo(
@@ -690,18 +660,17 @@ const ClientRow = memo(
     index: number;
     onEdit: (
       client: { name: string; email: string; contact: string },
-      index: number
+      index: number,
     ) => void;
   }) => (
     <TableRow
       sx={{
         "&:last-child td": { borderBottom: "none" },
-        "&:hover": { transform: "scale(1.01)" },
-        transition: "background-color 0.3s, transform 0.2s",
+        "&:nth-of-type(odd)": { bgcolor: "#F9FAFB" },
         display: { xs: "flex", md: "table-row" },
         flexDirection: { xs: "column", md: "row" },
         alignItems: { xs: "flex-start", md: "center" },
-        borderBottom: { xs: "1px solid rgba(0, 0, 0, 0.05)", md: "none" },
+        borderBottom: { xs: "1px solid #E5E7EB", md: "none" },
         p: { xs: 2, md: 0 },
         gap: { xs: 1, md: 0 },
       }}
@@ -709,19 +678,21 @@ const ClientRow = memo(
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
         <Typography
           variant="body2"
-          sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+          sx={{ overflow: "hidden", textOverflow: "ellipsis", fontWeight: 500 }}
         >
           {client.name}
         </Typography>
       </TableCell>
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <MailOutlineIcon
-            sx={{ fontSize: 16, color: "text.secondary", opacity: 1 }}
-          />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <MailOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
           <Typography
             variant="body2"
-            sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              color: "text.secondary",
+            }}
           >
             {client.email}
           </Typography>
@@ -730,24 +701,29 @@ const ClientRow = memo(
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "30%" } }}>
         <Typography
           variant="body2"
-          sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+          sx={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            color: "text.secondary",
+          }}
         >
           {client.contact}
         </Typography>
       </TableCell>
       <TableCell sx={{ p: { xs: 1, md: "12px" }, width: { md: "10%" } }}>
         <IconButton
+          size="small"
           sx={{
-            "&:hover": { bgcolor: "var(--primary-color-1)", color: "white" },
-            transition: "all 0.3s",
+            color: "text.secondary",
+            "&:hover": { bgcolor: "#F3F4F6", color: "var(--primary-color-1)" },
           }}
           onClick={() => onEdit(client, index)}
         >
-          <EditIcon />
+          <EditIcon fontSize="small" />
         </IconButton>
       </TableCell>
     </TableRow>
-  )
+  ),
 );
 
 const ProjectTimelineItem = memo(
@@ -786,8 +762,8 @@ const ProjectTimelineItem = memo(
             position: "absolute",
             right: "15px",
             top: "-15px",
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -798,14 +774,15 @@ const ProjectTimelineItem = memo(
             borderRadius: "50%",
             zIndex: 1,
             bgcolor: "var(--primary-color-1)",
+            boxShadow: "none",
           }}
         >
           <Typography
             sx={{
-              fontSize: "0.9rem",
-              fontWeight: 700,
+              fontSize: "0.875rem",
+              fontWeight: 600,
               lineHeight: 1.2,
-              marginBottom: "4px",
+              marginBottom: "2px",
             }}
           >
             {splitDate(timeline.time).year}
@@ -820,7 +797,7 @@ const ProjectTimelineItem = memo(
             <Typography
               sx={{
                 fontSize: "0.75rem",
-                fontWeight: 600,
+                fontWeight: 500,
                 lineHeight: 1.1,
               }}
             >
@@ -829,7 +806,7 @@ const ProjectTimelineItem = memo(
             <Typography
               sx={{
                 fontSize: "0.75rem",
-                fontWeight: 600,
+                fontWeight: 500,
                 lineHeight: 1.1,
               }}
             >
@@ -846,7 +823,7 @@ const ProjectTimelineItem = memo(
         {!isFirst && (
           <TimelineConnector
             sx={{
-              bgcolor: "primary.main",
+              bgcolor: "#E5E7EB",
               width: "2px",
             }}
           />
@@ -854,16 +831,16 @@ const ProjectTimelineItem = memo(
         <TimelineDot
           sx={{
             bgcolor: "var(--primary-color-1)",
-            width: 16,
-            height: 16,
+            width: 12,
+            height: 12,
             margin: "0",
-            border: "2px solid rgba(255, 255, 255, 0.9)",
+            boxShadow: "none",
           }}
         />
         {!isLast && (
           <TimelineConnector
             sx={{
-              bgcolor: "primary.main",
+              bgcolor: "#E5E7EB",
               width: "2px",
             }}
           />
@@ -874,38 +851,34 @@ const ProjectTimelineItem = memo(
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          py: 2,
-          px: 3,
-          bgcolor: "rgba(255, 255, 255, 0.9)",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-          transition: "transform 0.3s, box-shadow 0.3s",
-          "&:hover": {
-            transform: "translateY(-2px)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          },
+          py: 1.5,
+          px: 2,
+          bgcolor: "#ffffff",
+          borderRadius: "6px",
+          border: "1px solid #E5E7EB",
         }}
       >
         <Box>
           <Typography
             variant="body1"
-            sx={{ fontWeight: 600, color: "var(--primary-color-1)" }}
+            sx={{ fontWeight: 500, color: "#1F2937" }}
           >
             {timeline.title}
           </Typography>
         </Box>
         <IconButton
+          size="small"
           sx={{
-            "&:hover": { bgcolor: "var(--primary-color-1)", color: "white" },
-            transition: "all 0.3s",
+            color: "text.secondary",
+            "&:hover": { bgcolor: "#F3F4F6", color: "var(--primary-color-1)" },
           }}
           onClick={() => onEdit(timeline, index)}
         >
-          <EditIcon />
+          <EditIcon fontSize="small" />
         </IconButton>
       </TimelineContent>
     </TimelineItem>
-  )
+  ),
 );
 // const TicketSection = ({ title, tickets }) => (
 // <motion.div
@@ -918,22 +891,23 @@ const ProjectTimelineItem = memo(
 const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
   <Box sx={{ mb: 2 }}>
     <SectionHeader onClick={onToggle}>
-      <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
+      <Typography sx={{ fontWeight: 500, fontSize: "0.875rem" }}>
+        {title}
+      </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Box
           sx={{
-            width: 24,
-            height: 24,
-            borderRadius: "50%",
-            backgroundColor: "white",
+            minWidth: 20,
+            height: 20,
+            borderRadius: "4px",
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            border: "1px solid",
-            borderColor: "grey.300",
-            color: "primary.main",
-            fontSize: "0.85rem",
-            fontWeight: 600,
+            color: "white",
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            px: 0.5,
           }}
           aria-label={`${noOFTickets ?? 0} tickets`}
         >
@@ -942,37 +916,34 @@ const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
         <ExpandMoreIcon
           sx={{
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.3s ease",
+            fontSize: 18,
           }}
         />
       </Box>
     </SectionHeader>
     <Collapse in={open}>
-      <Box sx={{ p: { xs: 2, md: 3 } }}>
+      <Box sx={{ py: 1 }}>
         {tickets.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
+          <Box sx={{ textAlign: "center", py: 3 }}>
             <HourglassEmptyIcon
-              sx={{ fontSize: 60, color: "text.secondary", opacity: 0.7 }}
+              sx={{ fontSize: 40, color: "#9CA3AF", mb: 1 }}
             />
-            <Typography
-              color="text.secondary"
-              mt={2}
-              sx={{ fontSize: "0.9rem" }}
-            >
+            <Typography variant="body2" color="text.secondary">
               No tickets found.
             </Typography>
           </Box>
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
             {tickets.map((ticket) => (
               <TaskCard key={ticket.id}>
                 <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 15%" } }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      fontWeight: 600,
-                      color: "text.primary",
-                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      color: "#6B7280",
+                      fontSize: "0.8rem",
+                      fontFamily: "monospace",
                     }}
                   >
                     {ticket.ticket_no}
@@ -983,23 +954,26 @@ const TicketSection = ({ title, tickets, open, onToggle, noOFTickets }) => (
                     variant="body2"
                     sx={{
                       fontWeight: 500,
-                      color: "text.primary",
-                      fontSize: "0.9rem",
+                      color: "#1F2937",
+                      fontSize: "0.875rem",
                     }}
                   >
                     {ticket.title}
                   </Typography>
                 </Box>
                 <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 20%" } }}>
-                  <StatusBadge label={formatStatusForDisplay(ticket.status)} />
+                  <StatusBadge
+                    label={formatStatusForDisplay(ticket.status)}
+                    status={ticket.status}
+                  />
                 </Box>
                 <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 30%" } }}>
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 400,
-                      color: "text.secondary",
-                      fontSize: "0.85rem",
+                      color: "#6B7280",
+                      fontSize: "0.8rem",
                     }}
                   >
                     {ticket.current_user
@@ -1049,7 +1023,7 @@ const taskSchema = Yup.object({
   current_user_id: Yup.string().test(
     "is-uuid",
     "User ID must be a valid UUID",
-    (value) => (value ? isUUID(value) : true)
+    (value) => (value ? isUUID(value) : true),
   ),
   deadline_hours: Yup.number()
     .min(0, "Hours cannot be negative")
@@ -1104,13 +1078,13 @@ const ProjectDetailsPage = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [clientDialogMode, setClientDialogMode] = useState<"add" | "edit">(
-    "add"
+    "add",
   );
   const [timelineDialogMode, setTimelineDialogMode] = useState<"add" | "edit">(
-    "add"
+    "add",
   );
   const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(
-    null
+    null,
   );
   const [selectedTimelineIndex, setSelectedTimelineIndex] = useState<
     number | null
@@ -1160,13 +1134,13 @@ const ProjectDetailsPage = () => {
     setAttachmentsLoading(true);
     try {
       const res = await axiosInstance.get(
-        `/project-management/${id}/attachments`
+        `/project-management/${id}/attachments`,
       );
       const attachmentData: ProjectAttachment[] = (res.data?.data || []).map(
         (item: ProjectAttachment) => ({
           ...item,
           file_size: item.file_size ? Number(item.file_size) : undefined,
-        })
+        }),
       );
       setAttachments(attachmentData);
     } catch (error) {
@@ -1179,7 +1153,7 @@ const ProjectDetailsPage = () => {
   };
 
   const handleAttachmentUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !id) {
@@ -1195,14 +1169,14 @@ const ProjectDetailsPage = () => {
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
-          }
+          },
         );
       });
       await Promise.all(uploads);
       toast.success(
         files.length > 1
           ? "Files uploaded successfully"
-          : "File uploaded successfully"
+          : "File uploaded successfully",
       );
       await fetchAttachments();
     } catch (error) {
@@ -1242,7 +1216,7 @@ const ProjectDetailsPage = () => {
 
   const handleDeleteDocument = async (documentId: string) => {
     const confirmDelete = window.confirm(
-      "Delete this document? This cannot be undone."
+      "Delete this document? This cannot be undone.",
     );
     if (!confirmDelete) return;
     try {
@@ -1262,7 +1236,7 @@ const ProjectDetailsPage = () => {
     }
     try {
       await axiosInstance.delete(
-        `/project-management/attachments/${attachmentId}`
+        `/project-management/attachments/${attachmentId}`,
       );
       toast.success("Attachment removed");
       setAttachments((prev) => prev.filter((item) => item.id !== attachmentId));
@@ -1284,7 +1258,7 @@ const ProjectDetailsPage = () => {
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -1311,14 +1285,14 @@ const ProjectDetailsPage = () => {
     const fetchProject = async () => {
       try {
         const res = await axiosInstance.get(
-          `/project-management/find-one/${id}`
+          `/project-management/find-one/${id}`,
         );
         const projectData = res.data.data;
         setProject(projectData);
         setClientDetails(
           projectData?.client_details?.length > 0
             ? projectData?.client_details[0]
-            : { name: "", email: "", contact: "" }
+            : { name: "", email: "", contact: "" },
         );
         setTimelineDetails(
           projectData?.project_timeline?.length > 0
@@ -1326,7 +1300,7 @@ const ProjectDetailsPage = () => {
             : {
                 time: new Date().toISOString().split("T")[0],
                 title: "",
-              }
+              },
         );
         setLoading(false);
       } catch (err) {
@@ -1338,14 +1312,14 @@ const ProjectDetailsPage = () => {
     const fetchTeam = async () => {
       try {
         const res = await axiosInstance.get(
-          `/project-management/project-team/${id}`
+          `/project-management/project-team/${id}`,
         );
         const teamData = res.data.data;
         teamData.forEach((member: TeamMember, index: number) => {
           if (!member.user.designation) {
             console.warn(
               `Team member at index ${index} has no designation:`,
-              member
+              member,
             );
           }
         });
@@ -1372,7 +1346,7 @@ const ProjectDetailsPage = () => {
           const allUsers = res.data.data || [];
           const unassignedUsers = allUsers.filter(
             (user: User) =>
-              !teamMembers.some((member) => member.user.id === user.id)
+              !teamMembers.some((member) => member.user.id === user.id),
           );
           setAvailableUsers(unassignedUsers);
         } catch (err) {
@@ -1411,7 +1385,7 @@ const ProjectDetailsPage = () => {
       await axiosInstance.post(`/project-management/assign-team`, payload);
       toast.success("Team members assigned successfully");
       const res = await axiosInstance.get(
-        `/project-management/project-team/${id}`
+        `/project-management/project-team/${id}`,
       );
       setTeamMembers(res.data.data);
       handleCloseDialog();
@@ -1440,15 +1414,15 @@ const ProjectDetailsPage = () => {
       const payload = { userId: selectedMember.user.id, status: newStatus };
       await axiosInstance.patch(
         `/project-management/team-user/status/${id}`,
-        payload
+        payload,
       );
       toast.success("Team member status updated successfully");
       setTeamMembers((prev) =>
         prev.map((member) =>
           member.user.id === selectedMember.user.id
             ? { ...member, status: newStatus }
-            : member
-        )
+            : member,
+        ),
       );
       handleCloseStatusDialog();
     } catch (err) {
@@ -1462,7 +1436,7 @@ const ProjectDetailsPage = () => {
   const handleOpenClientDialog = (
     mode: "add" | "edit",
     client?: { name: string; email: string; contact: string },
-    index?: number
+    index?: number,
   ) => {
     setClientDialogMode(mode);
     setClientDetails(client || { name: "", email: "", contact: "" });
@@ -1479,7 +1453,7 @@ const ProjectDetailsPage = () => {
 
   const handleClientChange = (
     field: "name" | "email" | "contact",
-    value: string
+    value: string,
   ) => {
     setClientDetails((prev) => ({ ...prev, [field]: value }));
   };
@@ -1502,10 +1476,10 @@ const ProjectDetailsPage = () => {
       toast.success(
         `Client details ${
           clientDialogMode === "edit" ? "updated" : "added"
-        } successfully`
+        } successfully`,
       );
       setProject((prev) =>
-        prev ? { ...prev, client_details: updatedClientDetails } : null
+        prev ? { ...prev, client_details: updatedClientDetails } : null,
       );
       handleCloseClientDialog();
     } catch (err) {
@@ -1513,12 +1487,12 @@ const ProjectDetailsPage = () => {
         `Failed to ${
           clientDialogMode === "edit" ? "update" : "add"
         } client details:`,
-        err
+        err,
       );
       toast.error(
         `Failed to ${
           clientDialogMode === "edit" ? "update" : "add"
-        } client details`
+        } client details`,
       );
     } finally {
       setIsSubmitting(false);
@@ -1528,11 +1502,11 @@ const ProjectDetailsPage = () => {
   const handleOpenTimelineDialog = (
     mode: "add" | "edit",
     timeline?: { time: string; title: string },
-    index?: number
+    index?: number,
   ) => {
     setTimelineDialogMode(mode);
     setTimelineDetails(
-      timeline || { time: new Date().toISOString().split("T")[0], title: "" }
+      timeline || { time: new Date().toISOString().split("T")[0], title: "" },
     );
     setSelectedTimelineIndex(index !== undefined ? index : null);
     setOpenTimelineDialog(true);
@@ -1570,10 +1544,10 @@ const ProjectDetailsPage = () => {
       toast.success(
         `Project timeline ${
           timelineDialogMode === "edit" ? "updated" : "added"
-        } successfully`
+        } successfully`,
       );
       setProject((prev) =>
-        prev ? { ...prev, project_timeline: updatedTimeline } : null
+        prev ? { ...prev, project_timeline: updatedTimeline } : null,
       );
       handleCloseTimelineDialog();
     } catch (err) {
@@ -1581,12 +1555,12 @@ const ProjectDetailsPage = () => {
         `Failed to ${
           timelineDialogMode === "edit" ? "update" : "add"
         } project timeline:`,
-        err
+        err,
       );
       toast.error(
         `Failed to ${
           timelineDialogMode === "edit" ? "update" : "add"
-        } project timeline`
+        } project timeline`,
       );
     } finally {
       setIsSubmitting(false);
@@ -1607,7 +1581,7 @@ const ProjectDetailsPage = () => {
 
     if (!isUnique) {
       throw new Error(
-        "Unable to generate a unique ticket number after maximum attempts"
+        "Unable to generate a unique ticket number after maximum attempts",
       );
     }
 
@@ -1633,7 +1607,7 @@ const ProjectDetailsPage = () => {
         try {
           const response = await axiosInstance.post(
             "/task-maangement",
-            payload
+            payload,
           );
           isUnique = true;
 
@@ -1643,7 +1617,7 @@ const ProjectDetailsPage = () => {
           }
 
           const selectedUser = modalUsers.find(
-            (user) => user?.id === values?.current_user_id
+            (user) => user?.id === values?.current_user_id,
           );
           const createdTask: Report = {
             id: taskId,
@@ -1668,7 +1642,7 @@ const ProjectDetailsPage = () => {
         } catch (error) {
           if (
             error.response?.data?.message?.includes(
-              "Ticket number already exists"
+              "Ticket number already exists",
             )
           ) {
             attempts++;
@@ -1680,7 +1654,7 @@ const ProjectDetailsPage = () => {
 
       if (!isUnique) {
         throw new Error(
-          "Unable to create task: Could not generate a unique ticket number"
+          "Unable to create task: Could not generate a unique ticket number",
         );
       }
     } catch (error) {
@@ -1689,11 +1663,11 @@ const ProjectDetailsPage = () => {
         toast.error(
           `Failed to create task: ${
             error.response.data.message || "Unknown error"
-          }`
+          }`,
         );
       } else {
         toast.error(
-          `Failed to create task: ${error.message || "Network error"}`
+          `Failed to create task: ${error.message || "Network error"}`,
         );
       }
     } finally {
@@ -1711,7 +1685,7 @@ const ProjectDetailsPage = () => {
       if (project?.id) {
         try {
           const response = await axiosInstance.get(
-            `/project-management/project-team/${project?.id}`
+            `/project-management/project-team/${project?.id}`,
           );
           const teamMembers = response.data.data || [];
           const mappedUsers: User[] = teamMembers.map((member: any) => ({
@@ -1746,33 +1720,33 @@ const ProjectDetailsPage = () => {
   // const unassignedTasks = tasks.filter(task => !task.current_user);
 
   const filteredTasks = tasks.filter((task) =>
-    task.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    task.title?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const priority1Tasks = filteredTasks.filter(
     (task) =>
       task.priority === "p1" &&
-      !(task.status === "testable" || task.status === "completed")
+      !(task.status === "testable" || task.status === "completed"),
   );
   const priority2Tasks = filteredTasks.filter(
     (task) =>
       task.priority === "p2" &&
-      !(task.status === "testable" || task.status === "completed")
+      !(task.status === "testable" || task.status === "completed"),
   );
   const priority3Tasks = filteredTasks.filter(
     (task) =>
       task.priority === "p3" &&
-      !(task.status === "testable" || task.status === "completed")
+      !(task.status === "testable" || task.status === "completed"),
   );
   const unassignedTasks = filteredTasks.filter((task) => !task.current_user);
   const completedTasks = filteredTasks.filter(
-    (task) => task.status === "testable" || task.status === "completed"
+    (task) => task.status === "testable" || task.status === "completed",
   );
 
   const filteredMembers = teamMembers.filter((member) =>
     `${member.user.first_name} ${member.user.last_name}`
       .toLowerCase()
-      .includes(search.toLowerCase())
+      .includes(search.toLowerCase()),
   );
 
   const statusOptions = [
@@ -1788,18 +1762,18 @@ const ProjectDetailsPage = () => {
       <Box sx={{ p: { xs: 2, md: 4 } }}>
         <Skeleton
           variant="rectangular"
-          height={250}
-          sx={{ borderRadius: "20px", mb: 4 }}
+          height={120}
+          sx={{ borderRadius: "8px", mb: 3 }}
         />
         <Skeleton
           variant="rectangular"
-          height={350}
-          sx={{ borderRadius: "20px", mb: 4 }}
+          height={200}
+          sx={{ borderRadius: "8px", mb: 3 }}
         />
         <Skeleton
           variant="rectangular"
-          height={250}
-          sx={{ borderRadius: "20px" }}
+          height={150}
+          sx={{ borderRadius: "8px" }}
         />
       </Box>
     );
@@ -1821,16 +1795,18 @@ const ProjectDetailsPage = () => {
         position="top-right"
         toastOptions={{
           style: {
-            borderRadius: "12px",
+            borderRadius: "6px",
             background: "#fff",
             color: "#1F2937",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            border: "1px solid #E5E7EB",
+            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+            fontSize: "0.875rem",
           },
           success: {
-            style: { border: "1px solid #10B981" },
+            style: { borderColor: "#10B981" },
           },
           error: {
-            style: { border: "1px solid #B91C1C" },
+            style: { borderColor: "#B91C1C" },
           },
         }}
       />
@@ -1842,36 +1818,21 @@ const ProjectDetailsPage = () => {
           overflowX: "hidden",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
+        <Box>
           <Card
             sx={{
-              mb: 6,
-              position: "relative",
-              overflow: "hidden",
-              "&:before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "4px",
-                background:
-                  "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
-              },
+              mb: 4,
+              cursor: "pointer",
             }}
             onClick={() => setExpanded(!expanded)}
           >
-            <CardContent sx={{ p: { xs: 4, md: 6 }, position: "relative" }}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
               <Box
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  mb: 3,
+                  mb: expanded ? 2 : 0,
                   flexWrap: "wrap",
                   gap: 2,
                 }}
@@ -1879,11 +1840,8 @@ const ProjectDetailsPage = () => {
                 <Typography
                   variant="h5"
                   sx={{
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
                     flex: "1 1 auto",
-                    backgroundColor: "var(--primary-color-1)",
-                    color: "var(--text-color)",
+                    color: "#1F2937",
                   }}
                 >
                   {project.title}
@@ -1907,79 +1865,73 @@ const ProjectDetailsPage = () => {
                     Sprints
                   </Button>
                   <IconButton
+                    size="small"
                     sx={{
-                      "&:hover": {
-                        bgcolor: "var(--primary-color-1)",
-                        color: "white",
-                      },
-                      transition: "all 0.3s",
+                      color: "text.secondary",
+                      "&:hover": { bgcolor: "#F3F4F6" },
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setExpanded(!expanded);
                     }}
                   >
-                    <InfoIcon />
+                    <InfoIcon fontSize="small" />
                   </IconButton>
                 </Box>
               </Box>
-              <motion.div
-                initial={{ height: expanded ? "auto" : 0 }}
-                animate={{ height: expanded ? "auto" : 0 }}
-                transition={{ duration: 0.4 }}
-                style={{ overflow: "hidden" }}
-              >
+              <Collapse in={expanded}>
                 <Box
                   sx={{
                     display: "grid",
                     gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 2,
-                    p: 2,
-                    borderRadius: "12px",
+                    gap: 1.5,
+                    pt: 2,
+                    borderTop: "1px solid #E5E7EB",
                   }}
                 >
-                  <Typography variant="body1">
-                    <strong>Status:</strong> {project?.status}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>Status:</strong>{" "}
+                    {project?.status}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Client:</strong>{" "}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>Client:</strong>{" "}
                     {project?.client_details?.length > 0
                       ? project?.client_details[0]?.name
                       : "—"}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Current Phase:</strong>{" "}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>Current Phase:</strong>{" "}
                     {project.current_phase || "—"}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Start Date:</strong>{" "}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>Start Date:</strong>{" "}
                     {formatDate(project?.start_date)}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>End Date:</strong> {formatDate(project?.end_date)}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>End Date:</strong>{" "}
+                    {formatDate(project?.end_date)}
                   </Typography>
-                  <Typography variant="body1">
-                    <strong>Deadline:</strong> {formatDate(project?.deadLine)}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong style={{ color: "#1F2937" }}>Deadline:</strong>{" "}
+                    {formatDate(project?.deadLine)}
                   </Typography>
                   <Typography
-                    variant="body1"
+                    variant="body2"
+                    color="text.secondary"
                     sx={{ gridColumn: { xs: "1", sm: "1 / 3" } }}
                   >
-                    <strong>Description:</strong> {project?.description || "—"}
+                    <strong style={{ color: "#1F2937" }}>Description:</strong>{" "}
+                    {project?.description || "—"}
                   </Typography>
                 </Box>
-              </motion.div>
+              </Collapse>
             </CardContent>
           </Card>
-        </motion.div>
+        </Box>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-        >
-          <Card sx={{ mb: 6 }}>
-            <CardContent sx={{ p: { xs: 4, md: 6 } }}>
+        <Box>
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
               <Box
                 sx={{
                   display: "flex",
@@ -1993,7 +1945,7 @@ const ProjectDetailsPage = () => {
                 <Box>
                   <Typography
                     variant="h6"
-                    sx={{ color: "var(--primary-color-1)" }}
+                    sx={{ color: "#1F2937", fontWeight: 600 }}
                   >
                     Project Files & Documents
                   </Typography>
@@ -2013,15 +1965,16 @@ const ProjectDetailsPage = () => {
                   />
                   <Button
                     variant="outlined"
-                    startIcon={<CloudUploadIcon />}
+                    size="small"
+                    startIcon={<CloudUploadIcon fontSize="small" />}
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingAttachment}
                     sx={{
-                      borderColor: "var(--primary-color-1)",
-                      color: "var(--primary-color-1)",
+                      borderColor: "#D1D5DB",
+                      color: "#374151",
                       "&:hover": {
-                        borderColor: "var(--primary-color-2)",
-                        bgcolor: "rgba(30, 58, 138, 0.05)",
+                        borderColor: "#9CA3AF",
+                        bgcolor: "#F9FAFB",
                       },
                     }}
                   >
@@ -2029,7 +1982,8 @@ const ProjectDetailsPage = () => {
                   </Button>
                   <Button
                     variant="contained"
-                    startIcon={<NoteAddIcon />}
+                    size="small"
+                    startIcon={<NoteAddIcon fontSize="small" />}
                     onClick={() => setCreateDocModalOpen(true)}
                     sx={{
                       bgcolor: "var(--primary-color-1)",
@@ -2050,10 +2004,10 @@ const ProjectDetailsPage = () => {
                 documents.length > 0 && (
                   <>
                     <Typography
-                      variant="subtitle2"
-                      sx={{ mb: 1.5, color: "text.secondary", fontWeight: 600 }}
+                      variant="body2"
+                      sx={{ mb: 1.5, color: "#6B7280", fontWeight: 500 }}
                     >
-                      📝 Documents ({documents.length})
+                      Documents ({documents.length})
                     </Typography>
                     <Stack spacing={2} sx={{ mb: 3 }}>
                       {documents.map((doc) => {
@@ -2079,46 +2033,43 @@ const ProjectDetailsPage = () => {
                             spacing={2}
                             alignItems={{ xs: "flex-start", md: "center" }}
                             sx={{
-                              p: 2.5,
-                              borderRadius: "16px",
-                              border: "1px solid rgba(16, 185, 129, 0.2)",
-                              bgcolor: "rgba(16, 185, 129, 0.03)",
-                              boxShadow: "0 6px 14px rgba(15, 23, 42, 0.05)",
+                              p: 2,
+                              borderRadius: "6px",
+                              border: "1px solid #E5E7EB",
+                              bgcolor: "#ffffff",
                               cursor: "pointer",
-                              transition: "all 0.2s ease",
                               "&:hover": {
-                                borderColor: "rgba(16, 185, 129, 0.4)",
-                                bgcolor: "rgba(16, 185, 129, 0.06)",
+                                bgcolor: "#F9FAFB",
                               },
                             }}
                             onClick={() =>
                               router.push(
-                                `/project-listing/${id}/documents/${doc.id}`
+                                `/project-listing/${id}/documents/${doc.id}`,
                               )
                             }
                           >
                             <Box
                               sx={{
-                                width: 52,
-                                height: 52,
-                                borderRadius: "14px",
-                                bgcolor: "rgba(16, 185, 129, 0.12)",
-                                color: "#10B981",
+                                width: 40,
+                                height: 40,
+                                borderRadius: "6px",
+                                bgcolor: "#DCFCE7",
+                                color: "#166534",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 position: "relative",
                               }}
                             >
-                              <ArticleIcon />
+                              <ArticleIcon fontSize="small" />
                               {doc.is_locked && (
                                 <LockIcon
                                   sx={{
                                     position: "absolute",
-                                    bottom: -4,
-                                    right: -4,
-                                    fontSize: 16,
-                                    color: "warning.main",
+                                    bottom: -2,
+                                    right: -2,
+                                    fontSize: 12,
+                                    color: "#B45309",
                                     bgcolor: "white",
                                     borderRadius: "50%",
                                     p: 0.25,
@@ -2128,12 +2079,13 @@ const ProjectDetailsPage = () => {
                             </Box>
                             <Box sx={{ flexGrow: 1, width: "100%" }}>
                               <Typography
-                                variant="subtitle2"
+                                variant="body2"
                                 sx={{
-                                  fontWeight: 600,
+                                  fontWeight: 500,
                                   display: "flex",
                                   alignItems: "center",
                                   gap: 1,
+                                  color: "#1F2937",
                                 }}
                               >
                                 {doc.title}
@@ -2141,8 +2093,13 @@ const ProjectDetailsPage = () => {
                                   <Chip
                                     label="Locked"
                                     size="small"
-                                    color="warning"
-                                    sx={{ height: 20, fontSize: 10 }}
+                                    sx={{
+                                      height: 18,
+                                      fontSize: 10,
+                                      bgcolor: "#FEF3C7",
+                                      color: "#B45309",
+                                      borderRadius: "4px",
+                                    }}
                                   />
                                 )}
                               </Typography>
@@ -2162,34 +2119,35 @@ const ProjectDetailsPage = () => {
                               <Button
                                 variant="outlined"
                                 size="small"
-                                startIcon={<EditIcon fontSize="small" />}
+                                startIcon={<EditIcon sx={{ fontSize: 14 }} />}
                                 onClick={() =>
                                   router.push(
-                                    `/project-listing/${id}/documents/${doc.id}`
+                                    `/project-listing/${id}/documents/${doc.id}`,
                                   )
                                 }
                                 sx={{
-                                  borderColor: "#10B981",
-                                  color: "#10B981",
+                                  borderColor: "#D1D5DB",
+                                  color: "#374151",
+                                  fontSize: "0.75rem",
                                   "&:hover": {
-                                    borderColor: "#059669",
-                                    bgcolor: "rgba(16, 185, 129, 0.05)",
+                                    borderColor: "#9CA3AF",
+                                    bgcolor: "#F9FAFB",
                                   },
                                 }}
                               >
                                 Open
                               </Button>
                               <IconButton
-                                color="error"
+                                size="small"
                                 onClick={() => handleDeleteDocument(doc.id)}
                                 sx={{
-                                  bgcolor: "rgba(254, 226, 226, 0.6)",
+                                  color: "#B91C1C",
                                   "&:hover": {
-                                    bgcolor: "rgba(248, 113, 113, 0.2)",
+                                    bgcolor: "#FEE2E2",
                                   },
                                 }}
                               >
-                                <DeleteOutlineIcon />
+                                <DeleteOutlineIcon fontSize="small" />
                               </IconButton>
                             </Stack>
                           </Stack>
@@ -2207,28 +2165,32 @@ const ProjectDetailsPage = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    py: 6,
+                    py: 4,
                   }}
                 >
-                  <CircularProgress size={28} />
+                  <CircularProgress size={24} />
                 </Box>
               ) : attachments.length === 0 && documents.length === 0 ? (
                 <Box
                   sx={{
                     textAlign: "center",
-                    py: 6,
-                    borderRadius: "16px",
-                    border: "1px dashed rgba(148, 163, 184, 0.4)",
-                    bgcolor: "rgba(248, 250, 252, 0.6)",
+                    py: 4,
+                    borderRadius: "6px",
+                    border: "1px dashed #D1D5DB",
+                    bgcolor: "#F9FAFB",
                   }}
                 >
                   <DescriptionIcon
-                    sx={{ fontSize: 56, color: "text.disabled", mb: 1 }}
+                    sx={{ fontSize: 40, color: "#9CA3AF", mb: 1 }}
                   />
-                  <Typography variant="subtitle1" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
                     No files or documents yet
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="caption" color="text.secondary">
                     Upload files or create collaborative documents for your
                     team.
                   </Typography>
@@ -2236,12 +2198,12 @@ const ProjectDetailsPage = () => {
               ) : attachments.length === 0 ? null : (
                 <>
                   <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1.5, color: "text.secondary", fontWeight: 600 }}
+                    variant="body2"
+                    sx={{ mb: 1.5, color: "#6B7280", fontWeight: 500 }}
                   >
-                    📎 Uploaded Files ({attachments.length})
+                    Uploaded Files ({attachments.length})
                   </Typography>
-                  <Stack spacing={2}>
+                  <Stack spacing={1}>
                     {attachments.map((file) => {
                       const uploadedAt = file.uploaded_at
                         ? new Date(file.uploaded_at)
@@ -2267,31 +2229,30 @@ const ProjectDetailsPage = () => {
                           spacing={2}
                           alignItems={{ xs: "flex-start", md: "center" }}
                           sx={{
-                            p: 2.5,
-                            borderRadius: "16px",
-                            border: "1px solid rgba(148, 163, 184, 0.18)",
-                            bgcolor: "rgba(249, 250, 251, 0.8)",
-                            boxShadow: "0 6px 14px rgba(15, 23, 42, 0.05)",
+                            p: 2,
+                            borderRadius: "6px",
+                            border: "1px solid #E5E7EB",
+                            bgcolor: "#ffffff",
                           }}
                         >
                           <Box
                             sx={{
-                              width: 52,
-                              height: 52,
-                              borderRadius: "14px",
-                              bgcolor: "rgba(30, 58, 138, 0.12)",
-                              color: "var(--primary-color-1)",
+                              width: 40,
+                              height: 40,
+                              borderRadius: "6px",
+                              bgcolor: "#DBEAFE",
+                              color: "#1E40AF",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                             }}
                           >
-                            <DescriptionIcon />
+                            <DescriptionIcon fontSize="small" />
                           </Box>
                           <Box sx={{ flexGrow: 1, width: "100%" }}>
                             <Typography
-                              variant="subtitle2"
-                              sx={{ fontWeight: 600 }}
+                              variant="body2"
+                              sx={{ fontWeight: 500, color: "#1F2937" }}
                             >
                               {file.file_name}
                             </Typography>
@@ -2309,13 +2270,24 @@ const ProjectDetailsPage = () => {
                             <Button
                               variant="outlined"
                               size="small"
-                              startIcon={<VisibilityIcon fontSize="small" />}
+                              startIcon={
+                                <VisibilityIcon sx={{ fontSize: 14 }} />
+                              }
                               onClick={() =>
                                 id &&
                                 router.push(
-                                  `/project-listing/${id}/files?file=${file.id}`
+                                  `/project-listing/${id}/files?file=${file.id}`,
                                 )
                               }
+                              sx={{
+                                borderColor: "#D1D5DB",
+                                color: "#374151",
+                                fontSize: "0.75rem",
+                                "&:hover": {
+                                  borderColor: "#9CA3AF",
+                                  bgcolor: "#F9FAFB",
+                                },
+                              }}
                             >
                               View
                             </Button>
@@ -2326,21 +2298,30 @@ const ProjectDetailsPage = () => {
                               href={file.file_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              startIcon={<DownloadIcon fontSize="small" />}
+                              startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
+                              sx={{
+                                borderColor: "#D1D5DB",
+                                color: "#374151",
+                                fontSize: "0.75rem",
+                                "&:hover": {
+                                  borderColor: "#9CA3AF",
+                                  bgcolor: "#F9FAFB",
+                                },
+                              }}
                             >
                               Download
                             </Button>
                             <IconButton
-                              color="error"
+                              size="small"
                               onClick={() => handleDeleteAttachment(file.id)}
                               sx={{
-                                bgcolor: "rgba(254, 226, 226, 0.6)",
+                                color: "#B91C1C",
                                 "&:hover": {
-                                  bgcolor: "rgba(248, 113, 113, 0.2)",
+                                  bgcolor: "#FEE2E2",
                                 },
                               }}
                             >
-                              <DeleteOutlineIcon />
+                              <DeleteOutlineIcon fontSize="small" />
                             </IconButton>
                           </Stack>
                         </Stack>
@@ -2358,16 +2339,12 @@ const ProjectDetailsPage = () => {
               />
             </CardContent>
           </Card>
-        </motion.div>
+        </Box>
 
         {/* Team Members Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-        >
-          <Card sx={{ mb: 6 }}>
-            <CardContent sx={{ p: { xs: 4, md: 6 } }}>
+        <Box>
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
               <Box
                 sx={{
                   display: "flex",
@@ -2378,58 +2355,63 @@ const ProjectDetailsPage = () => {
               >
                 <Typography
                   variant="h6"
-                  sx={{ color: "var(--primary-color-1)" }}
+                  sx={{ color: "#1F2937", fontWeight: 600 }}
                 >
                   Team Members
                 </Typography>
                 <IconButton
+                  size="small"
                   sx={{
-                    backgroundColor: "#DCDCDC",
+                    bgcolor: "#F3F4F6",
+                    color: "#374151",
                     "&:hover": {
-                      backgroundColor: "var(--primary-color-1)",
+                      bgcolor: "var(--primary-color-1)",
                       color: "white",
                     },
-                    transition: "all 0.3s",
                   }}
                   onClick={handleOpenDialog}
                 >
-                  <AddIcon />
+                  <AddIcon fontSize="small" />
                 </IconButton>
               </Box>
               <TextField
                 label="Search Team Members"
                 variant="outlined"
                 fullWidth
-                sx={{ mb: 3 }}
+                size="small"
+                sx={{ mb: 2 }}
                 onChange={(e) => setSearch(e.target.value)}
               />
               {teamLoading ? (
-                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                  <Skeleton variant="circular" width={40} height={40} />
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={24} />
                 </Box>
               ) : filteredMembers?.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 6 }}>
-                  <GroupIcon
-                    sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }}
-                  />
-                  <Typography variant="h6" color="text.secondary" mt={2}>
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <GroupIcon sx={{ fontSize: 48, color: "#9CA3AF", mb: 1 }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
                     No team members found.
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" mt={1}>
+                  <Typography variant="caption" color="text.secondary">
                     Try adjusting your search or add a new team member.
                   </Typography>
                 </Box>
               ) : (
-                <Box sx={{ width: "100%", overflowX: "hidden" }}>
+                <Box sx={{ width: "100%", overflowX: "auto" }}>
                   <TableContainer
                     component={Paper}
                     sx={{
                       boxShadow: "none",
-                      borderRadius: "16px",
-                      bgcolor: "rgba(255, 255, 255, 0.9)",
+                      borderRadius: "6px",
+                      border: "1px solid #E5E7EB",
+                      bgcolor: "#ffffff",
                     }}
                   >
-                    <Table>
+                    <Table size="small">
                       <TableHead sx={{ position: "sticky", top: 0, zIndex: 1 }}>
                         <TableRow>
                           <TableCell>Icon</TableCell>
@@ -2444,7 +2426,7 @@ const ProjectDetailsPage = () => {
                         {filteredMembers
                           .slice(
                             page * rowsPerPage,
-                            page * rowsPerPage + rowsPerPage
+                            page * rowsPerPage + rowsPerPage,
                           )
                           .map((member, index) => (
                             <TeamMemberRow
@@ -2467,7 +2449,7 @@ const ProjectDetailsPage = () => {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </Box>
 
         {/* Assign Team Members Dialog */}
         <Dialog
@@ -2478,12 +2460,10 @@ const ProjectDetailsPage = () => {
         >
           <DialogTitle
             sx={{
-              bgcolor: "primary.main",
-              color: "white",
-              mb: 2,
-              textAlign: "center",
-              background:
-                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              borderBottom: "1px solid #E5E7EB",
+              pb: 2,
+              color: "#1F2937",
+              fontWeight: 600,
             }}
           >
             Assign Team Members
@@ -2508,7 +2488,7 @@ const ProjectDetailsPage = () => {
                           onDelete={(e) => {
                             e.stopPropagation();
                             setSelectedUsers((prev) =>
-                              prev.filter((id) => id !== value)
+                              prev.filter((id) => id !== value),
                             );
                           }}
                           onMouseDown={(e) => e.stopPropagation()}
@@ -2556,12 +2536,10 @@ const ProjectDetailsPage = () => {
         >
           <DialogTitle
             sx={{
-              bgcolor: "primary.main",
-              color: "white",
-              mb: 2,
-              textAlign: "center",
-              background:
-                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              borderBottom: "1px solid #E5E7EB",
+              pb: 2,
+              color: "#1F2937",
+              fontWeight: 600,
             }}
           >
             Change Status for {selectedMember?.user.first_name}{" "}
@@ -2599,12 +2577,10 @@ const ProjectDetailsPage = () => {
         >
           <DialogTitle
             sx={{
-              bgcolor: "primary.main",
-              color: "white",
-              mb: 2,
-              textAlign: "center",
-              background:
-                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              borderBottom: "1px solid #E5E7EB",
+              pb: 2,
+              color: "#1F2937",
+              fontWeight: 600,
             }}
           >
             {clientDialogMode === "edit"
@@ -2671,8 +2647,8 @@ const ProjectDetailsPage = () => {
               {isSubmitting
                 ? "Saving..."
                 : clientDialogMode === "edit"
-                ? "Save"
-                : "Add"}
+                  ? "Save"
+                  : "Add"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2686,12 +2662,10 @@ const ProjectDetailsPage = () => {
         >
           <DialogTitle
             sx={{
-              bgcolor: "primary.main",
-              color: "white",
-              mb: 2,
-              textAlign: "center",
-              background:
-                "linear-gradient(90deg, var(--primary-color-1), var(--primary-color-2))",
+              borderBottom: "1px solid #E5E7EB",
+              pb: 2,
+              color: "#1F2937",
+              fontWeight: 600,
             }}
           >
             {timelineDialogMode === "edit"
@@ -2748,147 +2722,137 @@ const ProjectDetailsPage = () => {
               {isSubmitting
                 ? "Saving..."
                 : timelineDialogMode === "edit"
-                ? "Save"
-                : "Add"}
+                  ? "Save"
+                  : "Add"}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Client Details */}
-        <Box sx={{ mb: 6 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          >
-            <Card sx={{ mb: 6 }}>
-              <CardContent sx={{ p: { xs: 4, md: 6 } }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{ color: "var(--primary-color-1)" }}
-                  >
-                    Client Details
-                  </Typography>
-                  <IconButton
-                    sx={{
-                      backgroundColor: "#DCDCDC",
-                      "&:hover": {
-                        backgroundColor: "var(--primary-color-1)",
-                        color: "white",
-                      },
-                      transition: "all 0.3s",
-                    }}
-                    onClick={() => handleOpenClientDialog("add")}
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </Box>
-                {project.client_details?.length === 0 ? (
-                  <Box sx={{ textAlign: "center", py: 6 }}>
-                    <GroupIcon
-                      sx={{
-                        fontSize: 80,
-                        color: "text.secondary",
-                        opacity: 0.7,
-                      }}
-                    />
-                    <Typography variant="h6" color="text.secondary" mt={2}>
-                      No client details found.
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box sx={{ width: "100%", overflowX: "hidden" }}>
-                    <TableContainer
-                      component={Paper}
-                      sx={{
-                        boxShadow: "none",
-                        borderRadius: "16px",
-                        bgcolor: "rgba(255, 255, 255, 0.9)",
-                        overflowY: "hidden",
-                      }}
-                    >
-                      <Table>
-                        <TableHead
-                          sx={{ position: "sticky", top: 0, zIndex: 1 }}
-                        >
-                          <TableRow>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Contact</TableCell>
-                            <TableCell>Action</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {project?.client_details?.map((client, index) => (
-                            <ClientRow
-                              key={client.email}
-                              client={client}
-                              index={index}
-                              onEdit={(client, index) =>
-                                handleOpenClientDialog("edit", client, index)
-                              }
-                            />
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </Box>
-
-        {/* Project Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-        >
+        <Box>
           <Card sx={{ mb: 4 }}>
-            <CardContent sx={{ p: { xs: 4, md: 6 } }}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
               <Box
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  mb: 4,
+                  alignItems: "center",
+                  mb: 3,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ color: "#1F2937", fontWeight: 600 }}
+                >
+                  Client Details
+                </Typography>
+                <IconButton
+                  size="small"
+                  sx={{
+                    bgcolor: "#F3F4F6",
+                    color: "#374151",
+                    "&:hover": {
+                      bgcolor: "var(--primary-color-1)",
+                      color: "white",
+                    },
+                  }}
+                  onClick={() => handleOpenClientDialog("add")}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              {project.client_details?.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <GroupIcon sx={{ fontSize: 48, color: "#9CA3AF", mb: 1 }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
+                    No client details found.
+                  </Typography>
+                </Box>
+              ) : (
+                <Box sx={{ width: "100%", overflowX: "auto" }}>
+                  <TableContainer
+                    component={Paper}
+                    sx={{
+                      boxShadow: "none",
+                      borderRadius: "6px",
+                      border: "1px solid #E5E7EB",
+                      bgcolor: "#ffffff",
+                    }}
+                  >
+                    <Table size="small">
+                      <TableHead sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+                        <TableRow>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Email</TableCell>
+                          <TableCell>Contact</TableCell>
+                          <TableCell>Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {project?.client_details?.map((client, index) => (
+                          <ClientRow
+                            key={client.email}
+                            client={client}
+                            index={index}
+                            onEdit={(client, index) =>
+                              handleOpenClientDialog("edit", client, index)
+                            }
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Project Timeline */}
+        <Box>
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mb: 3,
                   alignItems: "center",
                 }}
               >
                 <Typography
                   variant="h6"
-                  sx={{ color: "var(--primary-color-1)" }}
+                  sx={{ color: "#1F2937", fontWeight: 600 }}
                 >
                   Project Timeline
                 </Typography>
                 <IconButton
+                  size="small"
                   sx={{
-                    backgroundColor: "#DCDCDC",
+                    bgcolor: "#F3F4F6",
+                    color: "#374151",
                     "&:hover": {
-                      backgroundColor: "var(--primary-color-1)",
+                      bgcolor: "var(--primary-color-1)",
                       color: "white",
                     },
-                    transition: "all 0.3s",
                   }}
                   onClick={() => handleOpenTimelineDialog("add")}
                 >
-                  <AddIcon />
+                  <AddIcon fontSize="small" />
                 </IconButton>
               </Box>
               {project.project_timeline?.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 6 }}>
-                  <GroupIcon
-                    sx={{ fontSize: 80, color: "text.secondary", opacity: 0.7 }}
-                  />
-                  <Typography variant="h6" color="text.secondary" mt={2}>
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <GroupIcon sx={{ fontSize: 48, color: "#9CA3AF", mb: 1 }} />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
                     No timeline entries found.
                   </Typography>
                 </Box>
@@ -2907,7 +2871,7 @@ const ProjectDetailsPage = () => {
                       ?.sort(
                         (a, b) =>
                           new Date(a.time).getTime() -
-                          new Date(b.time).getTime()
+                          new Date(b.time).getTime(),
                       )
                       ?.map((timeline, index) => (
                         <ProjectTimelineItem
@@ -2928,14 +2892,10 @@ const ProjectDetailsPage = () => {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </Box>
 
         {/* Tasks Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-        >
+        <Box>
           <TasksContainer>
             <Box
               sx={{
@@ -2943,41 +2903,40 @@ const ProjectDetailsPage = () => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 3,
-                px: 3,
               }}
             >
               <Typography
-                variant="h4"
-                sx={{ fontWeight: 700, color: "var(--primary-color-1)" }}
+                variant="h6"
+                sx={{ fontWeight: 600, color: "#1F2937" }}
               >
                 Tasks
               </Typography>
-              <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <SearchField
                   label="Search by title"
                   variant="outlined"
                   size="small"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ width: { xs: "100%", sm: 300 } }}
+                  sx={{ width: { xs: "100%", sm: 250 } }}
                 />
                 <IconButton
+                  size="small"
                   sx={{
-                    backgroundColor: "#DCDCDC",
-                    marginLeft: "10px",
+                    bgcolor: "#F3F4F6",
+                    color: "#374151",
                     "&:hover": {
-                      backgroundColor: "var(--primary-color-1)",
+                      bgcolor: "var(--primary-color-1)",
                       color: "white",
                     },
-                    transition: "all 0.3s",
                   }}
                   onClick={handleOpenModal}
                 >
-                  <AddIcon />
+                  <AddIcon fontSize="small" />
                 </IconButton>
               </Box>
             </Box>
-            <Box sx={{ px: 3 }}>
+            <Box>
               {(searchTerm === "" || priority1Tasks.length > 0) && (
                 <TicketSection
                   title="Priority 1 Tickets"
@@ -3024,22 +2983,16 @@ const ProjectDetailsPage = () => {
                 />
               )}
               {searchTerm && filteredTasks.length === 0 && (
-                <Box sx={{ textAlign: "center", py: 4, px: 3 }}>
-                  <GroupIcon
-                    sx={{ fontSize: 60, color: "text.secondary", opacity: 0.7 }}
-                  />
-                  <Typography
-                    color="text.secondary"
-                    mt={2}
-                    sx={{ fontSize: "0.9rem" }}
-                  >
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <GroupIcon sx={{ fontSize: 48, color: "#9CA3AF", mb: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
                     No tickets found matching '{searchTerm}'
                   </Typography>
                 </Box>
               )}
             </Box>
           </TasksContainer>
-        </motion.div>
+        </Box>
       </Box>
       <Modal open={openModal} onClose={handleCloseModal}>
         <Box
@@ -3049,17 +3002,25 @@ const ProjectDetailsPage = () => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: 800,
+            maxWidth: "95vw",
             bgcolor: "#ffffff",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 4,
+            borderRadius: "8px",
+            border: "1px solid #E5E7EB",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            p: 3,
           }}
         >
           <Typography
-            component="h2"
-            sx={{ mb: 2, fontWeight: "bold", color: "#172b4d" }}
+            variant="h6"
+            sx={{
+              mb: 2,
+              fontWeight: 600,
+              color: "#1F2937",
+              pb: 2,
+              borderBottom: "1px solid #E5E7EB",
+            }}
           >
-            {"Add New Task"}
+            Add New Task
           </Typography>
           {error && (
             <Typography color="error" sx={{ mb: 2, color: "#f44336" }}>
@@ -3173,7 +3134,7 @@ const ProjectDetailsPage = () => {
                     <FormControl
                       fullWidth
                       error={Boolean(
-                        touched.current_user_id && errors?.current_user_id
+                        touched.current_user_id && errors?.current_user_id,
                       )}
                     >
                       <Autocomplete
@@ -3183,13 +3144,13 @@ const ProjectDetailsPage = () => {
                         }
                         value={
                           modalUsers.find(
-                            (u) => u.id === values.current_user_id
+                            (u) => u.id === values.current_user_id,
                           ) || null
                         }
                         onChange={(_, selectedUser) => {
                           setFieldValue(
                             "current_user_id",
-                            selectedUser?.id || ""
+                            selectedUser?.id || "",
                           );
                         }}
                         disabled={!values.project_id}
@@ -3212,7 +3173,8 @@ const ProjectDetailsPage = () => {
                               },
                             }}
                             error={Boolean(
-                              touched.current_user_id && errors?.current_user_id
+                              touched.current_user_id &&
+                              errors?.current_user_id,
                             )}
                             helperText={
                               touched.current_user_id &&
@@ -3295,7 +3257,7 @@ const ProjectDetailsPage = () => {
                             (parseFloat(values.deadline_minutes) || 0);
                           setFieldValue(
                             "deadline_total_minutes",
-                            Math.round(totalMinutes).toString()
+                            Math.round(totalMinutes).toString(),
                           );
                         }}
                       />
@@ -3333,7 +3295,7 @@ const ProjectDetailsPage = () => {
                             (parseFloat(minutes) || 0);
                           setFieldValue(
                             "deadline_total_minutes",
-                            Math.round(totalMinutes).toString()
+                            Math.round(totalMinutes).toString(),
                           );
                         }}
                       />

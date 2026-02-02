@@ -84,7 +84,8 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(document.is_locked);
   const [selectedUser, setSelectedUser] = useState<TeamMember | null>(null);
-  const [selectedPermission, setSelectedPermission] = useState<PermissionLevel>("edit");
+  const [selectedPermission, setSelectedPermission] =
+    useState<PermissionLevel>("edit");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -97,14 +98,14 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     setLoading(true);
     try {
       const axiosInstance = createAxiosInstance();
-      
+
       // Fetch permissions
       const perms = await getDocumentPermissions(projectId, documentId);
       setPermissions(perms);
 
       // Fetch team members
       const teamRes = await axiosInstance.get(
-        `/project-management/project-team/${projectId}`
+        `/project-management/project-team/${projectId}`,
       );
       const members = (teamRes.data?.data || []).map((t: any) => t.user);
       setTeamMembers(members);
@@ -136,7 +137,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
         projectId,
         documentId,
         selectedUser.id,
-        selectedPermission
+        selectedPermission,
       );
       setPermissions((prev) => {
         const existing = prev.findIndex((p) => p.user.id === selectedUser.id);
@@ -156,11 +157,14 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
     }
   };
 
-  const handleUpdatePermission = async (userId: string, permission: PermissionLevel) => {
+  const handleUpdatePermission = async (
+    userId: string,
+    permission: PermissionLevel,
+  ) => {
     try {
       await setUserPermission(projectId, documentId, userId, permission);
       setPermissions((prev) =>
-        prev.map((p) => (p.user.id === userId ? { ...p, permission } : p))
+        prev.map((p) => (p.user.id === userId ? { ...p, permission } : p)),
       );
       toast.success("Permission updated");
     } catch (error) {
@@ -180,7 +184,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 
   // Filter out users who already have permissions
   const availableUsers = teamMembers.filter(
-    (m) => !permissions.some((p) => p.user.id === m.id)
+    (m) => !permissions.some((p) => p.user.id === m.id),
   );
 
   return (
@@ -277,7 +281,10 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                     renderOption={(props, option) => (
                       <li {...props} key={option.id}>
                         <Avatar
-                          src={option.profile_image}
+                          src={
+                            option.profile_image ||
+                            "/images/profile/defaultprofile.jpg"
+                          }
                           sx={{ width: 28, height: 28, mr: 1 }}
                         >
                           {option.first_name.charAt(0)}
@@ -335,7 +342,12 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                         }}
                       >
                         <ListItemAvatar>
-                          <Avatar src={perm.user.profile_image}>
+                          <Avatar
+                            src={
+                              perm.user.profile_image ||
+                              "/images/profile/defaultprofile.jpg"
+                            }
+                          >
                             {perm.user.first_name?.charAt(0)}
                           </Avatar>
                         </ListItemAvatar>
@@ -360,7 +372,7 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
                             onChange={(e) =>
                               handleUpdatePermission(
                                 perm.user.id,
-                                e.target.value as PermissionLevel
+                                e.target.value as PermissionLevel,
                               )
                             }
                           >
@@ -394,4 +406,3 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
 };
 
 export default PermissionsModal;
-

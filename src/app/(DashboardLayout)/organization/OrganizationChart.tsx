@@ -150,10 +150,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               level === 0
                 ? "var(--primary-color-1)"
                 : level === 1
-                ? "var(--primary-color-2)"
-                : level === 2
-                ? "rgba(7, 152, 189, 0.5)"
-                : "rgba(0, 0, 0, 0.12)"
+                  ? "var(--primary-color-2)"
+                  : level === 2
+                    ? "rgba(7, 152, 189, 0.5)"
+                    : "rgba(0, 0, 0, 0.12)"
             }`,
             transition: "all 0.3s ease",
             "&:hover": {
@@ -175,7 +175,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               mb={1.5}
             >
               <Avatar
-                src={node.profileImage || undefined}
+                src={node.profileImage || "/images/profile/defaultprofile.jpg"}
                 sx={{
                   width: 64,
                   height: 64,
@@ -196,7 +196,9 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                     onToggle(node.id);
                   }}
                   sx={{
-                    bgcolor: isExpanded ? "var(--primary-color-1)" : "rgba(7, 152, 189, 0.08)",
+                    bgcolor: isExpanded
+                      ? "var(--primary-color-1)"
+                      : "rgba(7, 152, 189, 0.08)",
                     color: isExpanded ? "white" : "var(--primary-color-1)",
                     "&:hover": {
                       bgcolor: "var(--primary-color-1-hover)",
@@ -230,7 +232,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ mb: 0.5, fontSize: "0.75rem", display: "flex", alignItems: "center" }}
+                sx={{
+                  mb: 0.5,
+                  fontSize: "0.75rem",
+                  display: "flex",
+                  alignItems: "center",
+                }}
               >
                 <Badge sx={{ fontSize: 12, mr: 0.5 }} />
                 {node.employeeCode}
@@ -357,14 +364,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                     index === 0
                       ? "50%"
                       : index === node.children.length - 1
-                      ? "50%"
-                      : 0,
+                        ? "50%"
+                        : 0,
                   right:
                     index === node.children.length - 1
                       ? "50%"
                       : index === 0
-                      ? "50%"
-                      : 0,
+                        ? "50%"
+                        : 0,
                   height: 2,
                   bgcolor: "var(--primary-color-1)",
                   zIndex: 0,
@@ -398,7 +405,7 @@ const OrganizationChart: React.FC = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [userProjects, setUserProjects] = useState<Map<string, Project[]>>(
-    new Map()
+    new Map(),
   );
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -437,7 +444,7 @@ const OrganizationChart: React.FC = () => {
 
     try {
       const response = await axiosInstance.get(
-        `/organization/user-projects/${userId}?limit=5`
+        `/organization/user-projects/${userId}?limit=5`,
       );
       const projects = response.data.data || [];
       setUserProjects((prev) => {
@@ -526,7 +533,7 @@ const OrganizationChart: React.FC = () => {
     if (value.length > 2) {
       try {
         const response = await axiosInstance.get(
-          `/organization/search?q=${encodeURIComponent(value)}`
+          `/organization/search?q=${encodeURIComponent(value)}`,
         );
         setSearchResults(response.data.data || []);
       } catch (error) {
@@ -618,7 +625,16 @@ const OrganizationChart: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, bgcolor: "background.default", minHeight: "100vh", height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        p: 3,
+        bgcolor: "background.default",
+        minHeight: "100vh",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Header */}
       <Paper
         elevation={2}
@@ -833,7 +849,11 @@ const OrganizationChart: React.FC = () => {
                 onToggle={handleToggle}
                 onHover={handleHover}
                 onLeave={handleLeave}
-                projects={hoveredNodeId === node.id ? userProjects.get(node.id) : undefined}
+                projects={
+                  hoveredNodeId === node.id
+                    ? userProjects.get(node.id)
+                    : undefined
+                }
               />
             ))
           ) : (

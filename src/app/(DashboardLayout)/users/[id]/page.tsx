@@ -110,7 +110,7 @@ export default function UserProfilePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [taskReports, setTaskReports] = useState<TaskReport[]>([]);
   const [coverImage, setCoverImage] = useState<string>(
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   );
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<number>(0);
@@ -134,7 +134,7 @@ export default function UserProfilePage() {
 
   const fetchUserProjects = async () => {
     const res = await axiosInstance.get(
-      `/project-management/user-projects/${userId}`
+      `/project-management/user-projects/${userId}`,
     );
     return res.data;
   };
@@ -150,7 +150,7 @@ export default function UserProfilePage() {
       setFilteredProjects(projects);
     } else {
       const filtered = projects.filter((project) =>
-        project?.title.toLowerCase().includes(query.toLowerCase())
+        project?.title.toLowerCase().includes(query.toLowerCase()),
       );
       setFilteredProjects(filtered);
     }
@@ -181,7 +181,7 @@ export default function UserProfilePage() {
 
       await axiosInstance.post(
         `/project-management/assign-user-to-projects`,
-        payload
+        payload,
       );
       toast.success("User assigned to selected projects successfully");
       const projects = await fetchUserProjects();
@@ -251,7 +251,7 @@ export default function UserProfilePage() {
       try {
         // Fetch all projects
         const allProjectsRes = await axiosInstance.get(
-          "/project-management/list"
+          "/project-management/list",
         );
         if (allProjectsRes.data.status !== "success")
           throw new Error("Failed to fetch projects");
@@ -259,16 +259,16 @@ export default function UserProfilePage() {
 
         // Fetch projects assigned to the user
         const userProjectsRes = await axiosInstance.get(
-          `/project-management/user-projects/${userId}`
+          `/project-management/user-projects/${userId}`,
         );
         const userProjects: Project[] = userProjectsRes.data;
 
         // Set available projects (projects user is NOT assigned to)
         const userProjectIds = new Set(
-          userProjects.map((project) => project.id)
+          userProjects.map((project) => project.id),
         );
         const available = allProjects.filter(
-          (project) => !userProjectIds.has(project.id)
+          (project) => !userProjectIds.has(project.id),
         );
 
         setAvailableProjects(available);
@@ -299,8 +299,7 @@ export default function UserProfilePage() {
     return <Loader />;
   }
 
-  const defaultProfilePicture =
-    "https://www.gravatar.com/avatar/2c7d99fe281ecd3bcd65ab915bac6dd5?s=250";
+  const defaultProfilePicture = "/images/profile/defaultprofile.jpg";
 
   return (
     <>
@@ -486,7 +485,7 @@ export default function UserProfilePage() {
                     user,
                     projects,
                     ["Frontend", "JavaScript", "Security", "Design"],
-                    taskReports
+                    taskReports,
                   )
                 }
               >
@@ -624,7 +623,7 @@ export default function UserProfilePage() {
                         </span>
                         <span className="text-[var(--text-color)]">
                           {new Date(
-                            filteredProjects[selectedProject].start_date
+                            filteredProjects[selectedProject].start_date,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -634,7 +633,7 @@ export default function UserProfilePage() {
                         </span>
                         <span className="text-[var(--text-color)]">
                           {new Date(
-                            filteredProjects[selectedProject].end_date
+                            filteredProjects[selectedProject].end_date,
                           ).toLocaleDateString()}
                         </span>
                       </div>
@@ -687,7 +686,7 @@ export default function UserProfilePage() {
                     {taskReports.filter(
                       (report) =>
                         report?.project?.id ===
-                        filteredProjects[selectedProject].id
+                        filteredProjects[selectedProject].id,
                     ).length > 0 && (
                       <>
                         <h4 className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
@@ -698,7 +697,7 @@ export default function UserProfilePage() {
                             .filter(
                               (report) =>
                                 report.project.id ===
-                                filteredProjects[selectedProject].id
+                                filteredProjects[selectedProject].id,
                             )
                             .map((report, idx) => (
                               <div
@@ -714,8 +713,8 @@ export default function UserProfilePage() {
                                       report?.status === "completed"
                                         ? "bg-green-50 text-green-700"
                                         : report?.status === "in_progress"
-                                        ? "bg-yellow-50 text-yellow-700"
-                                        : "bg-red-50 text-red-700"
+                                          ? "bg-yellow-50 text-yellow-700"
+                                          : "bg-red-50 text-red-700"
                                     }`}
                                   >
                                     {report?.status}
@@ -738,13 +737,13 @@ export default function UserProfilePage() {
                                       Start:
                                     </span>{" "}
                                     {new Date(
-                                      report?.start_time
+                                      report?.start_time,
                                     ).toLocaleString()}
                                   </p>
                                   <p>
                                     <span className="font-semibold">End:</span>{" "}
                                     {new Date(
-                                      report?.end_time
+                                      report?.end_time,
                                     ).toLocaleString()}
                                   </p>
                                   <p>
@@ -793,11 +792,11 @@ export default function UserProfilePage() {
               multiple
               id="assign-projects-autocomplete"
               options={[...availableProjects, ...projects].filter(
-                (p) => !selectedProjects.includes(p.id)
+                (p) => !selectedProjects.includes(p.id),
               )}
               getOptionLabel={(option) => option.title}
               value={[...availableProjects, ...projects].filter((p) =>
-                selectedProjects.includes(p.id)
+                selectedProjects.includes(p.id),
               )}
               onChange={(event, newValue) => {
                 setSelectedProjects(newValue.map((proj) => proj.id));

@@ -126,7 +126,7 @@ interface LeaveDay {
 
 const Attendance = () => {
   const [currentStatus, setCurrentStatus] = useState<CurrentStatus | null>(
-    null
+    null,
   );
   const [teamAttendance, setTeamAttendance] = useState<AttendanceRecord[]>([]);
   const [dayAttendance, setDayAttendance] = useState<AttendanceRecord[]>([]);
@@ -252,7 +252,7 @@ const Attendance = () => {
       const year = selectedMonth.getFullYear();
       const month = selectedMonth.getMonth() + 1;
       const response = await axiosInstance.get(
-        `/attendance/monthly-attendance?year=${year}&month=${month}`
+        `/attendance/monthly-attendance?year=${year}&month=${month}`,
       );
       setMonthlyRecords(response.data.data);
     } catch (error) {
@@ -268,7 +268,7 @@ const Attendance = () => {
   const fetchTeamAttendance = async () => {
     try {
       const response = await axiosInstance.get(
-        `/attendance/team-attendance?date=${format(selectedDate, "yyyy-MM-dd")}`
+        `/attendance/team-attendance?date=${format(selectedDate, "yyyy-MM-dd")}`,
       );
       setTeamAttendance(response.data.data);
     } catch (error) {
@@ -280,11 +280,11 @@ const Attendance = () => {
     try {
       const dateStr = format(date, "yyyy-MM-dd");
       const response = await axiosInstance.get(
-        `/attendance/day-attendance?date=${dateStr}`
+        `/attendance/day-attendance?date=${dateStr}`,
       );
       if (response.data && response.data.data) {
         setDayAttendance(
-          Array.isArray(response.data.data) ? response.data.data : []
+          Array.isArray(response.data.data) ? response.data.data : [],
         );
       } else {
         setDayAttendance([]);
@@ -300,7 +300,7 @@ const Attendance = () => {
       const year = selectedMonth.getFullYear();
       const month = selectedMonth.getMonth() + 1;
       const response = await axiosInstance.get(
-        `/attendance/leave-days?year=${year}&month=${month}`
+        `/attendance/leave-days?year=${year}&month=${month}`,
       );
       setLeaveDays(response.data.data || []);
     } catch (error) {
@@ -314,7 +314,7 @@ const Attendance = () => {
     try {
       const response = await axiosInstance.get("/attendance/lunch-settings");
       const settings = response.data.data || {
-        defaultStartTime: '12:00',
+        defaultStartTime: "12:00",
         defaultDurationMinutes: 60,
         autoStart: false,
         autoEnd: false,
@@ -324,7 +324,7 @@ const Attendance = () => {
       console.error("Error fetching lunch settings:", error);
       // Set defaults if fetch fails
       setLunchSettings({
-        defaultStartTime: '12:00',
+        defaultStartTime: "12:00",
         defaultDurationMinutes: 60,
         autoStart: false,
         autoEnd: false,
@@ -373,7 +373,7 @@ const Attendance = () => {
           enableHighAccuracy: true,
           timeout: 15000,
           maximumAge: 0,
-        }
+        },
       );
     });
   };
@@ -580,7 +580,7 @@ const Attendance = () => {
 
   const getAttendanceForDate = (date: Date) => {
     const recordsForDay = monthlyRecords.filter((record) =>
-      isSameDay(parseISO(record.attendance_date), date)
+      isSameDay(parseISO(record.attendance_date), date),
     );
 
     if (recordsForDay.length === 0) {
@@ -655,8 +655,14 @@ const Attendance = () => {
             gap: 4,
           }}
         >
-          <Box display="flex" alignItems="center" gap={2} justifyContent="space-between" width="100%"> 
-            <Box display="flex" alignItems="center" gap={2} >
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={2}
+            justifyContent="space-between"
+            width="100%"
+          >
+            <Box display="flex" alignItems="center" gap={2}>
               <Typography variant="h4" fontWeight="bold">
                 Attendance Management
               </Typography>
@@ -914,7 +920,10 @@ const Attendance = () => {
                         }}
                       >
                         <Avatar
-                          src={record.user?.profile_image}
+                          src={
+                            record.user?.profile_image ||
+                            "/images/profile/defaultprofile.jpg"
+                          }
                           sx={{
                             width: 56,
                             height: 56,
@@ -1059,19 +1068,23 @@ const Attendance = () => {
                   const isCurrentMonth = isSameMonth(day, selectedMonth);
                   const isCurrentDay = isToday(day);
                   const dayOfWeek = getDay(day); // 0 = Sunday, 6 = Saturday
-                  
+
                   // Check if this day is configured as an off day based on weekend settings
                   const isSaturday = dayOfWeek === 6;
                   const isSunday = dayOfWeek === 0;
-                  const isSaturdayOffDay = weekendSettings?.saturdayIsOffDay ?? true;
-                  const isSundayOffDay = weekendSettings?.sundayIsOffDay ?? true;
-                  const isOffDay = (isSaturday && isSaturdayOffDay) || (isSunday && isSundayOffDay);
-                  
+                  const isSaturdayOffDay =
+                    weekendSettings?.saturdayIsOffDay ?? true;
+                  const isSundayOffDay =
+                    weekendSettings?.sundayIsOffDay ?? true;
+                  const isOffDay =
+                    (isSaturday && isSaturdayOffDay) ||
+                    (isSunday && isSundayOffDay);
+
                   const isLeaveDay = leaveDays.some((leave) =>
-                    isSameDay(parseISO(leave.leave_date), day)
+                    isSameDay(parseISO(leave.leave_date), day),
                   );
                   const leaveDay = leaveDays.find((leave) =>
-                    isSameDay(parseISO(leave.leave_date), day)
+                    isSameDay(parseISO(leave.leave_date), day),
                   );
 
                   // Get status color for the card bar
@@ -1091,10 +1104,10 @@ const Attendance = () => {
                         bgcolor: !isCurrentMonth
                           ? "grey.50"
                           : isLeaveDay
-                          ? "error.light"
-                          : isOffDay
-                          ? "grey.100"
-                          : "background.paper",
+                            ? "error.light"
+                            : isOffDay
+                              ? "grey.100"
+                              : "background.paper",
                         position: "relative",
                         cursor: isCurrentMonth ? "pointer" : "default",
                         display: "flex",
@@ -1128,13 +1141,17 @@ const Attendance = () => {
                             color: !isCurrentMonth
                               ? "text.disabled"
                               : isCurrentDay
-                              ? "primary.main"
-                              : isLeaveDay
-                              ? "error.main"
+                                ? "primary.main"
+                                : isLeaveDay
+                                  ? "error.main"
+                                  : isOffDay
+                                    ? "text.disabled"
+                                    : "text.secondary",
+                            fontWeight: isCurrentDay
+                              ? 700
                               : isOffDay
-                              ? "text.disabled"
-                              : "text.secondary",
-                            fontWeight: isCurrentDay ? 700 : isOffDay ? 400 : 400,
+                                ? 400
+                                : 400,
                           }}
                         >
                           {format(day, "d")}
@@ -1235,7 +1252,7 @@ const Attendance = () => {
                             <Box>
                               {(() => {
                                 const clockInDate = parseISO(
-                                  attendance.clock_in_time
+                                  attendance.clock_in_time,
                                 );
                                 const clockOutDate = attendance.clock_out_time
                                   ? parseISO(attendance.clock_out_time)
@@ -1318,7 +1335,7 @@ const Attendance = () => {
         {activeTab === 2 && (
           <Card>
             <CardContent>
-              {/* Admin-only: Leave Days Management */}
+              {/* Admin-only: Off Day Management */}
               {isAdmin && (
                 <>
                   <Box
@@ -1347,118 +1364,125 @@ const Attendance = () => {
                         setLeaveDialogOpen(true);
                       }}
                     >
-                      Add Leave Day
+                      Add Off Day
                     </Button>
                   </Box>
 
                   <Box mb={3}>
                     <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                      Leave Days Management
+                      Off Day Management
                     </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  Manage holidays and leave days that will be displayed on the
-                  calendar.
-                </Typography>
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                      Manage holidays and off days that will be displayed on the
+                      calendar.
+                    </Typography>
 
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Date</TableCell>
-                        <TableCell>Reason</TableCell>
-                        <TableCell>Type</TableCell>
-                        <TableCell>Status</TableCell>
-                        <TableCell align="right">Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {leaveDays.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} align="center">
-                            <Typography variant="body2" color="text.secondary">
-                              No leave days configured
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        leaveDays.map((leave) => (
-                          <TableRow key={leave.id}>
-                            <TableCell>
-                              {format(
-                                parseISO(leave.leave_date),
-                                "MMM dd, yyyy"
-                              )}
-                            </TableCell>
-                            <TableCell>{leave.reason || "-"}</TableCell>
-                            <TableCell>
-                              <Chip
-                                label={leave.leave_type}
-                                size="small"
-                                color="error"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                label={leave.is_active ? "Active" : "Inactive"}
-                                size="small"
-                                color={leave.is_active ? "success" : "default"}
-                              />
-                            </TableCell>
-                            <TableCell align="right">
-                              <IconButton
-                                size="small"
-                                onClick={async () => {
-                                  try {
-                                    await axiosInstance.patch(
-                                      `/attendance/leave-days/${leave.id}`,
-                                      { is_active: !leave.is_active }
-                                    );
-                                    toast.success("Leave day updated");
-                                    fetchLeaveDays();
-                                  } catch (error: any) {
-                                    toast.error(
-                                      error.response?.data?.message ||
-                                        "Error updating leave day"
-                                    );
-                                  }
-                                }}
-                              >
-                                <Refresh />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={async () => {
-                                  if (
-                                    confirm(
-                                      "Are you sure you want to delete this leave day?"
-                                    )
-                                  ) {
-                                    try {
-                                      await axiosInstance.delete(
-                                        `/attendance/leave-days/${leave.id}`
-                                      );
-                                      toast.success("Leave day deleted");
-                                      fetchLeaveDays();
-                                    } catch (error: any) {
-                                      toast.error(
-                                        error.response?.data?.message ||
-                                          "Error deleting leave day"
-                                      );
-                                    }
-                                  }
-                                }}
-                              >
-                                <Stop />
-                              </IconButton>
-                            </TableCell>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Reason</TableCell>
+                            <TableCell>Type</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell align="right">Actions</TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
+                        </TableHead>
+                        <TableBody>
+                          {leaveDays.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} align="center">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
+                                  No off days configured
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            leaveDays.map((leave) => (
+                              <TableRow key={leave.id}>
+                                <TableCell>
+                                  {format(
+                                    parseISO(leave.leave_date),
+                                    "MMM dd, yyyy",
+                                  )}
+                                </TableCell>
+                                <TableCell>{leave.reason || "-"}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={leave.leave_type}
+                                    size="small"
+                                    color="error"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={
+                                      leave.is_active ? "Active" : "Inactive"
+                                    }
+                                    size="small"
+                                    color={
+                                      leave.is_active ? "success" : "default"
+                                    }
+                                  />
+                                </TableCell>
+                                <TableCell align="right">
+                                  <IconButton
+                                    size="small"
+                                    onClick={async () => {
+                                      try {
+                                        await axiosInstance.patch(
+                                          `/attendance/leave-days/${leave.id}`,
+                                          { is_active: !leave.is_active },
+                                        );
+                                        toast.success("Leave day updated");
+                                        fetchLeaveDays();
+                                      } catch (error: any) {
+                                        toast.error(
+                                          error.response?.data?.message ||
+                                            "Error updating leave day",
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <Refresh />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={async () => {
+                                      if (
+                                        confirm(
+                                          "Are you sure you want to delete this leave day?",
+                                        )
+                                      ) {
+                                        try {
+                                          await axiosInstance.delete(
+                                            `/attendance/leave-days/${leave.id}`,
+                                          );
+                                          toast.success("Leave day deleted");
+                                          fetchLeaveDays();
+                                        } catch (error: any) {
+                                          toast.error(
+                                            error.response?.data?.message ||
+                                              "Error deleting leave day",
+                                          );
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <Stop />
+                                  </IconButton>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
                 </>
               )}
 
@@ -1466,13 +1490,19 @@ const Attendance = () => {
               {isAdmin && (
                 <Box mb={3}>
                   <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <Restaurant sx={{ color: "var(--primary-color-1)", fontSize: "1.5rem" }} />
+                    <Restaurant
+                      sx={{
+                        color: "var(--primary-color-1)",
+                        fontSize: "1.5rem",
+                      }}
+                    />
                     <Typography variant="subtitle1" fontWeight={600}>
                       Company-Wide Lunch Settings
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" mb={2}>
-                    Configure the generic lunch time that applies to all employees. This is the company-wide lunch schedule.
+                    Configure the generic lunch time that applies to all
+                    employees. This is the company-wide lunch schedule.
                   </Typography>
 
                   <Card
@@ -1485,9 +1515,9 @@ const Attendance = () => {
                     }}
                   >
                     <Stack spacing={3}>
-                      <Alert 
-                        severity="info" 
-                        sx={{ 
+                      <Alert
+                        severity="info"
+                        sx={{
                           bgcolor: "rgba(7, 152, 189, 0.08)",
                           border: "1px solid rgba(7, 152, 189, 0.2)",
                           "& .MuiAlert-icon": {
@@ -1499,23 +1529,30 @@ const Attendance = () => {
                           Company Default Lunch Time
                         </Typography>
                         <Typography variant="caption">
-                          This lunch time will be applied to all employees. 
-                          The system will automatically start and end lunch based on these settings if auto-start/end is enabled.
+                          This lunch time will be applied to all employees. The
+                          system will automatically start and end lunch based on
+                          these settings if auto-start/end is enabled.
                         </Typography>
                       </Alert>
 
                       <Box>
-                        <Typography variant="body2" fontWeight={600} mb={1} sx={{ color: "var(--primary-color-1)" }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          mb={1}
+                          sx={{ color: "var(--primary-color-1)" }}
+                        >
                           Generic Lunch Start Time (All Employees)
                         </Typography>
                         <TextField
                           label="Company Lunch Start Time"
                           type="time"
-                          value={lunchSettings?.defaultStartTime || '12:00'}
+                          value={lunchSettings?.defaultStartTime || "12:00"}
                           onChange={(e) =>
                             setLunchSettings({
                               defaultStartTime: e.target.value,
-                              defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
+                              defaultDurationMinutes:
+                                lunchSettings?.defaultDurationMinutes || 60,
                               autoStart: lunchSettings?.autoStart || false,
                               autoEnd: lunchSettings?.autoEnd || false,
                             })
@@ -1537,7 +1574,12 @@ const Attendance = () => {
                       </Box>
 
                       <Box>
-                        <Typography variant="body2" fontWeight={600} mb={1} sx={{ color: "var(--primary-color-1)" }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          mb={1}
+                          sx={{ color: "var(--primary-color-1)" }}
+                        >
                           Generic Lunch Duration (All Employees)
                         </Typography>
                         <TextField
@@ -1546,8 +1588,10 @@ const Attendance = () => {
                           value={lunchSettings?.defaultDurationMinutes || 60}
                           onChange={(e) =>
                             setLunchSettings({
-                              defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
-                              defaultDurationMinutes: parseInt(e.target.value) || 60,
+                              defaultStartTime:
+                                lunchSettings?.defaultStartTime || "12:00",
+                              defaultDurationMinutes:
+                                parseInt(e.target.value) || 60,
                               autoStart: lunchSettings?.autoStart || false,
                               autoEnd: lunchSettings?.autoEnd || false,
                             })
@@ -1568,7 +1612,12 @@ const Attendance = () => {
                         />
                       </Box>
                       <Box>
-                        <Typography variant="body2" fontWeight={600} mb={1.5} sx={{ color: "var(--primary-color-1)" }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          mb={1.5}
+                          sx={{ color: "var(--primary-color-1)" }}
+                        >
                           Automation Settings (Applies to All Employees)
                         </Typography>
                         <Stack spacing={1.5}>
@@ -1578,8 +1627,12 @@ const Attendance = () => {
                                 checked={lunchSettings?.autoStart || false}
                                 onChange={(e) =>
                                   setLunchSettings({
-                                    defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
-                                    defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
+                                    defaultStartTime:
+                                      lunchSettings?.defaultStartTime ||
+                                      "12:00",
+                                    defaultDurationMinutes:
+                                      lunchSettings?.defaultDurationMinutes ||
+                                      60,
                                     autoStart: e.target.checked,
                                     autoEnd: lunchSettings?.autoEnd || false,
                                   })
@@ -1588,9 +1641,10 @@ const Attendance = () => {
                                   "& .MuiSwitch-switchBase.Mui-checked": {
                                     color: "var(--primary-color-1)",
                                   },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                    backgroundColor: "var(--primary-color-1)",
-                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                    {
+                                      backgroundColor: "var(--primary-color-1)",
+                                    },
                                 }}
                               />
                             }
@@ -1599,8 +1653,12 @@ const Attendance = () => {
                                 <Typography variant="body2" fontWeight={500}>
                                   Auto-start lunch at company default time
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Automatically start lunch for all employees at the configured time
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  Automatically start lunch for all employees at
+                                  the configured time
                                 </Typography>
                               </Box>
                             }
@@ -1611,9 +1669,14 @@ const Attendance = () => {
                                 checked={lunchSettings?.autoEnd || false}
                                 onChange={(e) =>
                                   setLunchSettings({
-                                    defaultStartTime: lunchSettings?.defaultStartTime || '12:00',
-                                    defaultDurationMinutes: lunchSettings?.defaultDurationMinutes || 60,
-                                    autoStart: lunchSettings?.autoStart || false,
+                                    defaultStartTime:
+                                      lunchSettings?.defaultStartTime ||
+                                      "12:00",
+                                    defaultDurationMinutes:
+                                      lunchSettings?.defaultDurationMinutes ||
+                                      60,
+                                    autoStart:
+                                      lunchSettings?.autoStart || false,
                                     autoEnd: e.target.checked,
                                   })
                                 }
@@ -1621,9 +1684,10 @@ const Attendance = () => {
                                   "& .MuiSwitch-switchBase.Mui-checked": {
                                     color: "var(--primary-color-1)",
                                   },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                    backgroundColor: "var(--primary-color-1)",
-                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                    {
+                                      backgroundColor: "var(--primary-color-1)",
+                                    },
                                 }}
                               />
                             }
@@ -1632,8 +1696,12 @@ const Attendance = () => {
                                 <Typography variant="body2" fontWeight={500}>
                                   Auto-end lunch after company duration
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  Automatically end lunch for all employees after the configured duration
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  Automatically end lunch for all employees
+                                  after the configured duration
                                 </Typography>
                               </Box>
                             }
@@ -1648,12 +1716,18 @@ const Attendance = () => {
                             return;
                           }
                           try {
-                            await axiosInstance.post("/attendance/lunch-settings", lunchSettings);
-                            toast.success("Company-wide lunch settings saved successfully");
+                            await axiosInstance.post(
+                              "/attendance/lunch-settings",
+                              lunchSettings,
+                            );
+                            toast.success(
+                              "Company-wide lunch settings saved successfully",
+                            );
                             fetchLunchSettings();
                           } catch (error: any) {
                             toast.error(
-                              error.response?.data?.message || "Error updating lunch settings"
+                              error.response?.data?.message ||
+                                "Error updating lunch settings",
                             );
                           }
                         }}
@@ -1685,13 +1759,19 @@ const Attendance = () => {
               {isAdmin && (
                 <Box mb={3}>
                   <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <CalendarToday sx={{ color: "var(--primary-color-1)", fontSize: "1.5rem" }} />
+                    <CalendarToday
+                      sx={{
+                        color: "var(--primary-color-1)",
+                        fontSize: "1.5rem",
+                      }}
+                    />
                     <Typography variant="subtitle1" fontWeight={600}>
                       Weekend Configuration
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary" mb={2}>
-                    Configure whether weekends (Saturday and Sunday) are considered off days for attendance and leave calculations.
+                    Configure whether weekends (Saturday and Sunday) are
+                    considered off days for attendance and leave calculations.
                   </Typography>
 
                   <Card
@@ -1704,9 +1784,9 @@ const Attendance = () => {
                     }}
                   >
                     <Stack spacing={3}>
-                      <Alert 
-                        severity="info" 
-                        sx={{ 
+                      <Alert
+                        severity="info"
+                        sx={{
                           bgcolor: "rgba(7, 152, 189, 0.08)",
                           border: "1px solid rgba(7, 152, 189, 0.2)",
                           "& .MuiAlert-icon": {
@@ -1718,33 +1798,44 @@ const Attendance = () => {
                           Weekend Off Days Configuration
                         </Typography>
                         <Typography variant="caption">
-                          When enabled, weekends will be excluded from leave day calculations and marked as non-working days in the calendar. 
-                          This affects how leave days are calculated for all employees.
+                          When enabled, weekends will be excluded from leave day
+                          calculations and marked as non-working days in the
+                          calendar. This affects how leave days are calculated
+                          for all employees.
                         </Typography>
                       </Alert>
 
                       <Box>
-                        <Typography variant="body2" fontWeight={600} mb={1.5} sx={{ color: "var(--primary-color-1)" }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          mb={1.5}
+                          sx={{ color: "var(--primary-color-1)" }}
+                        >
                           Weekend Off Days (Applies to All Employees)
                         </Typography>
                         <Stack spacing={1.5}>
                           <FormControlLabel
                             control={
                               <Switch
-                                checked={weekendSettings?.saturdayIsOffDay ?? true}
+                                checked={
+                                  weekendSettings?.saturdayIsOffDay ?? true
+                                }
                                 onChange={(e) =>
                                   setWeekendSettings({
                                     saturdayIsOffDay: e.target.checked,
-                                    sundayIsOffDay: weekendSettings?.sundayIsOffDay ?? true,
+                                    sundayIsOffDay:
+                                      weekendSettings?.sundayIsOffDay ?? true,
                                   })
                                 }
                                 sx={{
                                   "& .MuiSwitch-switchBase.Mui-checked": {
                                     color: "var(--primary-color-1)",
                                   },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                    backgroundColor: "var(--primary-color-1)",
-                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                    {
+                                      backgroundColor: "var(--primary-color-1)",
+                                    },
                                 }}
                               />
                             }
@@ -1753,7 +1844,10 @@ const Attendance = () => {
                                 <Typography variant="body2" fontWeight={500}>
                                   Saturday is an off day
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
                                   {weekendSettings?.saturdayIsOffDay
                                     ? "Saturday will be excluded from leave calculations"
                                     : "Saturday will be counted as a working day"}
@@ -1764,10 +1858,13 @@ const Attendance = () => {
                           <FormControlLabel
                             control={
                               <Switch
-                                checked={weekendSettings?.sundayIsOffDay ?? true}
+                                checked={
+                                  weekendSettings?.sundayIsOffDay ?? true
+                                }
                                 onChange={(e) =>
                                   setWeekendSettings({
-                                    saturdayIsOffDay: weekendSettings?.saturdayIsOffDay ?? true,
+                                    saturdayIsOffDay:
+                                      weekendSettings?.saturdayIsOffDay ?? true,
                                     sundayIsOffDay: e.target.checked,
                                   })
                                 }
@@ -1775,9 +1872,10 @@ const Attendance = () => {
                                   "& .MuiSwitch-switchBase.Mui-checked": {
                                     color: "var(--primary-color-1)",
                                   },
-                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                                    backgroundColor: "var(--primary-color-1)",
-                                  },
+                                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                                    {
+                                      backgroundColor: "var(--primary-color-1)",
+                                    },
                                 }}
                               />
                             }
@@ -1786,7 +1884,10 @@ const Attendance = () => {
                                 <Typography variant="body2" fontWeight={500}>
                                   Sunday is an off day
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
                                   {weekendSettings?.sundayIsOffDay
                                     ? "Sunday will be excluded from leave calculations"
                                     : "Sunday will be counted as a working day"}
@@ -1804,8 +1905,13 @@ const Attendance = () => {
                             return;
                           }
                           try {
-                            await axiosInstance.post("/attendance/weekend-settings", weekendSettings);
-                            toast.success("Weekend settings saved successfully");
+                            await axiosInstance.post(
+                              "/attendance/weekend-settings",
+                              weekendSettings,
+                            );
+                            toast.success(
+                              "Weekend settings saved successfully",
+                            );
                             await fetchWeekendSettings();
                             // Refresh calendar to reflect changes
                             if (activeTab === 1) {
@@ -1813,7 +1919,8 @@ const Attendance = () => {
                             }
                           } catch (error: any) {
                             toast.error(
-                              error.response?.data?.message || "Error updating weekend settings"
+                              error.response?.data?.message ||
+                                "Error updating weekend settings",
                             );
                           }
                         }}
@@ -1875,7 +1982,11 @@ const Attendance = () => {
                             border: "1px solid rgba(52, 211, 153, 0.2)",
                           }}
                         >
-                          <Typography variant="caption" color="text.secondary" mb={0.5}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            mb={0.5}
+                          >
                             Clock In Location:
                           </Typography>
                           <Typography
@@ -1900,7 +2011,11 @@ const Attendance = () => {
                             border: "1px solid rgba(248, 113, 113, 0.2)",
                           }}
                         >
-                          <Typography variant="caption" color="text.secondary" mb={0.5}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            mb={0.5}
+                          >
                             Clock Out Location:
                           </Typography>
                           <Typography
@@ -1936,7 +2051,14 @@ const Attendance = () => {
                         src={`https://www.google.com/maps/dir/${selectedLocations.clockInLocation}/${selectedLocations.clockOutLocation}/@${selectedLocations.clockInLocation},13z/data=!4m2!4m1!3e0?output=embed`}
                       />
                     </Box>
-                    <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                    <Box
+                      sx={{
+                        mt: 2,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 1,
+                      }}
+                    >
                       <Button
                         variant="outlined"
                         startIcon={<LocationOn />}
@@ -2005,7 +2127,14 @@ const Attendance = () => {
                             src={`https://www.google.com/maps?q=${selectedLocation}&output=embed&z=15&layer=c`}
                           />
                         </Box>
-                        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                        <Box
+                          sx={{
+                            mt: 2,
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 1,
+                          }}
+                        >
                           <Button
                             variant="outlined"
                             startIcon={<LocationOn />}
@@ -2095,7 +2224,7 @@ const Attendance = () => {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle>Add Leave Day</DialogTitle>
+          <DialogTitle>Add Off Day</DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 2 }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -2147,7 +2276,7 @@ const Attendance = () => {
                   fetchLeaveDays();
                 } catch (error: any) {
                   toast.error(
-                    error.response?.data?.message || "Error adding leave day"
+                    error.response?.data?.message || "Error adding leave day",
                   );
                 }
               }}
@@ -2275,10 +2404,10 @@ const Attendance = () => {
                   currentStatus.status === "CLOCKED_IN"
                     ? "success.light"
                     : currentStatus.status === "BREAK"
-                    ? "warning.light"
-                    : currentStatus.status === "LUNCH"
-                    ? "info.light"
-                    : "grey.200",
+                      ? "warning.light"
+                      : currentStatus.status === "LUNCH"
+                        ? "info.light"
+                        : "grey.200",
               }}
             >
               <CardContent>
@@ -2296,12 +2425,12 @@ const Attendance = () => {
                       Clock In:{" "}
                       {format(
                         parseISO(currentStatus.attendance.clock_in_time),
-                        "hh:mm a"
+                        "hh:mm a",
                       )}
                       {currentStatus.attendance.clock_out_time &&
                         ` - Clock Out: ${format(
                           parseISO(currentStatus.attendance.clock_out_time),
-                          "hh:mm a"
+                          "hh:mm a",
                         )}`}
                     </Typography>
                     {currentStatus.attendance.break_start_time && (
@@ -2309,14 +2438,12 @@ const Attendance = () => {
                         Break:{" "}
                         {format(
                           parseISO(currentStatus.attendance.break_start_time),
-                          "hh:mm a"
+                          "hh:mm a",
                         )}
                         {currentStatus.attendance.break_end_time
                           ? ` - ${format(
-                              parseISO(
-                                currentStatus.attendance.break_end_time
-                              ),
-                              "hh:mm a"
+                              parseISO(currentStatus.attendance.break_end_time),
+                              "hh:mm a",
                             )}`
                           : " (In Progress)"}
                       </Typography>
@@ -2326,14 +2453,12 @@ const Attendance = () => {
                         Lunch:{" "}
                         {format(
                           parseISO(currentStatus.attendance.lunch_start_time),
-                          "hh:mm a"
+                          "hh:mm a",
                         )}
                         {currentStatus.attendance.lunch_end_time
                           ? ` - ${format(
-                              parseISO(
-                                currentStatus.attendance.lunch_end_time
-                              ),
-                              "hh:mm a"
+                              parseISO(currentStatus.attendance.lunch_end_time),
+                              "hh:mm a",
                             )}`
                           : " (In Progress)"}
                       </Typography>
@@ -2346,7 +2471,10 @@ const Attendance = () => {
                           fontWeight={600}
                         >
                           Total Hours:{" "}
-                          {Number(currentStatus.attendance.total_hours).toFixed(2)}h
+                          {Number(currentStatus.attendance.total_hours).toFixed(
+                            2,
+                          )}
+                          h
                         </Typography>
                       )}
                   </Stack>
@@ -2388,12 +2516,12 @@ const Attendance = () => {
                       record.total_hours !== null
                         ? Number(record.total_hours)
                         : clockOutDate
-                        ? Math.max(
-                            (clockOutDate.getTime() - clockInDate.getTime()) /
-                              (1000 * 60 * 60),
-                            0
-                          )
-                        : null;
+                          ? Math.max(
+                              (clockOutDate.getTime() - clockInDate.getTime()) /
+                                (1000 * 60 * 60),
+                              0,
+                            )
+                          : null;
                     const sessionHours =
                       typeof sessionHoursRaw === "number" &&
                       !Number.isNaN(sessionHoursRaw)
@@ -2409,40 +2537,54 @@ const Attendance = () => {
                     // Get locations for this date from all records
                     const getLocationsForDate = (dateLabel: string) => {
                       const recordsForDate = dayAttendance.filter((r) => {
-                        const rDate = format(parseISO(r.clock_in_time), "EEE, MMM dd");
+                        const rDate = format(
+                          parseISO(r.clock_in_time),
+                          "EEE, MMM dd",
+                        );
                         return rDate === dateLabel;
                       });
-                      
+
                       let clockInLocation: string | null = null;
                       let clockOutLocation: string | null = null;
                       let clockInTime: Date | null = null;
                       let clockOutTime: Date | null = null;
-                      
+
                       recordsForDate.forEach((r) => {
                         if (r.location) {
                           const clockIn = parseISO(r.clock_in_time);
-                          const clockOut = r.clock_out_time ? parseISO(r.clock_out_time) : null;
-                          
+                          const clockOut = r.clock_out_time
+                            ? parseISO(r.clock_out_time)
+                            : null;
+
                           // Get clock in location (first one or most recent)
-                          if (!clockInLocation || (clockInTime && clockIn > clockInTime)) {
+                          if (
+                            !clockInLocation ||
+                            (clockInTime && clockIn > clockInTime)
+                          ) {
                             clockInLocation = r.location;
                             clockInTime = clockIn;
                           }
-                          
+
                           // Get clock out location (most recent)
                           if (clockOut) {
-                            if (!clockOutLocation || (clockOutTime && clockOut > clockOutTime)) {
+                            if (
+                              !clockOutLocation ||
+                              (clockOutTime && clockOut > clockOutTime)
+                            ) {
                               clockOutLocation = r.location;
                               clockOutTime = clockOut;
                             }
                           }
                         }
                       });
-                      
+
                       return {
                         clockInLocation,
                         clockOutLocation,
-                        hasMultipleLocations: clockInLocation && clockOutLocation && clockInLocation !== clockOutLocation,
+                        hasMultipleLocations:
+                          clockInLocation &&
+                          clockOutLocation &&
+                          clockInLocation !== clockOutLocation,
                       };
                     };
 
@@ -2466,21 +2608,27 @@ const Attendance = () => {
                             </Typography>
                             {(() => {
                               const locations = getLocationsForDate(dateLabel);
-                              const hasLocation = locations.clockInLocation || locations.clockOutLocation;
+                              const hasLocation =
+                                locations.clockInLocation ||
+                                locations.clockOutLocation;
                               return hasLocation ? (
                                 <Tooltip title="View tracked location">
                                   <IconButton
                                     size="small"
                                     onClick={() => {
                                       setSelectedLocations(locations);
-                                      setSelectedLocation(locations.clockOutLocation || locations.clockInLocation);
+                                      setSelectedLocation(
+                                        locations.clockOutLocation ||
+                                          locations.clockInLocation,
+                                      );
                                       setLocationDialogOpen(true);
                                     }}
                                     sx={{
                                       p: 0.5,
                                       color: "var(--primary-color-1)",
                                       "&:hover": {
-                                        backgroundColor: "rgba(7, 152, 189, 0.08)",
+                                        backgroundColor:
+                                          "rgba(7, 152, 189, 0.08)",
                                       },
                                     }}
                                   >
