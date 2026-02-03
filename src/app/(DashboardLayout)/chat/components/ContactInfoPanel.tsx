@@ -325,22 +325,23 @@ export default function ContactInfoPanel({
               <Typography variant="body2" sx={{ color: "#333" }}>
                 Starred
               </Typography>
+              <Typography variant="caption" sx={{ color: "#8e8e8e", ml: 0.5 }}>
+                {isStarred ? "14" : "0"}
+              </Typography>
             </Box>
-            <Box
+            <Switch
+              checked={isStarred}
+              onChange={(e) => setIsStarred(e.target.checked)}
+              size="small"
               sx={{
-                bgcolor: isStarred ? "#ff8700" : "#e0e0e0",
-                color: "#fff",
-                borderRadius: "12px",
-                px: 1,
-                py: 0.25,
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                cursor: "pointer",
+                "& .MuiSwitch-switchBase.Mui-checked": {
+                  color: "#ff8700",
+                },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                  backgroundColor: "#ff8700",
+                },
               }}
-              onClick={() => setIsStarred(!isStarred)}
-            >
-              {isStarred ? "14" : "0"}
-            </Box>
+            />
           </Box>
         </Box>
 

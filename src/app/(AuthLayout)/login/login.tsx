@@ -1032,10 +1032,13 @@ const LoginPage: React.FC = () => {
             sx={{
               width: isMobile ? "90%" : isTablet ? "420px" : "480px",
               maxWidth: "480px",
-              background: `linear-gradient(135deg, ${cardColors.primary} 0%, ${cardColors.secondary} 100%)`,
+              background: `linear-gradient(135deg, ${cardColors.primary}40 0%, ${cardColors.secondary}35 100%)`,
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
               borderRadius: "24px",
               padding: isMobile ? "40px 32px" : "48px 40px",
-              boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
+              boxShadow: `0 20px 60px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.15)`,
               position: "relative",
               zIndex: 2,
               mt: isMobile ? "80px" : "100px",
@@ -1135,6 +1138,12 @@ const LoginPage: React.FC = () => {
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      formik.handleSubmit();
+                    }
+                  }}
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
                   variant="outlined"
@@ -1225,10 +1234,13 @@ const LoginPage: React.FC = () => {
             sx={{
               width: isMobile ? "90%" : isTablet ? "480px" : "540px",
               maxWidth: "540px",
-              background: `linear-gradient(135deg, ${cardColors.primary} 0%, ${cardColors.secondary} 100%)`,
+              background: `linear-gradient(135deg, ${cardColors.primary}40 0%, ${cardColors.secondary}35 100%)`,
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
               borderRadius: "24px",
               padding: isMobile ? "48px 32px" : "56px 40px",
-              boxShadow: `0 20px 60px ${cardColors.primary}40, 0 8px 24px ${cardColors.secondary}30`,
+              boxShadow: `0 20px 60px rgba(0, 0, 0, 0.25), 0 8px 24px rgba(0, 0, 0, 0.15)`,
               position: "relative",
               zIndex: 1,
               mt: isMobile ? "80px" : "100px",
@@ -1347,6 +1359,12 @@ const LoginPage: React.FC = () => {
                       value={formik.values.password}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          formik.handleSubmit();
+                        }
+                      }}
                       error={formik.touched.password && Boolean(formik.errors.password)}
                       helperText={formik.touched.password && formik.errors.password}
                       variant="outlined"

@@ -691,6 +691,13 @@ const SetPasswordPage: React.FC = () => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (!otpGenerated) generateOtp();
+                    else formik.handleSubmit();
+                  }
+                }}
                 error={formik.touched.email && Boolean(formik.errors.email)}
                 helperText={formik.touched.email && formik.errors.email}
                 variant="outlined"
@@ -783,6 +790,12 @@ const SetPasswordPage: React.FC = () => {
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        formik.handleSubmit();
+                      }
+                    }}
                     error={formik.touched.password && Boolean(formik.errors.password)}
                     helperText={formik.touched.password && formik.errors.password}
                     variant="outlined"
@@ -866,6 +879,12 @@ const SetPasswordPage: React.FC = () => {
                     value={formik.values.confirmPassword}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        formik.handleSubmit();
+                      }
+                    }}
                     error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
                     helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                     variant="outlined"
@@ -949,6 +968,12 @@ const SetPasswordPage: React.FC = () => {
                     value={formik.values.otp}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        formik.handleSubmit();
+                      }
+                    }}
                     error={formik.touched.otp && Boolean(formik.errors.otp)}
                     helperText={formik.touched.otp && formik.errors.otp}
                     variant="outlined"

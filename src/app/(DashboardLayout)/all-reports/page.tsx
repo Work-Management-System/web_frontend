@@ -622,7 +622,7 @@ const ProjectNestedTable: React.FC<ProjectNestedTableProps> = ({
           <TableHead>
             <TableRow>
               <StickyNestedTableCell>Task / Ticket Name</StickyNestedTableCell>
-              <StickyNestedTableCell>Assignee</StickyNestedTableCell>
+              <StickyNestedTableCell>Assigned To</StickyNestedTableCell>
               <StickyNestedTableCell>Ticket Type</StickyNestedTableCell>
               <StickyNestedTableCell>Status</StickyNestedTableCell>
               <StickyNestedTableCell>Time Worked</StickyNestedTableCell>
@@ -1690,7 +1690,91 @@ const UserReport = () => {
     setSelectedItem(null);
   };
 
-  // Export Functions
+  // Export all reports (summary table + work log details + ticket details) to Excel
+  const handleExportAllToExcel = () => {
+    const wb = XLSX.utils.book_new();
+    const dateRange = `${fromDate?.format("YYYY-MM-DD") || "N/A"} to ${toDate?.format("YYYY-MM-DD") || "N/A"}`;
+
+    // Sheet 1: Summary (current view - User or Project)
+    const summaryData =
+      viewMode === "user"
+        ? (filteredUsers as UserSummary[]).map((u) => ({
+            Name: u.name,
+            "Total Worked (min)": u.totalWorked,
+            "Total Worked": formatTime(u.totalWorked),
+            "Total Tickets": u.totalTickets,
+            "P1 Tickets": u.p1Tickets,
+            "P2 Tickets": u.p2Tickets,
+            "P3 Tickets": u.p3Tickets,
+          }))
+        : (filteredProjects as ProjectSummary[]).map((p) => ({
+            "Project Name": p.name,
+            "Total Worked (min)": p.totalWorked,
+            "Total Worked": formatTime(p.totalWorked),
+            "Total Tickets": p.totalTickets,
+            "P1 Tickets": p.p1Tickets,
+            "P2 Tickets": p.p2Tickets,
+            "P3 Tickets": p.p3Tickets,
+          }));
+
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    wsSummary["!cols"] = [
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+    ];
+    XLSX.utils.book_append_sheet(wb, wsSummary, viewMode === "user" ? "User Summary" : "Project Summary");
+
+    // Sheet 2: Work log details (all task reports from filtered work logs)
+    const workLogRows = filteredWorkData.flatMap((work) =>
+      (work.taskReports || []).map((task) => ({
+        "Report Date": dayjs(work.created_at).format("YYYY-MM-DD"),
+        User: work.user
+          ? `${work.user.first_name || ""} ${work.user.last_name || ""}`.trim() || work.user.email || "—"
+          : "—",
+        Project: task.project?.title || "—",
+        "Task Name": task.task_name,
+        Description: task.description ? stripHtml(task.description) : "",
+        "Time Taken (min)": parseTime(task.time_taken),
+        "Time Taken": formatTime(parseTime(task.time_taken)),
+        Status: task.status || "—",
+      })),
+    );
+    const wsWorkLog = XLSX.utils.json_to_sheet(workLogRows.length ? workLogRows : [{ "Report Date": "No work log data in selected range." }]);
+    wsWorkLog["!cols"] = [{ wch: 12 }, { wch: 22 }, { wch: 22 }, { wch: 32 }, { wch: 40 }, { wch: 14 }, { wch: 12 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, wsWorkLog, "Work Log Details");
+
+    // Sheet 3: Ticket details (all filtered tickets)
+    const ticketRows = filteredTickets.map((ticket) => ({
+      Title: ticket.title || `Ticket #${ticket.id?.slice(0, 8) || "—"}`,
+      Project: ticket.project?.title || "—",
+      Assignee: ticket.current_user
+        ? `${ticket.current_user.first_name || ""} ${ticket.current_user.last_name || ""}`.trim() || ticket.current_user.email || "—"
+        : "—",
+      Priority: (ticket.priority || "—").toUpperCase(),
+      Status: ticket.status || "—",
+      "Created Date": dayjs(ticket.created_at).format("YYYY-MM-DD"),
+      "Time Spent (min)": getTicketTotalTime(ticket),
+      "Time Spent": formatTime(getTicketTotalTime(ticket)),
+      Description: ticket.description ? stripHtml(ticket.description) : "",
+    }));
+    const wsTickets = XLSX.utils.json_to_sheet(ticketRows.length ? ticketRows : [{ Title: "No ticket data in selected range." }]);
+    wsTickets["!cols"] = [{ wch: 28 }, { wch: 22 }, { wch: 22 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, wsTickets, "Ticket Details");
+
+    const filename = `all_reports_${viewMode}_${dayjs().format("YYYYMMDD_HHmm")}.xlsx`;
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+    const buf = new ArrayBuffer(wbout.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < wbout.length; i++) view[i] = wbout.charCodeAt(i) & 0xff;
+    saveAs(new Blob([buf], { type: "application/octet-stream" }), filename);
+  };
+
+  // Export Functions (drawer - single user/project)
   const handleExport = (type: "summary" | "tasks") => {
     if (!selectedItem) return;
 
@@ -1910,6 +1994,28 @@ const UserReport = () => {
             }}
           >
             Refresh
+          </Button>
+
+          {/* Export all to Excel */}
+          <Button
+            variant="outlined"
+            onClick={handleExportAllToExcel}
+            startIcon={<FileDownloadIcon />}
+            disabled={loading}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: "6px",
+              px: 2,
+              borderColor: "var(--primary-color-1, #0798bd)",
+              color: "var(--primary-color-1, #0798bd)",
+              "&:hover": {
+                borderColor: "var(--primary-color-1-hover, #0799bdc8)",
+                backgroundColor: "rgba(7, 152, 189, 0.08)",
+              },
+            }}
+          >
+            Export to Excel
           </Button>
         </Stack>
       </FilterBar>

@@ -1,8 +1,6 @@
 'use client';
-import { Box, Typography, useMediaQuery } from '@mui/material';
+import { Box, Typography, useMediaQuery, IconButton } from '@mui/material';
 import React from 'react';
-import Image from 'next/image';
-import manazeIT from '@/assets/Images/manazeit_logo.png';
 import Link from 'next/link';
 
 import 'react-phone-input-2/lib/style.css';
@@ -10,10 +8,10 @@ import 'react-phone-input-2/lib/style.css';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import LanguageIcon from '@mui/icons-material/Language';
-import facebook from '@/assets/Images/facebook.png';
-import twitterX from '@/assets/Images/twitter.png';
-import instagram from '@/assets/Images/social.png';
-import linkedin from '@/assets/Images/linkedin.png';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import TwitterIcon from '@mui/icons-material/X';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 
 function FooterAuth() {
@@ -101,49 +99,25 @@ function FooterAuth() {
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '5px' }}>
                     {isMobile && <Typography sx={{ fontSize: '12px', marginRight: '5px' }}>Follow Us:</Typography>}
-                    <Link href="https://www.facebook.com/manazeit/" target='_blank'>
-                        <Image
-                            src={facebook}
-                            alt="facebook"
-                            width={isMobile ? 18 : 21}
-                            height={isMobile ? 18 : 21}
-                            style={{
-                                objectFit: 'contain',
-                            }}
-                        />
+                    <Link href="https://www.facebook.com/manazeit/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                        <IconButton size="small" component="span" sx={{ color: '#027cc1', p: 0.5 }} aria-label="Facebook">
+                            <FacebookIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                        </IconButton>
                     </Link>
-                    <Link href="https://x.com/manazeit" target='_blank'>
-                        <Image
-                            src={twitterX}
-                            alt="twitter"
-                            width={isMobile ? 18 : 21}
-                            height={isMobile ? 18 : 21}
-                            style={{
-                                objectFit: 'contain',
-                            }}
-                        />
+                    <Link href="https://x.com/manazeit" target="_blank" rel="noopener noreferrer" aria-label="X">
+                        <IconButton size="small" component="span" sx={{ color: '#027cc1', p: 0.5 }} aria-label="X">
+                            <TwitterIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                        </IconButton>
                     </Link>
-                    <Link href="https://www.instagram.com/manazeit.com/" target='_blank'>
-                        <Image
-                            src={instagram}
-                            alt="instagram"
-                            width={isMobile ? 18 : 21}
-                            height={isMobile ? 18 : 21}
-                            style={{
-                                objectFit: 'contain',
-                            }}
-                        />
+                    <Link href="https://www.instagram.com/manazeit.com/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                        <IconButton size="small" component="span" sx={{ color: '#027cc1', p: 0.5 }} aria-label="Instagram">
+                            <CameraAltIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                        </IconButton>
                     </Link>
-                    <Link href="https://linkedin.com/company/manazeit/" target='_blank'>
-                        <Image
-                            src={linkedin}
-                            alt="linkedin"
-                            width={isMobile ? 18 : 21}
-                            height={isMobile ? 18 : 21}
-                            style={{
-                                objectFit: 'contain',
-                            }}
-                        />
+                    <Link href="https://linkedin.com/company/manazeit/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <IconButton size="small" component="span" sx={{ color: '#027cc1', p: 0.5 }} aria-label="LinkedIn">
+                            <LinkedInIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                        </IconButton>
                     </Link>
                 </Box>
             </Box>
@@ -157,24 +131,12 @@ function FooterAuth() {
                 justifyContent: isMobile ? 'center' : 'flex-end',
                 width: isMobile ? '100%' : 'auto',
             }}>
-                <Typography variant="body1" sx={{ 
-                    fontSize: isMobile ? '12px' : '14px',
-                }}>
-                    Powered by: 
-                </Typography>
-                <Box>
-                    <Link href="www.manazeit.com" target='_blank'>
-                        <Image
-                            src={manazeIT}
-                            alt="logo"
-                            width={isMobile ? 80 : isTablet ? 90 : 99}
-                            height={isMobile ? 17 : isTablet ? 19 : 21}
-                            style={{
-                                objectFit: 'contain',
-                            }}
-                        />
+                <Typography variant="body1" sx={{ fontSize: isMobile ? '12px' : '14px' }}>
+                    Powered by{' '}
+                    <Link href="https://www.manazeit.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#027cc1', fontWeight: 600, textDecoration: 'none' }}>
+                        Manazeit
                     </Link>
-                </Box>
+                </Typography>
             </Box>
         </Box>
     )

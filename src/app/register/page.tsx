@@ -40,9 +40,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LanguageIcon from "@mui/icons-material/Language";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion } from "framer-motion";
 import { uploadFilePublic } from "@/utils/UploadFilePublic";
+import ModernBackgroundEffects from "@/app/components/ModernBackgroundEffects";
 
 // Simple debounce function
 function debounce<T extends (...args: any[]) => any>(
@@ -60,21 +60,14 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-// Register GSAP plugins
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
 const colors = {
-  primaryBlue: "#1E40AF",
-  secondaryBlue: "#3B82F6",
-  teal: "#0798bd",
-  lightTeal: "#5FD3CC",
+  primary: "#0F766E",
+  primaryLight: "#14B8A6",
+  primaryDark: "#0D9488",
+  dark: "#0F172A",
+  gray: "#64748B",
+  lightGray: "#F1F5F9",
   white: "#FFFFFF",
-  textGray: "#6B7280",
-  darkGray: "#1F2937",
-  lightGray: "#F3F4F6",
-  borderGray: "#E5E7EB",
   success: "#10B981",
   error: "#EF4444",
   warning: "#F59E0B",
@@ -146,15 +139,6 @@ export default function RegisterPage() {
     null
   );
 
-  // Animation refs
-  const headerRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const fieldsRef = useRef<HTMLDivElement>(null);
-  const footerRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
-
   // Calculate form completion percentage
   const calculateProgress = useCallback((values: any) => {
     const fields = [
@@ -214,126 +198,6 @@ export default function RegisterPage() {
     []
   );
 
-  useEffect(() => {
-    // Ensure content is visible first
-    if (formRef.current) {
-      formRef.current.style.opacity = "1";
-      formRef.current.style.visibility = "visible";
-    }
-
-    // Add a small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      try {
-        if (typeof window !== "undefined" && gsap) {
-          const ctx = gsap.context(() => {
-            // Header animation
-            if (headerRef.current) {
-              gsap.from(headerRef.current, {
-                y: -50,
-                opacity: 0,
-                duration: 0.8,
-                ease: "power3.out",
-              });
-            }
-
-            // Logo animation
-            if (logoRef.current) {
-              gsap.from(logoRef.current, {
-                scale: 0.5,
-                opacity: 0,
-                rotation: -180,
-                duration: 1,
-                ease: "back.out(1.7)",
-                delay: 0.2,
-              });
-            }
-
-            // Title animation
-            if (titleRef.current && titleRef.current.children) {
-              gsap.from(titleRef.current.children, {
-                y: 30,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.15,
-                ease: "power3.out",
-                delay: 0.4,
-              });
-            }
-
-            // Form card animation - but ensure it's visible
-            if (formRef.current) {
-              // Set initial state to visible
-              gsap.set(formRef.current, { opacity: 1, visibility: "visible" });
-              gsap.from(formRef.current, {
-                y: 50,
-                opacity: 0,
-                scale: 0.95,
-                duration: 1,
-                ease: "power3.out",
-                delay: 0.6,
-              });
-            }
-
-            // Progress bar animation - removed as it interferes with width-based progress
-
-            // Form fields animation
-            if (fieldsRef.current) {
-              const fields = fieldsRef.current.querySelectorAll(".form-field");
-              if (fields.length > 0) {
-                // Ensure fields are visible
-                gsap.set(fields, { opacity: 1, visibility: "visible" });
-                gsap.from(fields, {
-                  x: -30,
-                  opacity: 0,
-                  duration: 0.6,
-                  stagger: 0.1,
-                  ease: "power2.out",
-                  delay: 0.8,
-                });
-              }
-            }
-
-            // Footer animation
-            if (footerRef.current && footerRef.current.children) {
-              gsap.from(footerRef.current.children, {
-                y: 30,
-                opacity: 0,
-                duration: 0.8,
-                stagger: 0.1,
-                ease: "power3.out",
-                scrollTrigger: {
-                  trigger: footerRef.current,
-                  start: "top 80%",
-                },
-              });
-            }
-          });
-
-          return () => {
-            ctx.revert();
-          };
-        }
-      } catch (error) {
-        console.error("GSAP animation error:", error);
-        // Ensure content is visible even if animations fail
-        if (formRef.current) {
-          formRef.current.style.opacity = "1";
-          formRef.current.style.visibility = "visible";
-        }
-        if (fieldsRef.current) {
-          const fields = fieldsRef.current.querySelectorAll(".form-field");
-          fields.forEach((field: any) => {
-            field.style.opacity = "1";
-            field.style.visibility = "visible";
-          });
-        }
-      }
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -430,17 +294,6 @@ export default function RegisterPage() {
         );
 
         if (response.data?.status === "success") {
-          // Success animation
-          if (formRef.current) {
-            gsap.to(formRef.current, {
-              scale: 1.02,
-              duration: 0.3,
-              yoyo: true,
-              repeat: 1,
-              ease: "power2.inOut",
-            });
-          }
-
           toast.success("Registration successful! Redirecting to login...");
           setTimeout(() => {
             router.push(
@@ -457,17 +310,6 @@ export default function RegisterPage() {
           "Registration failed. Please try again.";
         setSubmitError(errorMessage);
         toast.error(errorMessage);
-
-        // Error shake animation
-        if (formRef.current) {
-          gsap.to(formRef.current, {
-            x: -10,
-            duration: 0.1,
-            repeat: 5,
-            yoyo: true,
-            ease: "power2.inOut",
-          });
-        }
       } finally {
         setIsSubmitting(false);
       }
@@ -505,33 +347,10 @@ export default function RegisterPage() {
   const handleFieldFocus = (fieldName: string) => {
     setFieldFocus(fieldName);
     setFieldAnimations((prev) => ({ ...prev, [fieldName]: true }));
-
-    // Animate field
-    const fieldElement = document
-      .querySelector(`[name="${fieldName}"]`)
-      ?.closest(".form-field");
-    if (fieldElement) {
-      gsap.to(fieldElement, {
-        scale: 1.02,
-        duration: 0.2,
-        ease: "power2.out",
-      });
-    }
   };
 
   const handleFieldBlur = (fieldName: string) => {
     setFieldFocus(null);
-
-    const fieldElement = document
-      .querySelector(`[name="${fieldName}"]`)
-      ?.closest(".form-field");
-    if (fieldElement) {
-      gsap.to(fieldElement, {
-        scale: 1,
-        duration: 0.2,
-        ease: "power2.out",
-      });
-    }
   };
 
   return (
@@ -540,253 +359,30 @@ export default function RegisterPage() {
       <Box
         sx={{
           minHeight: "100vh",
-          bgcolor: colors.lightGray,
+          bgcolor: "rgba(255, 255, 255, 0.91)",
           display: "flex",
           flexDirection: "column",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Animated Background Elements - Full Page Coverage */}
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            overflow: "hidden",
-            zIndex: 0,
-            pointerEvents: "none",
-          }}
-        >
-          {/* Floating Gradient Orbs - Brighter - Positioned in empty white space */}
-          <Box
-            sx={{
-              position: "absolute",
-              width: { xs: 300, md: 600 },
-              height: { xs: 300, md: 600 },
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${colors.primaryBlue}80 0%, ${colors.primaryBlue}50 30%, ${colors.primaryBlue}20 60%, transparent 80%)`,
-              top: { xs: "-5%", md: "-8%" },
-              left: { xs: "-10%", md: "-5%" },
-              animation: "float1 15s ease-in-out infinite",
-              filter: "blur(60px)",
-              opacity: 0.9,
-              "@keyframes float1": {
-                "0%, 100%": {
-                  transform: "translate(0, 0) scale(1)",
-                },
-                "50%": {
-                  transform: "translate(50px, 30px) scale(1.15)",
-                },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              width: { xs: 350, md: 700 },
-              height: { xs: 350, md: 700 },
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${colors.teal}75 0%, ${colors.teal}45 30%, ${colors.teal}20 60%, transparent 80%)`,
-              bottom: { xs: "-5%", md: "-8%" },
-              right: { xs: "-15%", md: "-5%" },
-              animation: "float2 20s ease-in-out infinite",
-              filter: "blur(70px)",
-              opacity: 0.85,
-              "@keyframes float2": {
-                "0%, 100%": {
-                  transform: "translate(0, 0) scale(1)",
-                },
-                "50%": {
-                  transform: "translate(-50px, -30px) scale(1.2)",
-                },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              width: { xs: 280, md: 550 },
-              height: { xs: 280, md: 550 },
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${colors.secondaryBlue}70 0%, ${colors.secondaryBlue}40 30%, ${colors.secondaryBlue}15 60%, transparent 80%)`,
-              top: { xs: "10%", md: "5%" },
-              right: { xs: "-8%", md: "5%" },
-              animation: "float3 18s ease-in-out infinite",
-              filter: "blur(55px)",
-              opacity: 0.8,
-              "@keyframes float3": {
-                "0%, 100%": {
-                  transform: "translate(0, 0) scale(1)",
-                },
-                "50%": {
-                  transform: "translate(-40px, 20px) scale(1.25)",
-                },
-              },
-            }}
-          />
-          {/* Additional Bright Orb */}
-          <Box
-            sx={{
-              position: "absolute",
-              width: { xs: 250, md: 500 },
-              height: { xs: 250, md: 500 },
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${colors.lightTeal}65 0%, ${colors.teal}40 30%, ${colors.teal}15 60%, transparent 80%)`,
-              top: { xs: "15%", md: "8%" },
-              left: { xs: "2%", md: "3%" },
-              animation: "float4 22s ease-in-out infinite",
-              filter: "blur(65px)",
-              opacity: 0.75,
-              "@keyframes float4": {
-                "0%, 100%": {
-                  transform: "translate(0, 0) scale(1)",
-                },
-                "50%": {
-                  transform: "translate(40px, -20px) scale(1.3)",
-                },
-              },
-            }}
-          />
-
-          {/* Floating Geometric Shapes - Brighter */}
-          <Box
-            sx={{
-              position: "absolute",
-              width: 80,
-              height: 80,
-              border: `3px solid ${colors.primaryBlue}60`,
-              borderRadius: "16px",
-              top: "15%",
-              left: { xs: "3%", md: "8%" },
-              animation: "rotate1 25s linear infinite",
-              boxShadow: `0 0 30px ${colors.primaryBlue}50`,
-              opacity: 0.8,
-              "@keyframes rotate1": {
-                "0%": {
-                  transform: "rotate(0deg) translateY(0)",
-                },
-                "50%": {
-                  transform: "rotate(180deg) translateY(-40px)",
-                },
-                "100%": {
-                  transform: "rotate(360deg) translateY(0)",
-                },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              width: 70,
-              height: 70,
-              border: `3px solid ${colors.teal}55`,
-              borderRadius: "50%",
-              bottom: "20%",
-              right: { xs: "5%", md: "10%" },
-              animation: "pulse1 3s ease-in-out infinite",
-              boxShadow: `0 0 35px ${colors.teal}50`,
-              opacity: 0.75,
-              "@keyframes pulse1": {
-                "0%, 100%": {
-                  transform: "scale(1)",
-                  opacity: 0.6,
-                },
-                "50%": {
-                  transform: "scale(1.6)",
-                  opacity: 0.9,
-                },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              width: 0,
-              height: 0,
-              borderLeft: "20px solid transparent",
-              borderRight: "20px solid transparent",
-              borderBottom: `35px solid ${colors.secondaryBlue}50`,
-              top: "55%",
-              left: { xs: "2%", md: "6%" },
-              animation: "floatTriangle 12s ease-in-out infinite",
-              filter: `drop-shadow(0 0 20px ${colors.secondaryBlue}60)`,
-              opacity: 0.7,
-              "@keyframes floatTriangle": {
-                "0%, 100%": {
-                  transform: "translateY(0) rotate(0deg)",
-                },
-                "50%": {
-                  transform: "translateY(-50px) rotate(180deg)",
-                },
-              },
-            }}
-          />
-          {/* Additional Bright Shapes */}
-          <Box
-            sx={{
-              position: "absolute",
-              width: 55,
-              height: 55,
-              background: `linear-gradient(135deg, ${colors.teal}50, ${colors.primaryBlue}50)`,
-              borderRadius: "10px",
-              top: "70%",
-              right: { xs: "3%", md: "15%" },
-              animation: "rotate2 20s linear infinite",
-              boxShadow: `0 0 25px ${colors.teal}60`,
-              opacity: 0.8,
-              "@keyframes rotate2": {
-                "0%": {
-                  transform: "rotate(0deg) scale(1)",
-                },
-                "50%": {
-                  transform: "rotate(180deg) scale(1.3)",
-                },
-                "100%": {
-                  transform: "rotate(360deg) scale(1)",
-                },
-              },
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              width: 45,
-              height: 45,
-              border: `2px solid ${colors.lightTeal}60`,
-              borderRadius: "50%",
-              top: "35%",
-              right: { xs: "2%", md: "20%" },
-              animation: "pulse2 4s ease-in-out infinite",
-              boxShadow: `0 0 20px ${colors.lightTeal}50`,
-              opacity: 0.7,
-              "@keyframes pulse2": {
-                "0%, 100%": {
-                  transform: "scale(1)",
-                  opacity: 0.5,
-                },
-                "50%": {
-                  transform: "scale(1.4)",
-                  opacity: 0.8,
-                },
-              },
-            }}
-          />
-        </Box>
+        <ModernBackgroundEffects />
 
         {/* Header */}
         <AppBar
-          ref={headerRef}
+          component={motion.div}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: "transparent",
-            background: "transparent",
-            borderBottom: "none",
+            bgcolor: "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(10px)",
+            borderBottom: "1px solid",
+            borderColor: "rgba(0,0,0,0.06)",
             py: 0,
-            boxShadow: "none",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
             position: "relative",
             zIndex: 10,
           }}
@@ -824,7 +420,7 @@ export default function RegisterPage() {
                   variant="h6"
                   sx={{
                     fontWeight: 700,
-                    color: colors.primaryBlue,
+                    color: colors.primary,
                     display: { xs: 'none', sm: 'block' },
                   }}
                 >
@@ -837,40 +433,40 @@ export default function RegisterPage() {
                   variant="text"
                   onClick={() => router.push("/")}
                   sx={{
-                    color: colors.textGray,
-                    textTransform: "none",
-                    fontWeight: 500,
-                    display: { xs: "none", sm: "flex" },
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      color: colors.primaryBlue,
-                      bgcolor: "transparent",
-                      transform: "translateX(-2px)",
-                    },
-                  }}
-                >
-                  <ArrowBackIcon sx={{ mr: 1, fontSize: 18 }} />
-                  Back to Home
-                </Button>
-                <Button
-                  variant="text"
-                  onClick={() => router.push("/login")}
-                  sx={{
-                    color: colors.primaryBlue,
-                    textTransform: "none",
-                    fontWeight: 600,
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      bgcolor: `${colors.primaryBlue}10`,
-                      transform: "translateY(-2px)",
-                    },
-                  }}
-                >
-                  Sign In
-                </Button>
+                  color: colors.gray,
+                  textTransform: "none",
+                  fontWeight: 500,
+                  display: { xs: "none", sm: "flex" },
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    color: colors.primary,
+                    bgcolor: "transparent",
+                    transform: "translateX(-2px)",
+                  },
+                }}
+              >
+                <ArrowBackIcon sx={{ mr: 1, fontSize: 18 }} />
+                Back to Home
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => router.push("/login")}
+                sx={{
+                  color: colors.primary,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    bgcolor: `${colors.primary}10`,
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                Sign In
+              </Button>
                 <IconButton
                   onClick={handleDrawerToggle}
-                  sx={{ display: { sm: "none" }, color: colors.darkGray }}
+                  sx={{ display: { sm: "none" }, color: colors.dark }}
                 >
                   {mobileOpen ? <CloseIcon /> : <MenuIcon />}
                 </IconButton>
@@ -955,19 +551,19 @@ export default function RegisterPage() {
         >
           <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
             <Paper
-              ref={formRef}
+              component={motion.div}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               elevation={0}
               sx={{
                 p: { xs: 4, md: 6 },
-                borderRadius: 4,
+                borderRadius: 3,
                 bgcolor: colors.white,
-                boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                border: `1px solid ${colors.borderGray}`,
+                boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
+                border: "1px solid rgba(0,0,0,0.06)",
                 position: "relative",
                 overflow: "visible",
-                transition: "all 0.3s ease",
-                opacity: 1,
-                visibility: "visible",
                 backdropFilter: "blur(10px)",
                 "&::before": {
                   content: '""',
@@ -976,16 +572,23 @@ export default function RegisterPage() {
                   left: 0,
                   right: 0,
                   height: "4px",
-                  background: `linear-gradient(90deg, ${colors.primaryBlue}, ${colors.teal})`,
+                  background: `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`,
+                  borderRadius: "3px 3px 0 0",
                 },
                 "&:hover": {
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
                 },
               }}
             >
               {/* Logo and Header */}
-              <Box ref={logoRef} sx={{ textAlign: "center", mb: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+              <Box
+                component={motion.div}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                sx={{ textAlign: "center", mb: 4 }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
                   <Image
                     src="/images/logos/time-sheet-base-logo.png"
                     alt="Manazeit Logo"
@@ -994,32 +597,44 @@ export default function RegisterPage() {
                     style={{ objectFit: "contain" }}
                   />
                 </Box>
-                <Box ref={titleRef}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 700,
-                      color: colors.primaryBlue,
-                      mb: 1,
-                      fontSize: { xs: "1.75rem", md: "2rem" },
-                    }}
-                  >
-                    Create Your Workspace
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: colors.textGray,
-                      fontSize: "1rem",
-                    }}
-                  >
-                    Get started with Manazeit in minutes
-                  </Typography>
-                </Box>
+                <Typography
+                  component={motion.h1}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    color: colors.primary,
+                    mb: 1,
+                    fontSize: { xs: "1.75rem", md: "2rem" },
+                  }}
+                >
+                  Create Your Workspace
+                </Typography>
+                <Typography
+                  component={motion.p}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  variant="body1"
+                  sx={{
+                    color: colors.gray,
+                    fontSize: "1rem",
+                  }}
+                >
+                  Get started with Manazeit in minutes
+                </Typography>
               </Box>
 
               {/* Progress Bar */}
-              <Box sx={{ mb: 4 }}>
+              <Box
+                component={motion.div}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+                sx={{ mb: 4 }}
+              >
                 <Box
                   sx={{
                     display: "flex",
@@ -1031,7 +646,7 @@ export default function RegisterPage() {
                   <Typography
                     variant="body2"
                     sx={{
-                      color: colors.textGray,
+                      color: colors.gray,
                       fontWeight: 600,
                       fontSize: "0.875rem",
                     }}
@@ -1046,8 +661,8 @@ export default function RegisterPage() {
                         formProgress === 100
                           ? colors.success
                           : formProgress > 0
-                          ? colors.primaryBlue
-                          : colors.textGray,
+                          ? colors.primary
+                          : colors.gray,
                       color: colors.white,
                       fontWeight: 700,
                       fontSize: "0.75rem",
@@ -1065,26 +680,27 @@ export default function RegisterPage() {
                     bgcolor: colors.lightGray,
                     borderRadius: 5,
                     overflow: "hidden",
-                    border: `1px solid ${colors.borderGray}`,
+                    border: "1px solid rgba(0,0,0,0.06)",
                   }}
                 >
                   <Box
-                    ref={progressRef}
+                    component={motion.div}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${formProgress}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                     sx={{
                       position: "absolute",
                       top: 0,
                       left: 0,
                       height: "100%",
-                      width: `${formProgress}%`,
                       background:
                         formProgress === 100
-                          ? `linear-gradient(90deg, ${colors.success}, ${colors.teal})`
-                          : `linear-gradient(90deg, ${colors.primaryBlue}, ${colors.teal})`,
+                          ? `linear-gradient(90deg, ${colors.success}, ${colors.primaryLight})`
+                          : `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`,
                       borderRadius: 5,
-                      transition: "width 0.5s ease, background 0.3s ease",
                       boxShadow:
                         formProgress > 0
-                          ? `0 2px 8px ${colors.primaryBlue}40`
+                          ? `0 2px 8px ${colors.primary}40`
                           : "none",
                     }}
                   />
@@ -1092,7 +708,7 @@ export default function RegisterPage() {
                 <Typography
                   variant="caption"
                   sx={{
-                    color: colors.textGray,
+                    color: colors.gray,
                     fontSize: "0.75rem",
                     mt: 0.5,
                     display: "block",
@@ -1126,8 +742,27 @@ export default function RegisterPage() {
               )}
 
               {/* Form */}
-              <Box ref={fieldsRef}>
-                <form onSubmit={formik.handleSubmit}>
+              <Box
+                component={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <form
+                  onSubmit={formik.handleSubmit}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      (e.target as HTMLElement).tagName !== "TEXTAREA"
+                    ) {
+                      const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+                      if (target?.form && !target.matches("textarea")) {
+                        e.preventDefault();
+                        formik.handleSubmit();
+                      }
+                    }
+                  }}
+                >
                   <Stack spacing={3}>
                     {/* Company Name */}
                     <Box className="form-field">
@@ -1159,8 +794,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "tenant_name"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1183,12 +818,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1272,8 +907,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "subdomain"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1311,7 +946,7 @@ export default function RegisterPage() {
                                 <Typography
                                   variant="body2"
                                   sx={{
-                                    color: colors.textGray,
+                                    color: colors.gray,
                                     fontWeight: 500,
                                   }}
                                 >
@@ -1330,7 +965,7 @@ export default function RegisterPage() {
                                 borderColor:
                                   subdomainAvailable === true
                                     ? colors.success
-                                    : colors.primaryBlue,
+                                    : colors.primary,
                               },
                             },
                             "&.Mui-focused": {
@@ -1340,7 +975,7 @@ export default function RegisterPage() {
                                     ? colors.success
                                     : subdomainAvailable === false
                                     ? colors.error
-                                    : colors.primaryBlue,
+                                    : colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1355,7 +990,7 @@ export default function RegisterPage() {
                         variant="h6"
                         sx={{
                           fontWeight: 600,
-                          color: colors.darkGray,
+                          color: colors.dark,
                           fontSize: "1.1rem",
                           display: "flex",
                           alignItems: "center",
@@ -1363,7 +998,7 @@ export default function RegisterPage() {
                         }}
                       >
                         <PersonIcon
-                          sx={{ fontSize: 20, color: colors.primaryBlue }}
+                          sx={{ fontSize: 20, color: colors.primary }}
                         />
                         Administrator Details
                       </Typography>
@@ -1410,12 +1045,12 @@ export default function RegisterPage() {
                               transition: "all 0.3s ease",
                               "&:hover": {
                                 "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: colors.primaryBlue,
+                                  borderColor: colors.primary,
                                 },
                               },
                               "&.Mui-focused": {
                                 "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: colors.primaryBlue,
+                                  borderColor: colors.primary,
                                   borderWidth: 2,
                                 },
                               },
@@ -1465,12 +1100,12 @@ export default function RegisterPage() {
                               transition: "all 0.3s ease",
                               "&:hover": {
                                 "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: colors.primaryBlue,
+                                  borderColor: colors.primary,
                                 },
                               },
                               "&.Mui-focused": {
                                 "& .MuiOutlinedInput-notchedOutline": {
-                                  borderColor: colors.primaryBlue,
+                                  borderColor: colors.primary,
                                   borderWidth: 2,
                                 },
                               },
@@ -1510,8 +1145,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "email"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1534,12 +1169,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1554,7 +1189,7 @@ export default function RegisterPage() {
                         variant="h6"
                         sx={{
                           fontWeight: 600,
-                          color: colors.darkGray,
+                          color: colors.dark,
                           fontSize: "1.1rem",
                           display: "flex",
                           alignItems: "center",
@@ -1562,7 +1197,7 @@ export default function RegisterPage() {
                         }}
                       >
                         <BusinessIcon
-                          sx={{ fontSize: 20, color: colors.primaryBlue }}
+                          sx={{ fontSize: 20, color: colors.primary }}
                         />
                         Company Contact
                       </Typography>
@@ -1600,8 +1235,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "tenant_phone"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1624,12 +1259,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1668,8 +1303,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "tenant_email"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1692,12 +1327,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1723,12 +1358,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1761,8 +1396,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "website_url"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1775,12 +1410,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1816,12 +1451,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1857,8 +1492,8 @@ export default function RegisterPage() {
                                 sx={{
                                   color:
                                     fieldFocus === "reporting_email"
-                                      ? colors.primaryBlue
-                                      : colors.textGray,
+                                      ? colors.primary
+                                      : colors.gray,
                                   transition: "color 0.2s",
                                 }}
                               />
@@ -1871,12 +1506,12 @@ export default function RegisterPage() {
                             transition: "all 0.3s ease",
                             "&:hover": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                               },
                             },
                             "&.Mui-focused": {
                               "& .MuiOutlinedInput-notchedOutline": {
-                                borderColor: colors.primaryBlue,
+                                borderColor: colors.primary,
                                 borderWidth: 2,
                               },
                             },
@@ -1892,7 +1527,7 @@ export default function RegisterPage() {
                         sx={{
                           mb: 1.5,
                           fontWeight: 600,
-                          color: colors.darkGray,
+                          color: colors.dark,
                           fontSize: "0.875rem",
                         }}
                       >
@@ -1901,7 +1536,7 @@ export default function RegisterPage() {
                       <Box
                         sx={{
                           border: `2px dashed ${
-                            logoFile ? colors.success : colors.borderGray
+                            logoFile ? colors.success : "rgba(0,0,0,0.12)"
                           }`,
                           borderRadius: 2,
                           p: 2,
@@ -1912,8 +1547,8 @@ export default function RegisterPage() {
                             ? `${colors.success}10`
                             : colors.lightGray,
                           "&:hover": {
-                            borderColor: colors.primaryBlue,
-                            bgcolor: `${colors.primaryBlue}05`,
+                            borderColor: colors.primary,
+                            bgcolor: `${colors.primary}05`,
                           },
                         }}
                         onClick={() =>
@@ -1964,13 +1599,13 @@ export default function RegisterPage() {
                           <Box>
                             <Typography
                               variant="body2"
-                              sx={{ color: colors.textGray, mb: 1 }}
+                              sx={{ color: colors.gray, mb: 1 }}
                             >
                               Click to upload logo
                             </Typography>
                             <Typography
                               variant="caption"
-                              sx={{ color: colors.textGray }}
+                              sx={{ color: colors.gray }}
                             >
                               PNG, JPG up to 10MB
                             </Typography>
@@ -1986,7 +1621,7 @@ export default function RegisterPage() {
                         sx={{
                           mb: 1.5,
                           fontWeight: 600,
-                          color: colors.darkGray,
+                          color: colors.dark,
                           fontSize: "0.875rem",
                         }}
                       >
@@ -1997,7 +1632,7 @@ export default function RegisterPage() {
                           border: `2px dashed ${
                             backgroundImageFile
                               ? colors.success
-                              : colors.borderGray
+                              : "rgba(0,0,0,0.12)"
                           }`,
                           borderRadius: 2,
                           p: 2,
@@ -2008,8 +1643,8 @@ export default function RegisterPage() {
                             ? `${colors.success}10`
                             : colors.lightGray,
                           "&:hover": {
-                            borderColor: colors.primaryBlue,
-                            bgcolor: `${colors.primaryBlue}05`,
+                            borderColor: colors.primary,
+                            bgcolor: `${colors.primary}05`,
                           },
                         }}
                         onClick={() =>
@@ -2060,13 +1695,13 @@ export default function RegisterPage() {
                           <Box>
                             <Typography
                               variant="body2"
-                              sx={{ color: colors.textGray, mb: 1 }}
+                              sx={{ color: colors.gray, mb: 1 }}
                             >
                               Click to upload background image
                             </Typography>
                             <Typography
                               variant="caption"
-                              sx={{ color: colors.textGray }}
+                              sx={{ color: colors.gray }}
                             >
                               PNG, JPG up to 10MB
                             </Typography>
@@ -2087,7 +1722,7 @@ export default function RegisterPage() {
                       }
                       fullWidth
                       sx={{
-                        bgcolor: colors.primaryBlue,
+                        bgcolor: colors.primary,
                         color: colors.white,
                         py: 1.75,
                         borderRadius: 2,
@@ -2095,17 +1730,17 @@ export default function RegisterPage() {
                         textTransform: "none",
                         fontSize: "1.1rem",
                         mt: 3,
-                        boxShadow: `0 4px 16px ${colors.primaryBlue}40`,
+                        boxShadow: `0 4px 16px ${colors.primary}40`,
                         transition: "all 0.3s ease",
                         position: "relative",
                         overflow: "hidden",
                         "&:hover": {
-                          bgcolor: colors.teal,
+                          bgcolor: colors.primaryDark,
                           transform: "translateY(-2px)",
-                          boxShadow: `0 8px 24px ${colors.teal}50`,
+                          boxShadow: `0 8px 24px ${colors.primaryDark}50`,
                         },
                         "&:disabled": {
-                          bgcolor: colors.textGray,
+                          bgcolor: colors.gray,
                           boxShadow: "none",
                         },
                         "&::before": {
@@ -2135,14 +1770,14 @@ export default function RegisterPage() {
                     <Box sx={{ textAlign: "center", mt: 2 }}>
                       <Typography
                         variant="body2"
-                        sx={{ color: colors.textGray }}
+                        sx={{ color: colors.gray }}
                       >
                         Already have a workspace?{" "}
                         <Button
                           variant="text"
                           onClick={() => router.push("/login")}
                           sx={{
-                            color: colors.primaryBlue,
+                            color: colors.primary,
                             textTransform: "none",
                             fontWeight: 600,
                             p: 0,
@@ -2168,9 +1803,13 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <Box
-          ref={footerRef}
+          component={motion.div}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
           sx={{
-            bgcolor: colors.darkGray,
+            bgcolor: colors.dark,
             color: colors.white,
             py: { xs: 4, md: 5 },
             mt: "auto",
@@ -2225,7 +1864,7 @@ export default function RegisterPage() {
                         textTransform: "none",
                         transition: "all 0.2s ease",
                         "&:hover": {
-                          color: colors.teal,
+                          color: colors.primaryLight,
                           bgcolor: "transparent",
                           transform: "translateX(4px)",
                         },

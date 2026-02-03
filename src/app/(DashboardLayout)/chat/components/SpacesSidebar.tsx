@@ -26,6 +26,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import TagIcon from "@mui/icons-material/Tag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import WorkspacesIcon from "@mui/icons-material/Workspaces";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import { Space, SpaceType } from "@/redux/features/spacesSlice";
 import { useAppselector } from "@/redux/store";
 import createAxiosInstance from "@/app/axiosInstance";
@@ -317,18 +318,34 @@ export default function SpacesSidebar({
                             },
                           }}
                         >
-                          <Avatar
-                            src={space.otherMember?.profile_image || ""}
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                            variant="dot"
                             sx={{
-                              width: 48,
-                              height: 48,
-                              bgcolor: getAvatarColor(displayName),
-                              fontSize: "1rem",
-                              fontWeight: 500,
+                              "& .MuiBadge-badge": {
+                                bgcolor: "#25D366",
+                                border: "2px solid #fff",
+                                width: 12,
+                                height: 12,
+                                borderRadius: "50%",
+                              },
                             }}
+                            invisible={!isSelected}
                           >
-                            {getSpaceAvatar(space)}
-                          </Avatar>
+                            <Avatar
+                              src={space.otherMember?.profile_image || ""}
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                bgcolor: getAvatarColor(displayName),
+                                fontSize: "1rem",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {getSpaceAvatar(space)}
+                            </Avatar>
+                          </Badge>
                         </Badge>
                         <Box sx={{ flex: 1, minWidth: 0, ml: 1.5 }}>
                           <Box
@@ -515,18 +532,8 @@ export default function SpacesSidebar({
                     );
                   }
 
-                  // Space emoji/icon
-                  const getSpaceEmoji = (name: string) => {
-                    if (name.toLowerCase().includes("crypto")) return "🪙";
-                    if (
-                      name.toLowerCase().includes("3d") ||
-                      name.toLowerCase().includes("artist")
-                    )
-                      return "🎨";
-                    if (name.toLowerCase().includes("marketing")) return "📈";
-                    if (name.toLowerCase().includes("tech")) return "💻";
-                    return "💬";
-                  };
+                  // Space icon: chat bubble for group spaces (matches chat section screenshot)
+                  const spaceAvatarBg = getAvatarColor(displayName);
 
                   return (
                     <ListItem key={space.id} disablePadding>
@@ -572,11 +579,11 @@ export default function SpacesSidebar({
                             sx={{
                               width: 40,
                               height: 40,
-                              bgcolor: getAvatarColor(displayName),
+                              bgcolor: spaceAvatarBg,
                               fontSize: "1.25rem",
                             }}
                           >
-                            {getSpaceEmoji(displayName)}
+                            <ChatBubbleOutlineIcon sx={{ fontSize: 20, color: "#fff" }} />
                           </Avatar>
                         </Badge>
                         <Box sx={{ flex: 1, minWidth: 0, ml: 1.5 }}>
