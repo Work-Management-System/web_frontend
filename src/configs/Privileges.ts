@@ -111,6 +111,17 @@ const privilegeModules: PrivilegeModule[] = [
     key: "chat",
     permissions: ["create", "read", "update", "delete"],
   },
+  // Content & SEO (SuperAdmin only in practice)
+  {
+    label: "Blog Management",
+    key: "blog-management",
+    permissions: ["create", "read", "update", "delete"],
+  },
+  {
+    label: "SEO Settings",
+    key: "seo-settings",
+    permissions: ["read", "update"],
+  },
 ];
 
 export default privilegeModules;

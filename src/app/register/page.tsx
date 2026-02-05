@@ -43,6 +43,8 @@ import LanguageIcon from "@mui/icons-material/Language";
 import { motion } from "framer-motion";
 import { uploadFilePublic } from "@/utils/UploadFilePublic";
 import ModernBackgroundEffects from "@/app/components/ModernBackgroundEffects";
+import { PageSEO } from "@/app/components/PageSEO";
+import { seoConfig } from "@/configs/seo";
 
 // Simple debounce function
 function debounce<T extends (...args: any[]) => any>(
@@ -355,6 +357,12 @@ export default function RegisterPage() {
 
   return (
     <>
+      <PageSEO
+        title={`Create Workspace | ${seoConfig.siteName}`}
+        description="Create your Manazeit workspace in minutes. Set up your organization, add your team, and start managing projects, tasks, attendance, and leave in one place."
+        path="/register"
+        noIndex={false}
+      />
       <Toaster position="top-right" />
       <Box
         sx={{

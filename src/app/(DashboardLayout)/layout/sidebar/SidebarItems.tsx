@@ -102,11 +102,22 @@ const SidebarItems = ({ collapsed, roleId }: any) => {
       }
       
       // Always filter by modules - if modules is null/undefined/empty, show empty menu
-      // This ensures SuperAdmin and all roles only see what's assigned to them
-      // NOTE: If SuperAdmin role has no modules assigned, they will see no menus.
-      // The role needs to have modules assigned in the database for menus to appear.
-      const allowedMenu = filterMenuByPermissions(MenuItems, modules);
-      
+      let allowedMenu = filterMenuByPermissions(MenuItems, modules);
+      // SuperAdmin (priority 1 or name SuperAdmin) always gets Blog Management & SEO Settings
+      const isSuperAdmin = role.priority === 1 || role.name === 'SuperAdmin';
+      if (isSuperAdmin) {
+        const contentKeys = ['blog-management', 'seo-settings'];
+        const existingKeys = new Set(allowedMenu.map((m: any) => m.key));
+        contentKeys.forEach((key) => {
+          if (!existingKeys.has(key)) {
+            const item = MenuItems.find((m: any) => m.key === key);
+            if (item) {
+              allowedMenu = [...allowedMenu, item];
+              existingKeys.add(key);
+            }
+          }
+        });
+      }
       setFilteredMenu(allowedMenu);
       checkRouteAccess(allowedMenu);
     }

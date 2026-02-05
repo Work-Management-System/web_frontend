@@ -19,6 +19,8 @@ import { useFormik } from "formik";
 import { useRouter, useSearchParams } from "next/navigation";
 import createAxiosInstance from "@/app/axiosInstance";
 import Cookies from "js-cookie";
+import { PageSEO } from "@/app/components/PageSEO";
+import { seoConfig } from "@/configs/seo";
 
 interface SetPasswordValues {
   email: string;
@@ -440,6 +442,12 @@ const SetPasswordPage: React.FC = () => {
 
   return (
     <>
+      <PageSEO
+        title={`Set Password | ${seoConfig.siteName}`}
+        description="Set or reset your Manazeit account password. Enter the OTP sent to your email to activate your account."
+        path="/set-password"
+        noIndex
+      />
       <Box
         sx={{
           display: "flex",

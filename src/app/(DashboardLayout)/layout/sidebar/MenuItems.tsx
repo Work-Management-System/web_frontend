@@ -13,6 +13,8 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import BeachAccessIcon from "@mui/icons-material/BeachAccess";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
 import ChatIcon from "@mui/icons-material/Chat";
+import ArticleIcon from "@mui/icons-material/Article";
+import SettingsEthernetIcon from "@mui/icons-material/SettingsEthernet";
 
 const MenuItems = [
   {
@@ -142,6 +144,22 @@ const MenuItems = [
     icon: ChatIcon,
     href: "/chat",
     group: "Communication",
+  },
+  {
+    id: uniqueId(),
+    title: "Blog Management",
+    key: "blog-management",
+    icon: ArticleIcon,
+    href: "/blog-management",
+    group: "Content & SEO",
+  },
+  {
+    id: uniqueId(),
+    title: "SEO Settings",
+    key: "seo-settings",
+    icon: SettingsEthernetIcon,
+    href: "/seo-settings",
+    group: "Content & SEO",
   },
 ];
 

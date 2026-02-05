@@ -60,9 +60,20 @@ const PageWrapper = styled("div")(() => ({
 
 interface Props {
   children: React.ReactNode;
+  params?: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
+  searchParams?: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children, params, searchParams }: Props) {
+  // Next.js 15: unwrap params/searchParams if they are Promises to avoid "params are being enumerated" warning
+  const resolvedParams = params != null && typeof (params as any)?.then === 'function'
+    ? React.use(params as Promise<Record<string, string | string[]>>)
+    : (params ?? {});
+  const _resolvedSearchParams = searchParams != null && typeof (searchParams as any)?.then === 'function'
+    ? React.use(searchParams as Promise<Record<string, string | string[]>>)
+    : (searchParams ?? {});
+  void resolvedParams;
+  void _resolvedSearchParams;
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState<boolean | null>(null);

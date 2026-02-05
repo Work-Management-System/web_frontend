@@ -28,6 +28,8 @@ import { setAuthDetails } from "@/redux/features/authSlice";
 import { setRoleDetails } from "@/redux/features/roleSlice";
 import { setUser } from "@/redux/features/userSlice";
 import { motion } from "framer-motion";
+import { PageSEO } from "@/app/components/PageSEO";
+import { seoConfig } from "@/configs/seo";
 
 interface TenantDetails {
   welcomeNote?: string;
@@ -875,6 +877,12 @@ const LoginPage: React.FC = () => {
 
   return (
     <>
+      <PageSEO
+        title={`Login | ${seoConfig.siteName}`}
+        description="Sign in to your Manazeit workspace. Access your dashboard, tasks, projects, and team collaboration in one place."
+        path="/login"
+        noIndex
+      />
       <Box
         sx={{
           display: "flex",

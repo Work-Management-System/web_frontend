@@ -33,6 +33,8 @@ const protectedRoutes = [
   "/project-listing/[id]/documents",
   "/project-listing/[id]/documents/[id]",
   "/chat",
+  "/blog-management",
+  "/seo-settings",
 ];
 
 const dynamicRoutePatterns = [

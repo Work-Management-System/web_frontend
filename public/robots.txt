@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Public pages
+Allow: /login
+Allow: /register
+Allow: /set-password
+
+# Sitemap (update base URL if your domain differs)
+Sitemap: https://manazeit.com/sitemap.xml

@@ -3,7 +3,7 @@ import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Typography from "@mui/material/Typography";
 
 interface BreadcrumbProps {
-  pageName: string;
+  pageName?: string | null;
 }
 
 const orangeText = "var(--primary-1-text-color)";
@@ -12,13 +12,13 @@ const capitalizeFirstLetter = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1).replace(/-/g, " ");
 
 const Breadcrumb = ({ pageName }: BreadcrumbProps) => {
-  console.log("Pagename is"+pageName);
-  const pathSegments = pageName.split("/").filter((segment) => segment);
-  console.log("pthsgms"+pathSegments)
-  const currentPage= pathSegments[0];
-  console.log("tname"+currentPage)
+  const pathSegments = (pageName ?? "").split("/").filter((segment) => segment);
+  const currentPage = pathSegments[0] ?? "";
   const filteredSegments = pathSegments.slice(1);
-  console.log("fls is -"+filteredSegments)
+
+  if (!currentPage) {
+    return null;
+  }
 
   return (
     <Breadcrumbs aria-label="breadcrumb">

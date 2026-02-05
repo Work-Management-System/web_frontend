@@ -51,6 +51,7 @@ const navLinks = [
   { label: "Features", href: "#features" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Benefits", href: "#benefits" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const featurePills = [
