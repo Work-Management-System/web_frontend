@@ -1,48 +1,59 @@
 "use client";
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Box, AppBar, Toolbar, styled, Stack, IconButton, Menu, MenuItem, Typography,
-  Grid, Badge, FormControl, Select, InputLabel,
+  Box,
+  AppBar,
+  Toolbar,
+  styled,
+  Stack,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Grid,
+  Badge,
+  FormControl,
+  Select,
+  InputLabel,
   Button,
   Popover,
-} from '@mui/material';
-import ChatIcon from '@mui/icons-material/Chat';
-import PropTypes from 'prop-types';
+} from "@mui/material";
+import ChatIcon from "@mui/icons-material/Chat";
+import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import CampaignIcon from '@mui/icons-material/Campaign';
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import { getMessaging, onMessage } from "firebase/messaging";
 import app from "@/utils/firebase";
 
 dayjs.extend(relativeTime);
 
-import Profile from './Profile';
-import { IconMenu2 } from '@tabler/icons-react';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import createAxiosInstance from '@/app/axiosInstance';
-import { useRouter } from 'next/navigation';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import useTenantRouter from '@/app/(AuthLayout)/components/useTenantRouter';
-import { useAppselector } from '@/redux/store';
+import Profile from "./Profile";
+import { IconMenu2 } from "@tabler/icons-react";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import createAxiosInstance from "@/app/axiosInstance";
+import { useRouter } from "next/navigation";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import useTenantRouter from "@/app/(AuthLayout)/components/useTenantRouter";
+import { useAppselector } from "@/redux/store";
 import Cookies from "js-cookie";
-import { AuthState, setAuthDetails } from '@/redux/features/authSlice';
+import { AuthState, setAuthDetails } from "@/redux/features/authSlice";
 import { setRoleDetails } from "@/redux/features/roleSlice";
-import { jwtDecode } from 'jwt-decode';
-import { useDispatch } from 'react-redux';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import OnlineToggle from './OnlineToggle';
-import { ArrowLeft } from '@mui/icons-material';
-import FolderIcon from '@mui/icons-material/Folder';
-import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import GroupIcon from '@mui/icons-material/Group';
-import InfoIcon from '@mui/icons-material/Info';
-import ListIcon from '@mui/icons-material/ListAlt';
-import { ArrowDropDownIcon } from '@mui/x-date-pickers/icons';
-
+import { jwtDecode } from "jwt-decode";
+import { useDispatch } from "react-redux";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import OnlineToggle from "./OnlineToggle";
+import { ArrowLeft } from "@mui/icons-material";
+import FolderIcon from "@mui/icons-material/Folder";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import GroupIcon from "@mui/icons-material/Group";
+import InfoIcon from "@mui/icons-material/Info";
+import ListIcon from "@mui/icons-material/ListAlt";
+import { ArrowDropDownIcon } from "@mui/x-date-pickers/icons";
 
 const bgHeader = "var(--card-bg-color)";
 const orangeText = "var(--primary-color-2)";
@@ -50,10 +61,10 @@ const blueText = "var(--primary-color-1)";
 
 const getBgColor = (segment: string, isRead: boolean) => {
   const colors: Record<string, string> = {
-    tasks: isRead ? "rgba(0, 128, 128, 0.05)" : "rgba(0, 128, 128, 0.15)",       // teal
-    projects: isRead ? "rgba(255, 140, 0, 0.05)" : "rgba(255, 140, 0, 0.15)",   // orange
-    users: isRead ? "rgba(30, 144, 255, 0.05)" : "rgba(30, 144, 255, 0.15)",    // blue
-    notify: isRead ? "rgba(255, 20, 147, 0.05)" : "rgba(255, 20, 147, 0.15)",   // pink
+    tasks: isRead ? "rgba(0, 128, 128, 0.05)" : "rgba(0, 128, 128, 0.15)", // teal
+    projects: isRead ? "rgba(255, 140, 0, 0.05)" : "rgba(255, 140, 0, 0.15)", // orange
+    users: isRead ? "rgba(30, 144, 255, 0.05)" : "rgba(30, 144, 255, 0.15)", // blue
+    notify: isRead ? "rgba(255, 20, 147, 0.05)" : "rgba(255, 20, 147, 0.15)", // pink
     default: isRead ? "rgba(128, 128, 128, 0.05)" : "rgba(128, 128, 128, 0.1)", // gray
   };
   return colors[segment] || colors.default;
@@ -82,29 +93,28 @@ type DecodedToken = {
 };
 
 const AppBarStyled = styled(AppBar)(({ theme }) => ({
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
   background: bgHeader,
-  justifyContent: 'center',
-  borderRadius: '0',
-  [theme.breakpoints.up('lg')]: {
-    minHeight: '70px',
+  justifyContent: "center",
+  borderRadius: "0",
+  [theme.breakpoints.up("lg")]: {
+    minHeight: "70px",
   },
 }));
 
 const ToolbarStyled = styled(Toolbar)(({ theme }) => ({
-  position: 'fixed',
+  position: "fixed",
   top: 0,
   right: 0,
   left: 0,
   zIndex: theme.zIndex.appBar,
-  width: '100%',
+  width: "100%",
   padding: theme.spacing(1.5, 3),
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
   gap: theme.spacing(2),
 }));
-
 
 interface Notification {
   id: number;
@@ -119,29 +129,35 @@ interface ItemType {
 const renderIcon = (segment: string) => {
   switch (segment) {
     case "tasks":
-      return <AssignmentTurnedInIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return (
+        <AssignmentTurnedInIcon sx={{ color: blueText, fontSize: "20px" }} />
+      );
     case "projects":
-      return <FolderIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return <FolderIcon sx={{ color: blueText, fontSize: "20px" }} />;
     case "my-reports":
-      return <ListIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return <ListIcon sx={{ color: blueText, fontSize: "20px" }} />;
     case "users":
-      return <GroupIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return <GroupIcon sx={{ color: blueText, fontSize: "20px" }} />;
     case "notify":
-      return <NotificationsActiveIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return (
+        <NotificationsActiveIcon sx={{ color: blueText, fontSize: "20px" }} />
+      );
     default:
-      return <InfoIcon sx={{ color: blueText, fontSize: '20px' }} />;
+      return <InfoIcon sx={{ color: blueText, fontSize: "20px" }} />;
   }
 };
 const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
-  const userRole = useAppselector(state => state.role.value)
-  const userPriority = useAppselector((state) => state.role.value?.priority ?? 0);
+  const userRole = useAppselector((state) => state.role.value);
+  const userPriority = useAppselector(
+    (state) => state.role.value?.priority ?? 0,
+  );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [anchorE, setAnchorE] = useState(null);
   const [notifications, setNotifications] = useState<any>();
   const [total, setTotal] = useState<number>(0);
   const [totalUnread, setTotalUnread] = useState<number>(0);
   const [roles, setRoles] = useState<any[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string>(userRole?.id || '');
+  const [selectedRole, setSelectedRole] = useState<string>(userRole?.id || "");
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [page, setPage] = useState(1);
@@ -152,7 +168,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const router = useRouter();
   const axiosInstance = createAxiosInstance();
   let dateNow = dayjs();
-  const authData = useAppselector(state => state.auth.value);
+  const authData = useAppselector((state) => state.auth.value);
   const dispatch = useDispatch();
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -167,15 +183,21 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   // Helper function to check if image URL is broken
   const isBrokenImageUrl = (url: string | null | undefined): boolean => {
     if (!url) return true;
-    return url.includes('profilePlaceholder') || 
-           url.includes('a6143582309785dca610') ||
-           (url.includes('/static/media/') && !url.startsWith('http'));
+    return (
+      url.includes("profilePlaceholder") ||
+      url.includes("a6143582309785dca610") ||
+      (url.includes("/static/media/") && !url.startsWith("http"))
+    );
   };
 
   const messaging = getMessaging(app);
   onMessage(messaging, (payload) => {
     // Only fetch if not SuperAdmin
-    if (userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
+    if (
+      userPriority !== 1 &&
+      userRole?.name !== "SuperAdmin" &&
+      userRole?.name !== "Developer"
+    ) {
       fetchNotifications();
     }
   });
@@ -184,55 +206,58 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
     // Skip API call if no user ID, invalid user ID, or if SuperAdmin (priority 1)
     const userId = authData?.user?.id;
     const roleName = userRole?.name;
-    
+
     // Check if SuperAdmin by priority or role name
-    if (!userId || 
-        userId === 'null' || 
-        userId === 'undefined' || 
-        userPriority === 1 || 
-        roleName === 'SuperAdmin' || 
-        roleName === 'Developer') {
+    if (
+      !userId ||
+      userId === "null" ||
+      userId === "undefined" ||
+      userPriority === 1 ||
+      roleName === "SuperAdmin" ||
+      roleName === "Developer"
+    ) {
       setNotifications([]);
       setTotalUnread(0);
       setTotal(0);
       return;
     }
-    
+
     try {
       const response = await axiosInstance.get(`notification`, {
         params: {
           userId: userId,
           page: 1,
           limit: 20,
-          sort: 'createdAt:desc'
-        }
+          sort: "createdAt:desc",
+        },
       });
-    const responseData = response?.data?.data;
-    if (responseData) {
-      const notifications = responseData.notifications || [];
+      const responseData = response?.data?.data;
+      if (responseData) {
+        const notifications = responseData.notifications || [];
 
-      // Filter out broken image URLs (webpack-generated paths that don't exist)
-      const sanitizedNotifications = notifications.map((n: any) => {
-        if (n.img && isBrokenImageUrl(n.img)) {
-          // Remove broken image URL to prevent 404 loops - completely remove the img property
-          console.warn('Removing broken image URL from notification:', n.img);
-          const { img, ...rest } = n;
-          return rest;
-        }
-        return n;
-      });
+        // Filter out broken image URLs (webpack-generated paths that don't exist)
+        const sanitizedNotifications = notifications.map((n: any) => {
+          if (n.img && isBrokenImageUrl(n.img)) {
+            // Remove broken image URL to prevent 404 loops - completely remove the img property
+            console.warn("Removing broken image URL from notification:", n.img);
+            const { img, ...rest } = n;
+            return rest;
+          }
+          return n;
+        });
 
-      //  Filter out Reminder notifications
-      const filteredUnreadCount = sanitizedNotifications.filter(
-        n => n.isRead === false && !n.title?.toLowerCase().includes('reminder')
-      ).length;
+        //  Filter out Reminder notifications
+        const filteredUnreadCount = sanitizedNotifications.filter(
+          (n) =>
+            n.isRead === false && !n.title?.toLowerCase().includes("reminder"),
+        ).length;
 
-      setNotifications(sanitizedNotifications);
-      setTotal(responseData.total);
-      setTotalUnread(filteredUnreadCount); // 👈 override unread count here
-    }
+        setNotifications(sanitizedNotifications);
+        setTotal(responseData.total);
+        setTotalUnread(filteredUnreadCount); // 👈 override unread count here
+      }
     } catch (error: any) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
       // If it's a 400 error, likely invalid user ID or SuperAdmin - set empty state
       if (error?.response?.status === 400 || error?.response?.status === 401) {
         setNotifications([]);
@@ -244,30 +269,35 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
 
   const fetchUserRoles = async () => {
     try {
-      const response = await axiosInstance.get(`/role-management/get-roles/${authData?.user?.id}`);
+      const response = await axiosInstance.get(
+        `/role-management/get-roles/${authData?.user?.id}`,
+      );
       const rolesData = response?.data?.data;
       if (rolesData) {
         setRoles(rolesData);
       }
     } catch (error) {
-      console.error('Failed to fetch roles:', error);
+      console.error("Failed to fetch roles:", error);
     }
   };
 
   const handleSwitchRole = (roleSelect) => {
-    router.push('/')
+    router.push("/");
     if (!selectedRole) return;
     setIsSwitching(true);
     setTimeout(async () => {
       try {
         const payload = { roleId: roleSelect };
-        const response = await axiosInstance.post(`/auth/switch-role/${authData?.user?.id}`, payload);
+        const response = await axiosInstance.post(
+          `/auth/switch-role/${authData?.user?.id}`,
+          payload,
+        );
         const token = response.data.result;
         Cookies.set("access_token", token);
         const decoded = jwtDecode<DecodedToken>(token);
         const role = await fetchRole(decoded?.role?.id);
         if (!role) {
-          console.warn('Role not found after switch');
+          console.warn("Role not found after switch");
         }
         let authDataUpdated = {
           user: {
@@ -295,7 +325,7 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
         dispatch(setAuthDetails(authDataUpdated));
         rerenderSidebar();
       } catch (error) {
-        console.error('Failed to switch role:', error);
+        console.error("Failed to switch role:", error);
       } finally {
         setIsSwitching(false);
       }
@@ -303,22 +333,22 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   };
 
   const fetchRole = async (id: string) => {
-    if (!id || id === 'null' || id === 'undefined') {
+    if (!id || id === "null" || id === "undefined") {
       return null;
     }
     try {
-    const res = await axiosInstance.get(`/role-management/get-one/${id}`);
+      const res = await axiosInstance.get(`/role-management/get-one/${id}`);
       if (!res.data?.status) {
         return null;
       }
-    const data: any = await res.data;
+      const data: any = await res.data;
       if (data?.data) {
         dispatch(setRoleDetails(data.data));
-    return data.data;
+        return data.data;
       }
       return null;
     } catch (error) {
-      console.error('Error fetching role:', error);
+      console.error("Error fetching role:", error);
       return null;
     }
   };
@@ -334,14 +364,17 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   useEffect(() => {
     const handleImageError = (e: ErrorEvent | Event) => {
       const target = e.target as HTMLImageElement;
-      if (target && target.src && (
-        target.src.includes('profilePlaceholder') || 
-        target.src.includes('a6143582309785dca610') ||
-        target.src.includes('/static/media/profilePlaceholder')
-      )) {
+      if (
+        target &&
+        target.src &&
+        (target.src.includes("profilePlaceholder") ||
+          target.src.includes("a6143582309785dca610") ||
+          target.src.includes("/static/media/profilePlaceholder"))
+      ) {
         // Prevent browser from retrying by setting to empty SVG and removing error handler
-        target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
-        target.style.display = 'none';
+        target.src =
+          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+        target.style.display = "none";
         target.onerror = null; // Remove error handler to prevent retries
         if (e.preventDefault) e.preventDefault();
         if (e.stopPropagation) e.stopPropagation();
@@ -350,31 +383,35 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
     };
 
     // Add global error listener for window errors
-    window.addEventListener('error', handleImageError, true);
-    
+    window.addEventListener("error", handleImageError, true);
+
     // Also intercept all img elements and add error handlers
     const interceptImages = () => {
-      const images = document.querySelectorAll('img');
+      const images = document.querySelectorAll("img");
       images.forEach((img) => {
-        if (img.src && (
-          img.src.includes('profilePlaceholder') || 
-          img.src.includes('a6143582309785dca610') ||
-          img.src.includes('/static/media/profilePlaceholder')
-        )) {
-          img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
-          img.style.display = 'none';
+        if (
+          img.src &&
+          (img.src.includes("profilePlaceholder") ||
+            img.src.includes("a6143582309785dca610") ||
+            img.src.includes("/static/media/profilePlaceholder"))
+        ) {
+          img.src =
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+          img.style.display = "none";
           img.onerror = null;
         } else {
           // Add error handler to all images to catch broken ones
           const originalOnError = img.onerror;
           img.onerror = (e) => {
-            if (img.src && (
-              img.src.includes('profilePlaceholder') || 
-              img.src.includes('a6143582309785dca610') ||
-              img.src.includes('/static/media/profilePlaceholder')
-            )) {
-              img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E';
-              img.style.display = 'none';
+            if (
+              img.src &&
+              (img.src.includes("profilePlaceholder") ||
+                img.src.includes("a6143582309785dca610") ||
+                img.src.includes("/static/media/profilePlaceholder"))
+            ) {
+              img.src =
+                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+              img.style.display = "none";
               img.onerror = null;
             } else if (originalOnError) {
               originalOnError.call(img, e);
@@ -388,18 +425,27 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
     interceptImages();
     const observer = new MutationObserver(interceptImages);
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     return () => {
-      window.removeEventListener('error', handleImageError, true);
+      window.removeEventListener("error", handleImageError, true);
       observer.disconnect();
     };
   }, []);
 
   useEffect(() => {
     // Only fetch notifications if role is loaded and user is not SuperAdmin
-    if (userRole && userPriority !== 1 && userRole?.name !== 'SuperAdmin' && userRole?.name !== 'Developer') {
-    fetchNotifications();
-    } else if (userPriority === 1 || userRole?.name === 'SuperAdmin' || userRole?.name === 'Developer') {
+    if (
+      userRole &&
+      userPriority !== 1 &&
+      userRole?.name !== "SuperAdmin" &&
+      userRole?.name !== "Developer"
+    ) {
+      fetchNotifications();
+    } else if (
+      userPriority === 1 ||
+      userRole?.name === "SuperAdmin" ||
+      userRole?.name === "Developer"
+    ) {
       // Set empty state for SuperAdmin
       setNotifications([]);
       setTotalUnread(0);
@@ -411,24 +457,26 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   const handleOnClick = async (item: any) => {
     setSelectedNotification(item);
     if (!item?.is_read) {
-      await axiosInstance.patch(`/notification/mark-as-read/${item?.id}`)
+      await axiosInstance
+        .patch(`/notification/mark-as-read/${item?.id}`)
         .then((result) => {
           if (result?.data?.data) {
             fetchNotifications();
           } else {
-            console.log('Failed to update');
+            console.log("Failed to update");
           }
         });
     }
   };
 
   const handleMarkAll = async () => {
-    await axiosInstance.patch(`notification/mark-all-as-read`, { userId: authData?.user?.id })
+    await axiosInstance
+      .patch(`notification/mark-all-as-read`, { userId: authData?.user?.id })
       .then((result) => {
         if (result?.data?.data) {
           fetchNotifications();
         } else {
-          console.log('Failed to update');
+          console.log("Failed to update");
         }
       });
   };
@@ -448,12 +496,15 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
   };
 
   const open = Boolean(anchorE);
-  const selectedRoleName = roles.find((role) => role?.role?.id === selectedRole)?.role?.name || 'Select Role';
+  const selectedRoleName =
+    roles.find((role) => role?.role?.id === selectedRole)?.role?.name ||
+    "Select Role";
 
-  const Mobile = useMediaQuery('(max-width: 767px)');
-  const desktop = useMediaQuery('(min-width: 768px) and (max-width: 1199px)');
-  const smallMobile = useMediaQuery('(min-width: 320px) and (max-width: 365px)');
-
+  const Mobile = useMediaQuery("(max-width: 767px)");
+  const desktop = useMediaQuery("(min-width: 768px) and (max-width: 1199px)");
+  const smallMobile = useMediaQuery(
+    "(min-width: 320px) and (max-width: 365px)",
+  );
 
   return (
     <>
@@ -465,8 +516,8 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
             onClick={toggleMobileSidebar}
             sx={{
               display: {
-                lg: 'none',
-                xs: 'inline-flex',
+                lg: "none",
+                xs: "inline-flex",
               },
             }}
           >
@@ -475,13 +526,13 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
 
           <Box flexGrow={1} />
 
-          <Stack 
-            spacing={Mobile ? 0.5 : 1} 
-            direction="row" 
+          <Stack
+            spacing={Mobile ? 0.5 : 1}
+            direction="row"
             alignItems="center"
             sx={{
-              flexWrap: Mobile ? 'nowrap' : 'wrap',
-              gap: Mobile ? '4px' : '8px',
+              flexWrap: Mobile ? "nowrap" : "wrap",
+              gap: Mobile ? "4px" : "8px",
             }}
           >
             {userRole?.priority !== 1 && <OnlineToggle />}
@@ -493,31 +544,38 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                   onClick={handleClick}
                   disabled={isSwitching}
                   sx={{
-                    borderRadius: Mobile ? '12px' : '16px',
-                    textTransform: 'none',
-                    backgroundColor: 'var(--primary-color-2)',
-                    fontWeight: '500',
-                    color: 'white',
-                    padding: Mobile ? '3px 8px' : '4px 12px',
-                    fontSize: Mobile ? '0.75rem' : '0.875rem',
-                    minWidth: Mobile ? 'auto' : 'auto',
-                    '&:hover': { backgroundColor: 'var(--primary-color-1)' },
+                    borderRadius: Mobile ? "12px" : "16px",
+                    textTransform: "none",
+                    backgroundColor: "var(--primary-color-2)",
+                    fontWeight: "500",
+                    color: "white",
+                    padding: Mobile ? "3px 8px" : "4px 12px",
+                    fontSize: Mobile ? "0.75rem" : "0.875rem",
+                    minWidth: Mobile ? "auto" : "auto",
+                    "&:hover": { backgroundColor: "var(--primary-color-1)" },
                   }}
-                  endIcon={<ArrowDropDownIcon sx={{ fontSize: Mobile ? '16px' : '20px' }} />}
+                  endIcon={
+                    <ArrowDropDownIcon
+                      sx={{ fontSize: Mobile ? "16px" : "20px" }}
+                    />
+                  }
                 >
-                  {Mobile ? selectedRoleName.substring(0, 10) + (selectedRoleName.length > 10 ? '...' : '') : selectedRoleName}
+                  {Mobile
+                    ? selectedRoleName.substring(0, 10) +
+                      (selectedRoleName.length > 10 ? "..." : "")
+                    : selectedRoleName}
                 </Button>
                 <Popover
                   open={open}
                   anchorEl={anchorE}
                   onClose={handleClose}
                   anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
+                    vertical: "bottom",
+                    horizontal: "left",
                   }}
                   transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
+                    vertical: "top",
+                    horizontal: "left",
                   }}
                 >
                   <Box sx={{ minWidth: 120 }}>
@@ -528,18 +586,20 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                           key={role?.role?.id}
                           onClick={() => handleRoleSelect(role?.role?.id)}
                           sx={{
-                            padding: '8px 16px',
-                            '&:hover': { backgroundColor: '#f5f5f5' },
+                            padding: "8px 16px",
+                            "&:hover": { backgroundColor: "#f5f5f5" },
                           }}
                         >
-                          <Typography variant="body2">{role?.role?.name}</Typography>
+                          <Typography variant="body2">
+                            {role?.role?.name}
+                          </Typography>
                         </MenuItem>
                       ))}
                   </Box>
                 </Popover>
               </Box>
             )}
-            <Box sx={{ position: 'relative' }}>
+            <Box sx={{ position: "relative" }}>
               <IconButton
                 aria-controls="notification-menu"
                 aria-haspopup="true"
@@ -547,32 +607,34 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 size={Mobile ? "small" : "medium"}
                 sx={{
                   ml: Mobile ? 1 : 2,
-                  position: 'relative',
-                  transition: 'all 0.2s ease',
-                  padding: Mobile ? '6px' : '8px',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  position: "relative",
+                  transition: "all 0.2s ease",
+                  padding: Mobile ? "6px" : "8px",
+                  "&:hover": {
+                    transform: "scale(1.1)",
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
                   },
                 }}
               >
                 <Badge
                   badgeContent={totalUnread}
                   sx={{
-                    '& .MuiBadge-badge': {
-                      color: 'white',
+                    "& .MuiBadge-badge": {
+                      color: "white",
                       backgroundColor: orangeText,
-                      fontSize: Mobile ? '0.65rem' : '0.75rem',
-                      height: Mobile ? '16px' : '18px',
-                      minWidth: Mobile ? '16px' : '18px',
-                      borderRadius: '50%',
+                      fontSize: Mobile ? "0.65rem" : "0.75rem",
+                      height: Mobile ? "16px" : "18px",
+                      minWidth: Mobile ? "16px" : "18px",
+                      borderRadius: "50%",
                     },
                   }}
                 >
-                  <NotificationsActiveIcon sx={{ 
-                    color: blueText, 
-                    fontSize: Mobile ? '22px' : '28px' 
-                  }} />
+                  <NotificationsActiveIcon
+                    sx={{
+                      color: blueText,
+                      fontSize: Mobile ? "22px" : "28px",
+                    }}
+                  />
                 </Badge>
               </IconButton>
               <Menu
@@ -581,164 +643,207 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: Mobile ? 'right' : 'left',
+                  vertical: "bottom",
+                  horizontal: Mobile ? "right" : "left",
                 }}
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: Mobile ? 'right' : 'left',
+                  vertical: "top",
+                  horizontal: Mobile ? "right" : "left",
                 }}
                 PaperProps={{
                   sx: {
-                    backgroundColor: '#fff',
-                    borderRadius: '16px',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
-                    minWidth: '380px',
-                    maxWidth: '400px',
-                    overflow: 'hidden',
-                    border: '1px solid #e0e0e0',
+                    backgroundColor: "#fff",
+                    borderRadius: "16px",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+                    minWidth: "380px",
+                    maxWidth: "400px",
+                    overflow: "hidden",
+                    border: "1px solid #e0e0e0",
                   },
                 }}
               >
                 {/* Header for list view */}
                 {!selectedNotification && (
-                  <Box sx={{
-                    background: 'linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)',
-                    padding: Mobile ? '12px' : '16px',
-                    borderBottom: '1px solid #e0e0e0',
-                  }}>
-                    <Typography variant="h6" sx={{ 
-                      color: '#fff', 
-                      fontSize: Mobile ? '1rem' : '1.2rem', 
-                      fontWeight: 600 
-                    }}>
+                  <Box
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, var(--primary-color-1) 0%, var(--primary-color-2) 100%)",
+                      padding: Mobile ? "12px" : "16px",
+                      borderBottom: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "#fff",
+                        fontSize: Mobile ? "1rem" : "1.2rem",
+                        fontWeight: 600,
+                      }}
+                    >
                       Notifications
                     </Typography>
-                    <Typography sx={{ 
-                      color: '#f0f0f0', 
-                      fontSize: Mobile ? '0.75rem' : '0.85rem', 
-                      mt: 0.5 
-                    }}>
+                    <Typography
+                      sx={{
+                        color: "#f0f0f0",
+                        fontSize: Mobile ? "0.75rem" : "0.85rem",
+                        mt: 0.5,
+                      }}
+                    >
                       {totalUnread === 1
                         ? `You have ${totalUnread} unread notification`
                         : totalUnread > 1
                           ? `You have ${totalUnread} unread notifications`
-                          : 'All caught up!'}
+                          : "All caught up!"}
                     </Typography>
                   </Box>
                 )}
 
                 {/* List view */}
                 {!selectedNotification && (
-                  <Box sx={{
-                    maxHeight: Mobile ? '60vh' : '320px',
-                    overflowY: 'auto',
-                    padding: Mobile ? '4px' : '8px',
-                    '&::-webkit-scrollbar': {
-                      width: '6px',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: '#d1d1d1',
-                      borderRadius: '8px',
-                    },
-                  }}>
+                  <Box
+                    sx={{
+                      maxHeight: Mobile ? "60vh" : "320px",
+                      overflowY: "auto",
+                      padding: Mobile ? "4px" : "8px",
+                      "&::-webkit-scrollbar": {
+                        width: "6px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#d1d1d1",
+                        borderRadius: "8px",
+                      },
+                    }}
+                  >
                     {notifications?.length > 0 ? (
-                      notifications?.filter(item => !item.title?.toLowerCase().includes('reminder'))//exclues all reminder notifications
+                      notifications
+                        ?.filter(
+                          (item) =>
+                            !item.title?.toLowerCase().includes("reminder"),
+                        ) //exclues all reminder notifications
                         .map((item) => (
-                        <MenuItem
-                          key={item?.id}
-                          onClick={() => handleOnClick(item)}
-                          sx={{
-                            padding: Mobile ? "10px 12px" : "12px 16px",
-                            borderRadius: Mobile ? "8px" : "12px",
-                            margin: Mobile ? "2px 4px" : "4px 8px",
-                            backgroundColor: getBgColor(getFirstPathSegment(item?.url), item?.is_read),
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                              backgroundColor: "rgba(0, 0, 0, 0.05)",
-                              transform: Mobile ? "none" : "translateY(-2px)",
-                              boxShadow: Mobile ? "none" : "0 2px 8px rgba(0, 0, 0, 0.1)",
-                            },
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
+                          <MenuItem
+                            key={item?.id}
+                            onClick={() => handleOnClick(item)}
+                            sx={{
+                              padding: Mobile ? "10px 12px" : "12px 16px",
+                              borderRadius: Mobile ? "8px" : "12px",
+                              margin: Mobile ? "2px 4px" : "4px 8px",
+                              backgroundColor: getBgColor(
+                                getFirstPathSegment(item?.url),
+                                item?.is_read,
+                              ),
+                              transition: "all 0.2s ease",
+                              "&:hover": {
+                                backgroundColor: "rgba(0, 0, 0, 0.05)",
+                                transform: Mobile ? "none" : "translateY(-2px)",
+                                boxShadow: Mobile
+                                  ? "none"
+                                  : "0 2px 8px rgba(0, 0, 0, 0.1)",
+                              },
+                            }}
+                          >
                             <Box
                               sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                backgroundColor: item?.is_read ? '#f5f5f5' : '#e6f0ff',
-                                overflow: 'hidden', // ensures image stays inside the circle
+                                display: "flex",
+                                alignItems: "center",
+                                width: "100%",
+                                gap: "12px",
                               }}
                             >
-                              {item?.img && 
-                               !isBrokenImageUrl(item.img) &&
-                               !failedImagesRef.current.has(item.img) ? (
-                                <Box
-                                  component="img"
-                                  src={item.img}
-                                  alt="profile"
-                                  onError={(e) => {
-                                    // Immediately prevent retry by clearing src and hiding
-                                    const target = e.target as HTMLImageElement;
-                                    if (target) {
-                                      target.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E'; // Use empty SVG to prevent retry
-                                      target.style.display = 'none';
-                                      target.onerror = null; // Remove error handler to prevent retries
-                                    }
-                                    // Mark this image as failed using ref (no re-render)
-                                    if (item?.img) {
-                                      failedImagesRef.current.add(item.img);
-                                    }
-                                  }}
-                                  sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                  }}
-                                />
-                              ) : (
-                                renderIcon(getFirstPathSegment(item?.url || ""))
-                              )}
-                            </Box>
-
-                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                              <Typography
+                              <Box
                                 sx={{
-                                  fontSize: Mobile ? '0.85rem' : '0.95rem',
-                                  fontWeight: item?.is_read ? 400 : 500,
-                                  color: '#333',
-                                  lineHeight: 1.4,
-                                  wordBreak: 'break-word',
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  backgroundColor: item?.is_read
+                                    ? "#f5f5f5"
+                                    : "#e6f0ff",
+                                  overflow: "hidden", // ensures image stays inside the circle
                                 }}
                               >
-                                {item?.title}
-                              </Typography>
-                              <Typography sx={{ 
-                                color: '#888', 
-                                fontSize: Mobile ? '0.7rem' : '0.8rem', 
-                                mt: 0.5 
-                              }}>
-                                {dateNow?.from(item?.created_at, true)} ago
-                              </Typography>
+                                {item?.img &&
+                                !isBrokenImageUrl(item.img) &&
+                                !failedImagesRef.current.has(item.img) ? (
+                                  <Box
+                                    component="img"
+                                    src={item.img}
+                                    alt="profile"
+                                    onError={(e) => {
+                                      // Immediately prevent retry by clearing src and hiding
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      if (target) {
+                                        target.src =
+                                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E"; // Use empty SVG to prevent retry
+                                        target.style.display = "none";
+                                        target.onerror = null; // Remove error handler to prevent retries
+                                      }
+                                      // Mark this image as failed using ref (no re-render)
+                                      if (item?.img) {
+                                        failedImagesRef.current.add(item.img);
+                                      }
+                                    }}
+                                    sx={{
+                                      width: "100%",
+                                      height: "100%",
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                ) : (
+                                  renderIcon(
+                                    getFirstPathSegment(item?.url || ""),
+                                  )
+                                )}
+                              </Box>
+
+                              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                <Typography
+                                  sx={{
+                                    fontSize: Mobile ? "0.85rem" : "0.95rem",
+                                    fontWeight: item?.is_read ? 400 : 500,
+                                    color: "#333",
+                                    lineHeight: 1.4,
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {item?.title}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    color: "#888",
+                                    fontSize: Mobile ? "0.7rem" : "0.8rem",
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  {dateNow?.from(item?.created_at, true)} ago
+                                </Typography>
+                              </Box>
+                              <ChevronRightIcon
+                                sx={{
+                                  color: "#888",
+                                  fontSize: Mobile ? "16px" : "18px",
+                                  flexShrink: 0,
+                                }}
+                              />
                             </Box>
-                            <ChevronRightIcon sx={{ 
-                              color: '#888', 
-                              fontSize: Mobile ? '16px' : '18px',
-                              flexShrink: 0,
-                            }} />
-                          </Box>
-                        </MenuItem>
-                      ))
+                          </MenuItem>
+                        ))
                     ) : (
-                      <Box sx={{ padding: Mobile ? '12px' : '16px', textAlign: 'center' }}>
-                        <Typography sx={{ 
-                          fontSize: Mobile ? '0.8rem' : '0.9rem', 
-                          color: '#666' 
-                        }}>
+                      <Box
+                        sx={{
+                          padding: Mobile ? "12px" : "16px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: Mobile ? "0.8rem" : "0.9rem",
+                            color: "#666",
+                          }}
+                        >
                           No notifications yet. You're all clear!
                         </Typography>
                       </Box>
@@ -748,77 +853,103 @@ const Header = ({ toggleMobileSidebar, rerenderSidebar }: ItemType) => {
 
                 {/* Detail view */}
                 {selectedNotification && (
-                  <Box sx={{
-                    width: Mobile ? '100%' : '360px',
-                    maxWidth: Mobile ? '100%' : '360px',
-                    background: '#fff',
-                    borderRadius: Mobile ? '8px' : '12px',
-                    padding: Mobile ? '12px' : '16px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: Mobile ? 1.5 : 2 }}>
+                  <Box
+                    sx={{
+                      width: Mobile ? "100%" : "360px",
+                      maxWidth: Mobile ? "100%" : "360px",
+                      background: "#fff",
+                      borderRadius: Mobile ? "8px" : "12px",
+                      padding: Mobile ? "12px" : "16px",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        mb: Mobile ? 1.5 : 2,
+                      }}
+                    >
                       <IconButton
                         onClick={() => setSelectedNotification(null)}
                         size={Mobile ? "small" : "medium"}
                         sx={{
                           color: blueText,
-                          '&:hover': { backgroundColor: '#f0f4ff' },
+                          "&:hover": { backgroundColor: "#f0f4ff" },
                         }}
                       >
-                        <ArrowLeft sx={{ fontSize: Mobile ? '20px' : '24px' }} />
+                        <ArrowLeft
+                          sx={{ fontSize: Mobile ? "20px" : "24px" }}
+                        />
                       </IconButton>
-                      <Typography sx={{ 
-                        fontSize: Mobile ? '0.95rem' : '1.1rem', 
-                        fontWeight: 600, 
-                        color: blueText, 
-                        ml: 1,
-                        wordBreak: 'break-word',
-                      }}>
-                        {selectedNotification?.title || 'Notification'}
+                      <Typography
+                        sx={{
+                          fontSize: Mobile ? "0.95rem" : "1.1rem",
+                          fontWeight: 600,
+                          color: blueText,
+                          ml: 1,
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {selectedNotification?.title || "Notification"}
                       </Typography>
                     </Box>
-                    <Box sx={{ borderTop: '1px solid #e0e0e0', pt: Mobile ? 1.5 : 2, mb: Mobile ? 1.5 : 2 }}>
-                      <Typography sx={{ 
-                        fontSize: Mobile ? '0.8rem' : '0.9rem', 
-                        color: '#444', 
-                        lineHeight: 1.6,
-                        wordBreak: 'break-word',
-                      }}>
-                        {selectedNotification?.body || 'No content available.'}
+                    <Box
+                      sx={{
+                        borderTop: "1px solid #e0e0e0",
+                        pt: Mobile ? 1.5 : 2,
+                        mb: Mobile ? 1.5 : 2,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: Mobile ? "0.8rem" : "0.9rem",
+                          color: "#444",
+                          lineHeight: 1.6,
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {selectedNotification?.body || "No content available."}
                       </Typography>
                     </Box>
-                    <Typography sx={{ 
-                      fontSize: Mobile ? '0.7rem' : '0.8rem', 
-                      color: '#888', 
-                      textAlign: 'right' 
-                    }}>
+                    <Typography
+                      sx={{
+                        fontSize: Mobile ? "0.7rem" : "0.8rem",
+                        color: "#888",
+                        textAlign: "right",
+                      }}
+                    >
                       {selectedNotification?.created_at
-                        ? new Date(selectedNotification.created_at).toLocaleString()
-                        : 'No date available'}
+                        ? new Date(
+                            selectedNotification.created_at,
+                          ).toLocaleString()
+                        : "No date available"}
                     </Typography>
                   </Box>
                 )}
 
                 {/* Footer for list view */}
                 {!selectedNotification && (
-                  <Box sx={{
-                    padding: '8px 16px',
-                    background: '#f8f9fa',
-                    borderTop: '1px solid #e0e0e0',
-                    textAlign: 'center',
-                  }}>
+                  <Box
+                    sx={{
+                      padding: "8px 16px",
+                      background: "#f8f9fa",
+                      borderTop: "1px solid #e0e0e0",
+                      textAlign: "center",
+                    }}
+                  >
                     <IconButton
                       aria-controls="notification-menu"
                       aria-haspopup="true"
                       sx={{
-                        fontSize: '0.85rem',
+                        fontSize: "0.85rem",
                         color: blueText,
-                        borderRadius: '12px',
-                        padding: '8px 16px',
-                        textTransform: 'none',
+                        borderRadius: "12px",
+                        padding: "8px 16px",
+                        textTransform: "none",
                         fontWeight: 500,
-                        '&:hover': {
-                          backgroundColor: '#e6f0ff',
+                        "&:hover": {
+                          backgroundColor: "#e6f0ff",
                         },
                       }}
                       onClick={handleMarkAll}
@@ -845,6 +976,6 @@ Header.propTypes = {
 
 export default Header;
 
-function dispatch(arg0: { payload: AuthState; type: "auth/setAuthDetails"; }) {
-  throw new Error('Function not implemented.');
+function dispatch(arg0: { payload: AuthState; type: "auth/setAuthDetails" }) {
+  throw new Error("Function not implemented.");
 }

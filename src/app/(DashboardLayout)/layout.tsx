@@ -1,27 +1,28 @@
 "use client";
 // Import polyfill first to fix React 19 compatibility
-import '@/utils/react-dom-polyfill';
+import "@/utils/react-dom-polyfill";
 import { styled, Container, Box, useMediaQuery } from "@mui/material";
 import React, { createContext, useEffect, useState } from "react";
 import Header from "@/app/(DashboardLayout)/layout/header/Header";
 import Sidebar from "@/app/(DashboardLayout)/layout/sidebar/Sidebar";
 import Footer from "./layout/footer/page";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
 import NextTopLoader from "nextjs-toploader";
 import { useAppselector } from "@/redux/store";
 import createAxiosInstance from "../axiosInstance";
 import { useRouter } from "next/navigation";
 import { PaletteChangeProvider } from "@/contextapi/PaletteChangeContext";
 import { TourProvider } from "@/contextapi/TourContext";
+import { GlobalTaskModalProvider } from "@/contextapi/GlobalTaskModalContext";
 import { getMessaging, getToken } from "firebase/messaging";
-import app from '@/utils/firebase';
+import app from "@/utils/firebase";
 
 export const SubscriptionContext = createContext<{
   isSubscriptionActive: boolean | null;
   setIsSubscriptionActive: React.Dispatch<React.SetStateAction<boolean | null>>;
 }>({
   isSubscriptionActive: null,
-  setIsSubscriptionActive: () => { },
+  setIsSubscriptionActive: () => {},
 });
 
 const MainWrapper = styled("div")(() => ({
@@ -60,27 +61,35 @@ const PageWrapper = styled("div")(() => ({
 
 interface Props {
   children: React.ReactNode;
-  params?: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
-  searchParams?: Promise<Record<string, string | string[]>> | Record<string, string | string[]>;
+  params?:
+    | Promise<Record<string, string | string[]>>
+    | Record<string, string | string[]>;
+  searchParams?:
+    | Promise<Record<string, string | string[]>>
+    | Record<string, string | string[]>;
 }
 
 export default function RootLayout({ children, params, searchParams }: Props) {
   // Next.js 15: unwrap params/searchParams if they are Promises to avoid "params are being enumerated" warning
-  const resolvedParams = params != null && typeof (params as any)?.then === 'function'
-    ? React.use(params as Promise<Record<string, string | string[]>>)
-    : (params ?? {});
-  const _resolvedSearchParams = searchParams != null && typeof (searchParams as any)?.then === 'function'
-    ? React.use(searchParams as Promise<Record<string, string | string[]>>)
-    : (searchParams ?? {});
+  const resolvedParams =
+    params != null && typeof (params as any)?.then === "function"
+      ? React.use(params as Promise<Record<string, string | string[]>>)
+      : (params ?? {});
+  const _resolvedSearchParams =
+    searchParams != null && typeof (searchParams as any)?.then === "function"
+      ? React.use(searchParams as Promise<Record<string, string | string[]>>)
+      : (searchParams ?? {});
   void resolvedParams;
   void _resolvedSearchParams;
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState<boolean | null>(null);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState<
+    boolean | null
+  >(null);
   const [sidebarRenderKey, setSidebarRenderKey] = useState<number>(0);
-  const [token, setToken] = useState('');
-  const selectedColor = 'var(--primary-bg-colors)';
-  const Mobile = useMediaQuery('(max-width: 767px)');
+  const [token, setToken] = useState("");
+  const selectedColor = "var(--primary-bg-colors)";
+  const Mobile = useMediaQuery("(max-width: 767px)");
   const axiosInstance = createAxiosInstance();
   const router = useRouter();
   const authData = useAppselector((state) => state.auth.value);
@@ -91,7 +100,9 @@ export default function RootLayout({ children, params, searchParams }: Props) {
 
   const checkRole = async (roleId: string) => {
     try {
-      const response = await axiosInstance.get(`/role-management/get-one/${roleId}`);
+      const response = await axiosInstance.get(
+        `/role-management/get-one/${roleId}`,
+      );
       const data = response.data;
       console.log("roleId name: ", data?.data?.name);
       return data?.data?.name || null;
@@ -103,7 +114,9 @@ export default function RootLayout({ children, params, searchParams }: Props) {
 
   const checkTenantSubscription = async (id: string) => {
     try {
-      const response = await axiosInstance.get(`/subscription/tenant-plans/${id}`);
+      const response = await axiosInstance.get(
+        `/subscription/tenant-plans/${id}`,
+      );
       const data = response.data;
       if (data.status === "success" && data.data.length > 0) {
         return data.data[0].status === "active";
@@ -124,18 +137,19 @@ export default function RootLayout({ children, params, searchParams }: Props) {
     try {
       const permission = await Notification.requestPermission();
       // setNotificationPermissionStatus(permission);
-      if (permission === 'granted') {
-        if ('serviceWorker' in navigator) {
+      if (permission === "granted") {
+        if ("serviceWorker" in navigator) {
           // console.log('Registering Service Worker...');
-          await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          await navigator.serviceWorker.register("/firebase-messaging-sw.js");
           // console.log('Waiting for Service Worker to be Ready...');
           const registration = await navigator.serviceWorker.ready;
-          console.log('Service Worker Ready');
+          console.log("Service Worker Ready");
         }
-        if ('serviceWorker' in navigator) {
+        if ("serviceWorker" in navigator) {
           const registration = await navigator.serviceWorker.ready;
           const currentToken = await getToken(messaging, {
-            vapidKey: 'BN23rYWK-5ENfDeGBWlZ5xfv-F0U-tad8YF_b7K2POuGSEm61KNdIbo98vWv9jSzX9y1bMUlAPWFEwicPVs-BGA',
+            vapidKey:
+              "BN23rYWK-5ENfDeGBWlZ5xfv-F0U-tad8YF_b7K2POuGSEm61KNdIbo98vWv9jSzX9y1bMUlAPWFEwicPVs-BGA",
             serviceWorkerRegistration: registration,
           });
           if (currentToken) {
@@ -148,21 +162,23 @@ export default function RootLayout({ children, params, searchParams }: Props) {
 
             await axiosInstance.post(`/notification/save-fcm-token`, payload);
           } else {
-            console.log('No registration token available. Request permission to generate one.');
+            console.log(
+              "No registration token available. Request permission to generate one.",
+            );
           }
         }
       } else {
-        console.log('Notification permission not granted.');
+        console.log("Notification permission not granted.");
       }
     } catch (err) {
-      console.log('An error occurred while retrieving token. ', err);
+      console.log("An error occurred while retrieving token. ", err);
     }
   }
 
   useEffect(() => {
     const initialize = async () => {
       if (!tenantId && !roleId) {
-        console.log('Returning from here.');
+        console.log("Returning from here.");
         return;
       }
 
@@ -193,64 +209,75 @@ export default function RootLayout({ children, params, searchParams }: Props) {
 
   useEffect(() => {
     if (sidebarRenderKey > 0) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [sidebarRenderKey]);
 
   useEffect(() => {
     requestPermissionAndGenerateToken();
-  }, [])
+  }, []);
 
   return (
     <PaletteChangeProvider>
       <TourProvider>
-      <MainWrapper className="mainwrapper">
-        <NextTopLoader />
-        <SubscriptionContext.Provider value={{ isSubscriptionActive, setIsSubscriptionActive }}>
-          {/* Sidebar */}
-          {isSubscriptionActive && (
-
-            <Sidebar
-              key={sidebarRenderKey}
-              isSidebarOpen={isSidebarOpen}
-              isMobileSidebarOpen={isMobileSidebarOpen}
-              onSidebarClose={() => setMobileSidebarOpen(false)}
-            />
-          )}
-          {/* Main Content */}
-          <PageWrapper className="page-wrapper">
-            {/* Header */}
-            <Header
-              toggleMobileSidebar={() => setMobileSidebarOpen(true)}
-              rerenderSidebar={rerenderSidebar}
-            />
-            {/* Page Content */}
-            <Container
-              sx={{
-                paddingTop: { xs: "80px", sm: "85px", md: "90px" },
-                paddingX: { xs: 1, sm: 2, md: 3, lg: 4 },
-                maxWidth: "100% !important",
-                minWidth: "100% !important",
-                position: "relative",
-                zIndex: 1, // Ensure content is above background
-              }}
+        <GlobalTaskModalProvider>
+          <MainWrapper className="mainwrapper">
+            <NextTopLoader />
+            <SubscriptionContext.Provider
+              value={{ isSubscriptionActive, setIsSubscriptionActive }}
             >
-              <Box
-                sx={{
-                  minHeight: { xs: "calc(100vh - 150px)", sm: "calc(100vh - 160px)", md: "calc(100vh - 170px)" },
-                  mt: { xs: 0.5, sm: 1, md: 2 },
-                  borderRadius: { xs: "8px", sm: "12px", md: "16px" },
-                }}
-              >
-                {children}
-              </Box>
-              {/* Footer */}
-              <Footer />
-            </Container>
-            <Toaster position={'top-right'} toastOptions={{ className: 'react-hot-toast' }} gutter={2} />
-          </PageWrapper>
-        </SubscriptionContext.Provider>
-      </MainWrapper>
+              {/* Sidebar */}
+              {isSubscriptionActive && (
+                <Sidebar
+                  key={sidebarRenderKey}
+                  isSidebarOpen={isSidebarOpen}
+                  isMobileSidebarOpen={isMobileSidebarOpen}
+                  onSidebarClose={() => setMobileSidebarOpen(false)}
+                />
+              )}
+              {/* Main Content */}
+              <PageWrapper className="page-wrapper">
+                {/* Header */}
+                <Header
+                  toggleMobileSidebar={() => setMobileSidebarOpen(true)}
+                  rerenderSidebar={rerenderSidebar}
+                />
+                {/* Page Content */}
+                <Container
+                  sx={{
+                    paddingTop: { xs: "80px", sm: "85px", md: "90px" },
+                    paddingX: { xs: 1, sm: 2, md: 3, lg: 4 },
+                    maxWidth: "100% !important",
+                    minWidth: "100% !important",
+                    position: "relative",
+                    zIndex: 1, // Ensure content is above background
+                  }}
+                >
+                  <Box
+                    sx={{
+                      minHeight: {
+                        xs: "calc(100vh - 150px)",
+                        sm: "calc(100vh - 160px)",
+                        md: "calc(100vh - 170px)",
+                      },
+                      mt: { xs: 0.5, sm: 1, md: 2 },
+                      borderRadius: { xs: "8px", sm: "12px", md: "16px" },
+                    }}
+                  >
+                    {children}
+                  </Box>
+                  {/* Footer */}
+                  <Footer />
+                </Container>
+                <Toaster
+                  position={"top-right"}
+                  toastOptions={{ className: "react-hot-toast" }}
+                  gutter={2}
+                />
+              </PageWrapper>
+            </SubscriptionContext.Provider>
+          </MainWrapper>
+        </GlobalTaskModalProvider>
       </TourProvider>
     </PaletteChangeProvider>
   );

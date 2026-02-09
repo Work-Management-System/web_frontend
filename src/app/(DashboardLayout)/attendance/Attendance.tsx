@@ -224,6 +224,12 @@ const Attendance = () => {
     }
   }, [activeTab, selectedDate]);
 
+  useEffect(() => {
+    if (!isAdmin && activeTab === 2) {
+      setActiveTab(1);
+    }
+  }, [isAdmin, activeTab]);
+
   const fetchCurrentStatus = async () => {
     try {
       // Process auto-lunch first (silently, don't show errors)
@@ -262,7 +268,7 @@ const Attendance = () => {
 
   const checkAdminRole = () => {
     const userRole = userInfo?.role?.name;
-    setIsAdmin(userRole === "Administrator" || userRole === "SuperAdmin");
+    setIsAdmin(userRole === "Administrator");
   };
 
   const fetchTeamAttendance = async () => {
@@ -841,7 +847,7 @@ const Attendance = () => {
         >
           <Tab label="Team Status" />
           <Tab label="Calendar View" />
-          <Tab label="Settings" />
+          {isAdmin && <Tab label="Settings" />}
         </Tabs>
 
         {activeTab === 0 && (
@@ -1332,7 +1338,7 @@ const Attendance = () => {
           </Box>
         )}
 
-        {activeTab === 2 && (
+        {activeTab === 2 && isAdmin && (
           <Card>
             <CardContent>
               {/* Admin-only: Off Day Management */}
